@@ -61,7 +61,10 @@ function playCloseSound() {
    UI 要素 & イベント
    ========================================================================== */
 const cardMemory = document.getElementById('card-memory');
-const cardRakugaku = document.getElementById('card-rakugaku');
+const cardKatakana = document.getElementById('card-katakana');
+const cardMath = document.getElementById('card-math');
+const cardLowercase = document.getElementById('card-lowercase');
+const cardUppercase = document.getElementById('card-uppercase');
 const cardPlaceholder = document.getElementById('card-placeholder');
 const btnHelp = document.getElementById('btn-help');
 
@@ -81,11 +84,41 @@ cardMemory.addEventListener('click', (e) => {
   }, 100);
 });
 
-// 2. らくがくアプリカードのタップ（音を鳴らしてから遷移）
-cardRakugaku.addEventListener('click', (e) => {
+// 2. かたかなクイズカードのタップ（音を鳴らしてから遷移）
+cardKatakana.addEventListener('click', (e) => {
   e.preventDefault();
   playPopSound();
-  const href = cardRakugaku.getAttribute('href');
+  const href = cardKatakana.getAttribute('href');
+  setTimeout(() => {
+    window.location.href = href;
+  }, 100);
+});
+
+// 3. さんすうクイズカードのタップ（音を鳴らしてから遷移）
+cardMath.addEventListener('click', (e) => {
+  e.preventDefault();
+  playPopSound();
+  const href = cardMath.getAttribute('href');
+  setTimeout(() => {
+    window.location.href = href;
+  }, 100);
+});
+
+// 4. たいぴんぐ（こもじ）カードのタップ（音を鳴らしてから遷移）
+cardLowercase.addEventListener('click', (e) => {
+  e.preventDefault();
+  playPopSound();
+  const href = cardLowercase.getAttribute('href');
+  setTimeout(() => {
+    window.location.href = href;
+  }, 100);
+});
+
+// 5. たいぴんぐ（おおもじ）カードのタップ（音を鳴らしてから遷移）
+cardUppercase.addEventListener('click', (e) => {
+  e.preventDefault();
+  playPopSound();
+  const href = cardUppercase.getAttribute('href');
   setTimeout(() => {
     window.location.href = href;
   }, 100);

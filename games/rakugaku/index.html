@@ -3382,6 +3382,17 @@
                 resultMessage.textContent = 'もういちどちょうせんしてみよう！';
             }
         }
+
+        // URLパラメータのチェック（起動時に特定の画面を自動表示）
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            if (mode === 'math') {
+                showMathSelect();
+            } else if (mode === 'katakana') {
+                startGame();
+            }
+        });
     </script>
 </body>
 
