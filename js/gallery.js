@@ -61,6 +61,7 @@ function playCloseSound() {
    UI 要素 & イベント
    ========================================================================== */
 const cardMemory = document.getElementById('card-memory');
+const cardRakugaku = document.getElementById('card-rakugaku');
 const cardPlaceholder = document.getElementById('card-placeholder');
 const btnHelp = document.getElementById('btn-help');
 
@@ -75,6 +76,16 @@ cardMemory.addEventListener('click', (e) => {
   e.preventDefault();
   playPopSound();
   const href = cardMemory.getAttribute('href');
+  setTimeout(() => {
+    window.location.href = href;
+  }, 100);
+});
+
+// 2. らくがくアプリカードのタップ（音を鳴らしてから遷移）
+cardRakugaku.addEventListener('click', (e) => {
+  e.preventDefault();
+  playPopSound();
+  const href = cardRakugaku.getAttribute('href');
   setTimeout(() => {
     window.location.href = href;
   }, 100);

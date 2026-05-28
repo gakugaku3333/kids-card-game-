@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大文字タイピングゲーム - Uppercase Typing!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff6b9d;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(255, 107, 157, 0.3);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .letter-display {
+            font-size: 240px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 40px 0;
+            text-shadow: 8px 8px 15px rgba(102, 126, 234, 0.3);
+            animation: bounce 0.5s ease;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 10px;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .instruction {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .feedback {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 60px;
+        }
+
+        .feedback.correct {
+            color: #10b981;
+            animation: celebrate 0.5s ease;
+        }
+
+        .feedback.wrong {
+            color: #ef4444;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes celebrate {
+
+            0%,
+            100% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: rotate(-10deg) scale(1.1);
+            }
+
+            75% {
+                transform: rotate(10deg) scale(1.1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-15px);
+            }
+
+            75% {
+                transform: translateX(15px);
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .start-screen,
+        .result-screen {
+            text-align: center;
+        }
+
+        .start-btn {
+            font-size: 42px;
+            padding: 30px 60px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .intro-text {
+            font-size: 28px;
+            color: #555;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .emoji {
+            font-size: 80px;
+            margin: 20px 0;
+        }
+
+        .keyboard-hint {
+            font-size: 24px;
+            color: #666;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .combo {
+            font-size: 32px;
+            color: #f59e0b;
+            font-weight: bold;
+            margin: 10px 0;
+            animation: pulse 0.5s ease infinite;
+        }
+
+        .visual-keyboard {
+            margin: 30px auto;
+            max-width: 600px;
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.3s ease;
+        }
+
+        .visual-keyboard.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .key {
+            min-width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .key:active {
+            transform: scale(0.95);
+            background: #e0e0e0;
+        }
+
+        .key.highlight {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-color: #f59e0b;
+            color: #000;
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: keyPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes keyPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- スタート画面 -->
+        <div id="startScreen" class="start-screen">
+            <h1>✨ 大文字タイピング ✨</h1>
+            <div class="emoji">⌨️🎀🌟</div>
+            <p class="intro-text">
+                画面に表示される大文字を<br>
+                キーボードで入力してね！<br>
+                速く正確に打てるかな？ 💕
+            </p>
+            <button class="start-btn" onclick="startGame()">スタート！</button>
+            <button class="shop-btn" onclick="window.location.href='index.html'" style="margin-top: 20px;">🏠
+                メニューにもどる</button>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen" class="hidden">
+            <h1>✨ 大文字タイピング ✨</h1>
+
+            <div class="timer-bar">
+                <div class="timer-fill" id="timerFill"></div>
+            </div>
+
+            <div class="score-board">
+                <div class="score-item">
+                    スコア: <span id="score">0</span>
+                </div>
+                <div class="score-item">
+                    正解: <span id="correct">0</span>
+                </div>
+                <div class="score-item">
+                    ミス: <span id="miss">0</span>
+                </div>
+                <div class="score-item">
+                    残り: <span id="timeLeft">60</span>秒
+                </div>
+            </div>
+
+            <div id="combo" class="combo hidden"></div>
+
+            <div class="letter-display" id="letterDisplay">A</div>
+
+            <div class="instruction">このもじをうって！</div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="keyboard-hint">
+                💡 キーボードでもじをうってね！
+            </div>
+
+            <div class="visual-keyboard" id="visualKeyboard">
+                <div class="keyboard-row">
+                    <div class="key" data-key="Q">Q</div>
+                    <div class="key" data-key="W">W</div>
+                    <div class="key" data-key="E">E</div>
+                    <div class="key" data-key="R">R</div>
+                    <div class="key" data-key="T">T</div>
+                    <div class="key" data-key="Y">Y</div>
+                    <div class="key" data-key="U">U</div>
+                    <div class="key" data-key="I">I</div>
+                    <div class="key" data-key="O">O</div>
+                    <div class="key" data-key="P">P</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="A">A</div>
+                    <div class="key" data-key="S">S</div>
+                    <div class="key" data-key="D">D</div>
+                    <div class="key" data-key="F">F</div>
+                    <div class="key" data-key="G">G</div>
+                    <div class="key" data-key="H">H</div>
+                    <div class="key" data-key="J">J</div>
+                    <div class="key" data-key="K">K</div>
+                    <div class="key" data-key="L">L</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="Z">Z</div>
+                    <div class="key" data-key="X">X</div>
+                    <div class="key" data-key="C">C</div>
+                    <div class="key" data-key="V">V</div>
+                    <div class="key" data-key="B">B</div>
+                    <div class="key" data-key="N">N</div>
+                    <div class="key" data-key="M">M</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div id="resultScreen" class="hidden result-screen">
+            <h1>🎉 おつかれさま！ 🎉</h1>
+            <div class="emoji" id="resultEmoji"></div>
+            <div style="font-size: 48px; margin: 30px 0; font-weight: bold; color: #667eea;">
+                スコア: <span id="finalScore"></span>
+            </div>
+            <div style="font-size: 36px; margin: 20px 0;">
+                <div style="color: #10b981; margin: 10px 0;">
+                    ✓ 正解: <span id="finalCorrect"></span>
+                </div>
+                <div style="color: #ef4444; margin: 10px 0;">
+                    ✗ ミス: <span id="finalMiss"></span>
+                </div>
+                <div style="color: #667eea; margin: 10px 0;">
+                    ⚡ 正確さ: <span id="accuracy"></span>%
+                </div>
+            </div>
+            <div id="resultMessage" style="font-size: 32px; color: #555; margin: 20px 0;"></div>
+            <button class="start-btn" onclick="location.reload()">もういちど！</button>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム変数
+        let score = 0;
+        let correctCount = 0;
+        let missCount = 0;
+        let currentLetter = '';
+        let gameTimer = null;
+        let timeLeft = 60;
+        let comboCount = 0;
+        let gameActive = false;
+        let hintTimer = null;
+
+        // アルファベット配列
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            // 初期化
+            score = 0;
+            correctCount = 0;
+            missCount = 0;
+            timeLeft = 60;
+            comboCount = 0;
+            gameActive = true;
+
+            updateDisplay();
+            nextLetter();
+            startTimer();
+
+            // キーボードイベントリスナー
+            document.addEventListener('keydown', handleKeyPress);
+
+            // ビジュアルキーボードのクリックイベントを追加
+            document.querySelectorAll('.key').forEach(key => {
+                key.addEventListener('click', () => {
+                    if (!gameActive) return;
+                    const keyChar = key.getAttribute('data-key');
+                    handleInput(keyChar);
+                });
+
+                // タッチデバイスでの反応を良くする
+                key.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // ダブルタップズームなどを防止
+                    if (!gameActive) return;
+                    const keyChar = key.getAttribute('data-key');
+                    handleInput(keyChar);
+
+                    // タッチフィードバック
+                    key.classList.add('active');
+                    setTimeout(() => key.classList.remove('active'), 100);
+                });
+            });
+        }
+
+        function nextLetter() {
+            if (!gameActive) return;
+
+            // ランダムに大文字を選択
+            currentLetter = letters[Math.floor(Math.random() * letters.length)];
+
+            // 表示を更新
+            const letterDisplay = document.getElementById('letterDisplay');
+            letterDisplay.textContent = currentLetter;
+            letterDisplay.style.animation = 'none';
+            setTimeout(() => {
+                letterDisplay.style.animation = 'bounce 0.5s ease';
+            }, 10);
+
+            // フィードバックをクリア
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+
+            // ヒントをリセット
+            const hintEl = document.querySelector('.keyboard-hint');
+            hintEl.textContent = '💡 キーボードでもじをうってね！';
+            hintEl.style.backgroundColor = '#f0f0f0';
+            hintEl.style.color = '#666';
+
+            // ハイライトをリセット（キーボードは隠さない）
+            document.querySelectorAll('.key').forEach(key => {
+                key.classList.remove('highlight');
+            });
+
+            // ヒントタイマーを開始
+            if (hintTimer) clearTimeout(hintTimer);
+            hintTimer = setTimeout(() => {
+                if (gameActive) {
+                    hintEl.innerHTML = `💡 ヒント: キーボードの<strong>「${currentLetter}」</strong>をおしてね！`;
+                    hintEl.style.backgroundColor = '#fff3cd';
+                    hintEl.style.color = '#856404';
+
+                    const targetKey = document.querySelector(`.key[data-key="${currentLetter}"]`);
+                    if (targetKey) {
+                        targetKey.classList.add('highlight');
+                    }
+
+                    playSound('hint');
+                }
+            }, 5000);
+        }
+
+        function handleKeyPress(event) {
+            if (!gameActive) return;
+            const pressedKey = event.key.toUpperCase();
+            handleInput(pressedKey);
+        }
+
+        function handleInput(inputKey) {
+            if (!gameActive) return;
+
+            // 大文字のA-Zのみを処理
+            if (!letters.includes(inputKey)) return;
+
+            const feedback = document.getElementById('feedback');
+
+            if (inputKey === currentLetter) {
+                // 正解
+                correctCount++;
+                comboCount++;
+                score += 10 + (comboCount > 1 ? comboCount * 2 : 0); // コンボボーナス
+
+                feedback.textContent = '🎉 せいかい！';
+                feedback.className = 'feedback correct';
+
+                // コンボ表示
+                if (comboCount > 2) {
+                    const comboEl = document.getElementById('combo');
+                    comboEl.textContent = `🔥 ${comboCount} コンボ！`;
+                    comboEl.classList.remove('hidden');
+                } else {
+                    document.getElementById('combo').classList.add('hidden');
+                }
+
+                createConfetti();
+                playSound('correct');
+
+                setTimeout(() => {
+                    nextLetter();
+                }, 400);
+            } else {
+                // 不正解
+                missCount++;
+                comboCount = 0;
+                document.getElementById('combo').classList.add('hidden');
+
+                feedback.textContent = '😢 ちがうよ！「' + currentLetter + '」だよ';
+                feedback.className = 'feedback wrong';
+                playSound('wrong');
+
+                setTimeout(() => {
+                    feedback.textContent = '';
+                    feedback.className = 'feedback';
+                }, 1500);
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('miss').textContent = missCount;
+            document.getElementById('timeLeft').textContent = timeLeft;
+        }
+
+        function startTimer() {
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                // タイマーバーの更新
+                const timerFill = document.getElementById('timerFill');
+                timerFill.style.width = (timeLeft / 60 * 100) + '%';
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            if (hintTimer) clearTimeout(hintTimer);
+            document.removeEventListener('keydown', handleKeyPress);
+            showResult();
+        }
+
+        function showResult() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalCorrect').textContent = correctCount;
+            document.getElementById('finalMiss').textContent = missCount;
+
+            const totalAttempts = correctCount + missCount;
+            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy;
+
+            const resultEmoji = document.getElementById('resultEmoji');
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (accuracy >= 95 && correctCount >= 30) {
+                resultEmoji.textContent = '🏆👑✨';
+                resultMessage.textContent = 'かんぺき！！タイピングマスター！';
+                createConfetti();
+            } else if (accuracy >= 85 && correctCount >= 20) {
+                resultEmoji.textContent = '🌟😊💕';
+                resultMessage.textContent = 'とってもすごい！よくできました！';
+            } else if (accuracy >= 70 && correctCount >= 15) {
+                resultEmoji.textContent = '🌈😄';
+                resultMessage.textContent = 'よくがんばったね！';
+            } else if (correctCount >= 10) {
+                resultEmoji.textContent = '💪😊';
+                resultMessage.textContent = 'いいちょうし！れんしゅうしよう！';
+            } else {
+                resultEmoji.textContent = '🌸💕';
+                resultMessage.textContent = 'もういちどちょうせんしてみよう！';
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#ff6b9d', '#c44569', '#f8b500', '#4bcffa', '#0fbcf9', '#7bed9f', '#ffa502'];
+
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = confetti.style.width;
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                if (type === 'correct') {
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.05); // E5
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.1); // G5
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } else if (type === 'wrong') {
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                } else if (type === 'hint') {
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+    </script>
+</body>
+
+</html>
