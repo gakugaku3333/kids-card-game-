@@ -1,0 +1,448 @@
+/* ==========================================================================
+   ギャラリー全体デザインシステム
+   ========================================================================== */
+:root {
+  --g-color-bg-start: #fff0f5;  /* ラベンダーピンク */
+  --g-color-bg-end: #e6f2ff;    /* パステルブルー */
+  --g-color-text: #5c4c51;      /* ブラウン系テキスト */
+  --g-color-text-light: #8f7d83;
+  --g-color-primary: #ff7ebb;   /* ピンク */
+  --g-color-primary-hover: #ff60aa;
+  --g-color-primary-shadow: #d4568e;
+  --g-color-accent: #ffd15c;    /* イエロー */
+  --g-color-white: #ffffff;
+  --g-font: 'M PLUS Rounded 1c', sans-serif;
+}
+
+/* ==========================================================================
+   リセット & ベース
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--g-font);
+  color: var(--g-color-text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--g-color-bg-start);
+}
+
+/* ==========================================================================
+   背景（生成した遊園地イラストを全画面に）
+   ========================================================================== */
+.gallery-bg-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: url('../assets/images/gallery_bg.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25; /* 背景画像をふんわりと透過させて、手前の文字を読みやすくします */
+  pointer-events: none;
+}
+
+.sky-light {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+}
+
+/* ==========================================================================
+   ラッパー & ヘッダー
+   ========================================================================== */
+.gallery-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.gallery-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: slideDown 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.gallery-title {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+.gallery-title .title-main {
+  color: var(--g-color-text);
+  font-size: 38px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+/* 「あそぼう！」の弾む風船テキスト */
+.bubble {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  line-height: 48px;
+  border-radius: 50%;
+  color: var(--g-color-white);
+  font-size: 24px;
+  font-weight: 900;
+  text-align: center;
+  margin: 0 2px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+  animation: bubbleFloat 3s ease-in-out infinite;
+}
+
+@keyframes bubbleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.bubble:nth-child(1) { background-color: #ff7ebb; animation-delay: 0s; }
+.bubble:nth-child(2) { background-color: #ffa726; animation-delay: 0.2s; }
+.bubble:nth-child(3) { background-color: #66bb6a; animation-delay: 0.4s; }
+.bubble:nth-child(4) { background-color: #29b6f6; animation-delay: 0.6s; }
+.bubble:nth-child(5) { background-color: #ab47bc; animation-delay: 0.8s; }
+
+.mobile-break {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .mobile-break { display: block; }
+  .gallery-title .title-main { font-size: 32px; }
+  .bubble { width: 40px; height: 40px; line-height: 40px; font-size: 20px; }
+}
+
+.gallery-subtitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--g-color-text-light);
+}
+
+/* ==========================================================================
+   ゲーム一覧グリッド（カード型レイアウト）
+   ========================================================================== */
+.games-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+  perspective: 1000px;
+}
+
+.game-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 25px;
+  border: 3px solid var(--g-color-white);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--g-color-text);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  animation: cardFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(20px) rotateX(-5deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+.game-card:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+/* ホバー＆アクティブ時のぷにぷに弾む挙動 */
+.game-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 15px 30px rgba(255, 126, 187, 0.15);
+  border-color: #ffd8eb;
+}
+
+.game-card:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+.card-image-wrapper {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background-color: #fff9fb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 2px dashed rgba(92, 76, 81, 0.1);
+}
+
+.card-thumb {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.game-card:hover .card-thumb {
+  transform: rotate(2deg) scale(1.05);
+}
+
+.card-info {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  color: var(--g-color-text);
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--g-color-text-light);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.play-tag {
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--g-color-white);
+  background-color: var(--g-color-primary);
+  padding: 6px 16px;
+  border-radius: 15px;
+  box-shadow: 0 4px 0 var(--g-color-primary-shadow);
+  transition: all 0.1s ease;
+}
+
+.game-card:hover .play-tag {
+  background-color: var(--g-color-primary-hover);
+}
+
+/* プレースホルダー（準備中）のスタイル */
+.game-card.placeholder {
+  opacity: 0.85;
+}
+.game-card.placeholder:hover {
+  border-color: #ffe082;
+  box-shadow: 0 15px 30px rgba(255, 209, 92, 0.15);
+}
+
+.play-tag.prepare {
+  background-color: var(--g-color-accent);
+  box-shadow: 0 4px 0 #d9ab32;
+  color: var(--g-color-text);
+}
+
+/* ==========================================================================
+   フッター & アプリ化ボタン
+   ========================================================================== */
+.gallery-footer {
+  margin-top: auto;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.help-btn {
+  font-family: var(--g-font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g-color-text-light);
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--g-color-white);
+  padding: 10px 22px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+}
+
+.help-btn:hover {
+  background-color: var(--g-color-white);
+  color: var(--g-color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 126, 187, 0.1);
+}
+
+.help-btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   モーダル（ポップアップ）
+   ========================================================================== */
+.g-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(92, 76, 81, 0.4);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+}
+
+.g-modal.active {
+  display: flex;
+  animation: gModalFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes gModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.g-modal-content {
+  background: linear-gradient(135deg, #fffcfd 0%, #f4f6ff 100%);
+  width: 90%;
+  max-width: 360px;
+  padding: 30px 20px;
+  border-radius: 25px;
+  border: 4px solid var(--g-color-white);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  text-align: center;
+  position: relative;
+  transform: scale(0.85);
+  animation: gModalScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes gModalScaleUp {
+  to { transform: scale(1); }
+}
+
+.g-modal-icon {
+  font-size: 54px;
+  margin-bottom: 10px;
+  animation: modalIconWiggle 2s ease-in-out infinite;
+}
+
+@keyframes modalIconWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg) scale(1.05); }
+  75% { transform: rotate(8deg) scale(1.05); }
+}
+
+.g-modal-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--g-color-text);
+  margin-bottom: 15px;
+}
+
+.g-modal-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--g-color-text-light);
+  margin-bottom: 25px;
+}
+
+/* ポップボタン */
+.g-btn {
+  font-family: var(--g-font);
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--g-color-white);
+  background-color: var(--g-color-primary);
+  border: none;
+  padding: 10px 35px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--g-color-primary-shadow);
+  transition: all 0.1s ease;
+}
+
+.g-btn:hover {
+  background-color: var(--g-color-primary-hover);
+}
+
+.g-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--g-color-primary-shadow);
+}
+
+/* ヘルプモーダルの手順リスト */
+.help-content {
+  text-align: left;
+  max-width: 400px;
+}
+
+.help-content .g-modal-title {
+  text-align: center;
+}
+
+.help-steps {
+  list-style: none;
+  margin-bottom: 25px;
+}
+
+.help-steps li {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+  padding-left: 35px;
+  position: relative;
+  color: var(--g-color-text);
+}
+
+.step-num {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 50%;
+  background-color: var(--g-color-primary);
+  color: var(--g-color-white);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.icon-share {
+  display: inline-block;
+  background-color: #eaeaea;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.help-content .g-btn {
+  display: block;
+  margin: 0 auto;
+}

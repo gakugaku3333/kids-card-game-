@@ -3,114 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="かわいいイラストの子供向け神経衰弱ゲーム。難易度調整機能付き。">
-  <title>かわいい！しんけいすいじゃく</title>
+  <meta name="description" content="gakugakuの自作ゲームひろば。子供向けの楽しいゲームが遊べます。">
+  <title>あそぼう！ゲームひろば</title>
   
-  <!-- Google Fonts: M PLUS Rounded 1c (丸文字でかわいい日本語フォント) -->
+  <!-- Google Fonts: M PLUS Rounded 1c (丸文字フォント) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
   
   <!-- スタイルシート -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/gallery.css">
 </head>
 <body>
-  <!-- 背景のふわふわ浮かぶ雲とキラキラ星 -->
-  <div class="background-decorations">
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-    <div class="cloud cloud-3"></div>
-    <div class="star star-1">★</div>
-    <div class="star star-2">★</div>
-    <div class="star star-3">★</div>
-    <div class="star star-4">★</div>
+  <!-- 背景デコレーション -->
+  <div class="gallery-bg-container">
+    <div class="sky-light"></div>
   </div>
 
-  <div class="game-container">
-    <!-- タイトル＆難易度選択画面 -->
-    <section id="start-screen" class="screen active">
-      <h1 class="game-title">
-        <span class="char c1">か</span>
-        <span class="char c2">わ</span>
-        <span class="char c3">い</span>
-        <span class="char c4">い</span>
-        <span class="char c5">！</span>
-        <br>
-        <span class="char c6">し</span>
-        <span class="char c7">ん</span>
-        <span class="char c8">け</span>
-        <span class="char c9">い</span>
-        <span class="char c10">す</span>
-        <span class="char c11">い</span>
-        <span class="char c12">じ</span>
-        <span class="char c13">ゃ</span>
-        <span class="char c14">く</span>
+  <div class="gallery-wrapper">
+    <!-- ヘッダー -->
+    <header class="gallery-header">
+      <h1 class="gallery-title">
+        <span class="bubble">あ</span>
+        <span class="bubble">そ</span>
+        <span class="bubble">ぼ</span>
+        <span class="bubble">う</span>
+        <span class="bubble">！</span>
+        <br class="mobile-break">
+        <span class="title-main">ゲームひろば</span>
       </h1>
+      <p class="gallery-subtitle">すきな ゲームを えらんで あそんでね！</p>
+    </header>
+
+    <!-- ゲーム一覧グリッド -->
+    <main class="games-grid">
       
-      <p class="subtitle">カードを めくって ペアを さがそう！</p>
+      <!-- 1. 神経衰弱ゲーム -->
+      <a href="games/memory/index.html" class="game-card" id="card-memory">
+        <div class="card-image-wrapper">
+          <img src="assets/images/memory_game_thumb.png" alt="しんけいすいじゃく" class="card-thumb">
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">しんけいすいじゃく</h2>
+          <p class="card-desc">おなじ えの カードを あてよう！ロップイヤーもうさぎもいるよ！</p>
+          <span class="play-tag">あそぶ！</span>
+        </div>
+      </a>
+
+      <!-- 2. つぎのゲーム（プレースホルダー） -->
+      <div class="game-card placeholder" id="card-placeholder">
+        <div class="card-image-wrapper">
+          <img src="assets/images/placeholder_game.png" alt="つぎのゲーム" class="card-thumb">
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">つぎは なにかな？</h2>
+          <p class="card-desc">あたらしい ゲームを じゅんびちゅうだよ。たのしみに まっててね！</p>
+          <span class="play-tag prepare">じゅんびちゅう</span>
+        </div>
+      </div>
       
-      <div class="difficulty-selection">
-        <h2>むずかしさを えらんでね</h2>
-        <button id="btn-easy" class="btn difficulty-btn easy-btn" data-difficulty="easy">
-          <span class="btn-text">かんたん</span>
-          <span class="btn-subtext">( 6まい )</span>
-        </button>
-        <button id="btn-medium" class="btn difficulty-btn medium-btn" data-difficulty="medium">
-          <span class="btn-text">ふつう</span>
-          <span class="btn-subtext">( 12まい )</span>
-        </button>
-        <button id="btn-hard" class="btn difficulty-btn hard-btn" data-difficulty="hard">
-          <span class="btn-text">むずかしい</span>
-          <span class="btn-subtext">( 20まい )</span>
-        </button>
-      </div>
-    </section>
+    </main>
 
-    <!-- プレイ画面 -->
-    <section id="play-screen" class="screen">
-      <header class="game-header">
-        <button id="btn-back" class="btn back-btn" aria-label="もどる">もどる</button>
-        
-        <div class="game-stats">
-          <div class="stat-item">
-            <span class="stat-label">あわせた数:</span>
-            <span id="stat-score" class="stat-value">0 / 3</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">じかん:</span>
-            <span id="stat-timer" class="stat-value">0 びょう</span>
-          </div>
-        </div>
-      </header>
+    <!-- 下部ヘルプ（iPadアプリ化ガイド） -->
+    <footer class="gallery-footer">
+      <button id="btn-help" class="help-btn">📱 iPadで アプリにする ほうほう</button>
+    </footer>
+  </div>
 
-      <!-- カードボード -->
-      <div id="card-board" class="card-board grid-easy"></div>
-    </section>
+  <!-- ポップアップモーダル (準備中用) -->
+  <div id="msg-modal" class="g-modal">
+    <div class="g-modal-content">
+      <div class="g-modal-icon">🎁</div>
+      <h3 class="g-modal-title">つぎは なにをつくろうかな？</h3>
+      <p class="g-modal-message">
+        オセロかな？ おえかきかな？<br>
+        リクエストが あったら おしえてね！
+      </p>
+      <button id="btn-close-msg" class="g-btn">はーい！</button>
+    </div>
+  </div>
 
-    <!-- クリア画面（モーダル） -->
-    <div id="clear-modal" class="modal">
-      <div class="modal-content">
-        <div class="ribbon">おめでとう！</div>
-        <div class="sparkles-container"></div>
-        <p class="modal-message">ぜんぶの カードが そろったよ！</p>
-        
-        <div class="modal-stats">
-          <div class="modal-stat-item">
-            <span class="modal-stat-label">かかった じかん</span>
-            <span id="result-time" class="modal-stat-value">0 びょう</span>
-          </div>
-          <div class="modal-stat-item">
-            <span class="modal-stat-label">まちがえた かず</span>
-            <span id="result-miss" class="modal-stat-value">0 かい</span>
-          </div>
-        </div>
-        
-        <button id="btn-restart" class="btn restart-btn">もういちど あそぶ</button>
-      </div>
+  <!-- ポップアップモーダル (iPadヘルプ用) -->
+  <div id="help-modal" class="g-modal">
+    <div class="g-modal-content help-content">
+      <h3 class="g-modal-title">iPadで アプリにする ほうほう</h3>
+      <ol class="help-steps">
+        <li>
+          <span class="step-num">1</span>
+          Safariの うえにある <strong>「共有（きょうゆう）ボタン」</strong> <span class="icon-share">⎋</span> を タップするよ。
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          メニューから <strong>「ホーム画面（がめん）に 追加（ついか）」</strong> を えらんでね。
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          ホーム画面に かわいい アイコンが できて、いつでも すぐに あそべるよ！
+        </li>
+      </ol>
+      <button id="btn-close-help" class="g-btn">わかった！</button>
     </div>
   </div>
 
   <!-- JavaScript -->
-  <script src="js/game.js"></script>
+  <script src="js/gallery.js"></script>
 </body>
 </html>
