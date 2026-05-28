@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="かわいいイラストの子供向け神経衰弱ゲーム。難易度調整機能付き。">
+  <title>かわいい！しんけいすいじゃく</title>
+  
+  <!-- Google Fonts: M PLUS Rounded 1c (丸文字でかわいい日本語フォント) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <!-- スタイルシート -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 背景のふわふわ浮かぶ雲とキラキラ星 -->
+  <div class="background-decorations">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="star star-1">★</div>
+    <div class="star star-2">★</div>
+    <div class="star star-3">★</div>
+    <div class="star star-4">★</div>
+  </div>
+
+  <div class="game-container">
+    <!-- タイトル＆難易度選択画面 -->
+    <section id="start-screen" class="screen active">
+      <h1 class="game-title">
+        <span class="char c1">か</span>
+        <span class="char c2">わ</span>
+        <span class="char c3">い</span>
+        <span class="char c4">い</span>
+        <span class="char c5">！</span>
+        <br>
+        <span class="char c6">し</span>
+        <span class="char c7">ん</span>
+        <span class="char c8">け</span>
+        <span class="char c9">い</span>
+        <span class="char c10">す</span>
+        <span class="char c11">い</span>
+        <span class="char c12">じ</span>
+        <span class="char c13">ゃ</span>
+        <span class="char c14">く</span>
+      </h1>
+      
+      <p class="subtitle">カードを めくって ペアを さがそう！</p>
+      
+      <div class="difficulty-selection">
+        <h2>むずかしさを えらんでね</h2>
+        <button id="btn-easy" class="btn difficulty-btn easy-btn" data-difficulty="easy">
+          <span class="btn-text">かんたん</span>
+          <span class="btn-subtext">( 6まい )</span>
+        </button>
+        <button id="btn-medium" class="btn difficulty-btn medium-btn" data-difficulty="medium">
+          <span class="btn-text">ふつう</span>
+          <span class="btn-subtext">( 12まい )</span>
+        </button>
+        <button id="btn-hard" class="btn difficulty-btn hard-btn" data-difficulty="hard">
+          <span class="btn-text">むずかしい</span>
+          <span class="btn-subtext">( 20まい )</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- プレイ画面 -->
+    <section id="play-screen" class="screen">
+      <header class="game-header">
+        <button id="btn-back" class="btn back-btn" aria-label="もどる">もどる</button>
+        
+        <div class="game-stats">
+          <div class="stat-item">
+            <span class="stat-label">あわせた数:</span>
+            <span id="stat-score" class="stat-value">0 / 3</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">じかん:</span>
+            <span id="stat-timer" class="stat-value">0 びょう</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- カードボード -->
+      <div id="card-board" class="card-board grid-easy"></div>
+    </section>
+
+    <!-- クリア画面（モーダル） -->
+    <div id="clear-modal" class="modal">
+      <div class="modal-content">
+        <div class="ribbon">おめでとう！</div>
+        <div class="sparkles-container"></div>
+        <p class="modal-message">ぜんぶの カードが そろったよ！</p>
+        
+        <div class="modal-stats">
+          <div class="modal-stat-item">
+            <span class="modal-stat-label">かかった じかん</span>
+            <span id="result-time" class="modal-stat-value">0 びょう</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-label">まちがえた かず</span>
+            <span id="result-miss" class="modal-stat-value">0 かい</span>
+          </div>
+        </div>
+        
+        <button id="btn-restart" class="btn restart-btn">もういちど あそぶ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="js/game.js"></script>
+</body>
+</html>
