@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
   
+  <!-- アイコンとファビコン -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+
   <!-- スタイルシート -->
   <link rel="stylesheet" href="css/gallery.css">
 </head>
@@ -23,6 +28,9 @@
   <div class="gallery-wrapper">
     <!-- ヘッダー -->
     <header class="gallery-header">
+      <div class="gallery-logo-wrapper">
+        <img src="assets/images/apple-touch-icon.png" alt="あそぼう！ゲームひろば ロゴ" class="gallery-logo">
+      </div>
       <h1 class="gallery-title">
         <span class="bubble">あ</span>
         <span class="bubble">そ</span>
@@ -62,19 +70,55 @@
         </div>
       </a>
 
-      <!-- 3. さんすうクイズ -->
-      <a href="games/rakugaku/index.html?mode=math" class="game-card" id="card-math">
+      <!-- 3. さんすうクイズ（たしざん） -->
+      <a href="games/rakugaku/index.html?math=addition" class="game-card" id="card-math-addition">
         <div class="card-image-wrapper">
-          <img src="assets/images/math_thumb.png" alt="さんすうクイズ" class="card-thumb">
+          <img src="assets/images/math_thumb.png" alt="たしざんクイズ" class="card-thumb">
         </div>
         <div class="card-info">
-          <h2 class="card-title">さんすうクイズ</h2>
-          <p class="card-desc">たしざん・ひきざん・かけざん・わりざん！レベルを えらんで ちょうせんしよう！</p>
+          <h2 class="card-title">たしざんクイズ</h2>
+          <p class="card-desc">➕ たしざんに ちょうせん！レベルを えらんで あそぼう！</p>
           <span class="play-tag">あそぶ！</span>
         </div>
       </a>
 
-      <!-- 4. たいぴんぐ（こもじ） -->
+      <!-- 4. さんすうクイズ（ひきざん） -->
+      <a href="games/rakugaku/index.html?math=subtraction" class="game-card" id="card-math-subtraction">
+        <div class="card-image-wrapper">
+          <img src="assets/images/math_thumb.png" alt="ひきざんクイズ" class="card-thumb">
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">ひきざんクイズ</h2>
+          <p class="card-desc">➖ ひきざんに ちょうせん！レベルを えらんで あそぼう！</p>
+          <span class="play-tag">あそぶ！</span>
+        </div>
+      </a>
+
+      <!-- 5. さんすうクイズ（かけざん） -->
+      <a href="games/rakugaku/index.html?math=multiplication" class="game-card" id="card-math-multiplication">
+        <div class="card-image-wrapper">
+          <img src="assets/images/math_thumb.png" alt="かけざんクイズ" class="card-thumb">
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">かけざんクイズ</h2>
+          <p class="card-desc">✖️ かけざんに ちょうせん！レベルを えらんで あそぼう！</p>
+          <span class="play-tag">あそぶ！</span>
+        </div>
+      </a>
+
+      <!-- 6. さんすうクイズ（わりざん） -->
+      <a href="games/rakugaku/index.html?math=division" class="game-card" id="card-math-division">
+        <div class="card-image-wrapper">
+          <img src="assets/images/math_thumb.png" alt="わりざんクイズ" class="card-thumb">
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">わりざんクイズ</h2>
+          <p class="card-desc">➗ わりざんに ちょうせん！レベルを えらんで あそぼう！</p>
+          <span class="play-tag">あそぶ！</span>
+        </div>
+      </a>
+
+      <!-- 7. たいぴんぐ（こもじ） -->
       <a href="games/rakugaku/lowercase-typing.html" class="game-card" id="card-lowercase">
         <div class="card-image-wrapper">
           <img src="assets/images/rakugaku_thumb.png" alt="たいぴんぐ こもじ" class="card-thumb">
@@ -86,7 +130,7 @@
         </div>
       </a>
 
-      <!-- 5. たいぴんぐ（おおもじ） -->
+      <!-- 8. たいぴんぐ（おおもじ） -->
       <a href="games/rakugaku/uppercase-typing.html" class="game-card" id="card-uppercase">
         <div class="card-image-wrapper">
           <img src="assets/images/rakugaku_thumb.png" alt="たいぴんぐ おおもじ" class="card-thumb">
@@ -98,7 +142,7 @@
         </div>
       </a>
 
-      <!-- 3. つぎのゲーム（プレースホルダー） -->
+      <!-- 9. つぎのゲーム（プレースホルダー） -->
       <div class="game-card placeholder" id="card-placeholder">
         <div class="card-image-wrapper">
           <img src="assets/images/placeholder_game.png" alt="つぎのゲーム" class="card-thumb">
@@ -147,6 +191,9 @@
         <li>
           <span class="step-num">3</span>
           ホーム画面に かわいい アイコンが できて、いつでも すぐに あそべるよ！
+          <div class="help-icon-preview">
+            <img src="assets/images/apple-touch-icon.png" alt="アプリアイコン" class="help-icon-img">
+          </div>
         </li>
       </ol>
       <button id="btn-close-help" class="g-btn">わかった！</button>

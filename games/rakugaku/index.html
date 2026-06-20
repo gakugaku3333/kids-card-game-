@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>カタカナクイズ - 楽しく学ぼう！</title>
+    <!-- アイコンとファビコン -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../assets/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../assets/images/favicon-16x16.png">
     <style>
         * {
             margin: 0;
@@ -1136,18 +1140,31 @@
                     ⭐ <span id="mathTokens">0</span>
                 </div>
                 <div class="score-item">
-                    もんだい: <span id="mathQuestionNum">1</span>/10
+                    もんだい: <span id="mathQuestionNum">1</span>/<span id="mathTotalQuestions">10</span>
                 </div>
             </div>
 
             <div style="font-size: 80px; font-weight: bold; color: #43e97b; margin: 40px 0; text-shadow: 3px 3px 6px rgba(67, 233, 123, 0.3);"
                 id="mathProblem"></div>
 
-            <div class="question">こたえは？</div>
+            <div class="question" id="mathQuestion">こたえは？</div>
 
             <div class="choices" id="mathChoices"></div>
 
             <div class="feedback" id="mathFeedback"></div>
+        </div>
+
+        <!-- 算数復習開始画面 -->
+        <div id="mathReviewStartScreen" class="hidden">
+            <h1>📚 ふくしゅうタイム！</h1>
+            <div class="emoji">💪✨📝</div>
+            <p class="intro-text">
+                まちがえた <span id="mathReviewCount" style="color: #f5576c; font-weight: bold;"></span> もんだいを<br>
+                ふくしゅうしよう！<br>
+                <small style="font-size: 20px;">できるまでがんばろう！💕</small>
+            </p>
+            <button class="start-btn" onclick="startMathReviewMode()">ふくしゅうスタート！</button>
+            <button class="back-btn" onclick="showMathResult()">けっかをみる</button>
         </div>
 
         <!-- 算数結果画面 -->
@@ -1480,27 +1497,36 @@
         }
 
         function playSound(type) {
-            // Web Audio APIで簡単な効果音を生成
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
 
             if (type === 'correct') {
-                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
-                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                // ぴんぽん：高い音(ぴん) → 低い音(ぽん)
+                const playTone = (freq, startTime, duration) => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    gain.gain.setValueAtTime(0.4, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+                const t = audioContext.currentTime;
+                playTone(880, t, 0.25);        // ぴん（A5）
+                playTone(587.33, t + 0.28, 0.35); // ぽん（D5）
             } else {
-                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.frequency.setValueAtTime(200, audioContext.currentTime);
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start(audioContext.currentTime);
+                osc.stop(audioContext.currentTime + 0.3);
             }
-
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
         }
 
         function showResult() {
@@ -1637,6 +1663,7 @@
             document.getElementById('mathSelectScreen').classList.add('hidden');
             document.getElementById('mathLevelScreen').classList.add('hidden');
             document.getElementById('mathGameScreen').classList.add('hidden');
+            document.getElementById('mathReviewStartScreen').classList.add('hidden');
             document.getElementById('mathResultScreen').classList.add('hidden');
         }
 
@@ -3100,10 +3127,15 @@
         let mathTotalQuestions = 10;
         let mathCorrectAnswer = 0;
         let mathTokensEarned = 0;
+        let mathPresetQuestions = [];
+        let mathSessionWrong = [];
+        let mathIsReviewMode = false;
+        let mathReviewQuestions = [];
+        let mathCurrentProblem = null;
 
         const mathLevels = {
             addition: [
-                { name: 'レベル1: 1けた+1けた (こたえ1けた)', desc: '1+2=3' },
+                { name: 'レベル1: 1けた+1けた (こたえ10いか)', desc: '3+7=10' },
                 { name: 'レベル2: 1けた+1けた (こたえ2けた)', desc: '7+8=15' },
                 { name: 'レベル3: 2けた+1けた', desc: '12+3=15' },
                 { name: 'レベル4: 2けた+2けた', desc: '12+34=46' }
@@ -3169,10 +3201,28 @@
             mathScore = 0;
             mathCurrentQuestion = 0;
             mathTokensEarned = 0;
+            mathPresetQuestions = [];
+            mathSessionWrong = [];
+            mathIsReviewMode = false;
+            mathReviewQuestions = [];
+
+            if (type === 'addition' && level === 0) {
+                // 答えが10以下になる1けた+1けたの組み合わせを全て出題
+                for (let a = 1; a <= 9; a++) {
+                    for (let b = 1; a + b <= 10; b++) {
+                        mathPresetQuestions.push({ text: `${a} + ${b}`, answer: a + b });
+                    }
+                }
+                mathPresetQuestions.sort(() => Math.random() - 0.5);
+                mathTotalQuestions = mathPresetQuestions.length;
+            } else {
+                mathTotalQuestions = 10;
+            }
 
             hideAllScreens();
             document.getElementById('mathGameScreen').classList.remove('hidden');
             document.getElementById('mathGameTitle').textContent = mathTitles[type];
+            document.getElementById('mathTotalQuestions').textContent = mathTotalQuestions;
             document.getElementById('mathScore').textContent = mathScore;
             document.getElementById('mathTokens').textContent = gameData.tokens;
 
@@ -3181,18 +3231,35 @@
 
         // 次の算数問題
         function nextMathQuestion() {
-            if (mathCurrentQuestion >= mathTotalQuestions) {
-                showMathResult();
-                return;
+            if (mathIsReviewMode) {
+                if (mathReviewQuestions.length === 0) {
+                    showMathReviewComplete();
+                    return;
+                }
+            } else {
+                if (mathCurrentQuestion >= mathTotalQuestions) {
+                    mathCheckForReview();
+                    return;
+                }
             }
 
             mathCurrentQuestion++;
             document.getElementById('mathQuestionNum').textContent = mathCurrentQuestion;
+            document.getElementById('mathTotalQuestions').textContent = mathIsReviewMode ? mathReviewQuestions.length + mathCurrentQuestion - 1 : mathTotalQuestions;
+            document.getElementById('mathQuestion').textContent = 'こたえは？';
             document.getElementById('mathFeedback').textContent = '';
             document.getElementById('mathFeedback').className = 'feedback';
 
             // 問題生成
-            const problem = generateMathProblem(mathType, mathLevel);
+            let problem;
+            if (mathIsReviewMode) {
+                problem = mathReviewQuestions.shift();
+            } else {
+                problem = mathPresetQuestions.length > 0
+                    ? mathPresetQuestions.shift()
+                    : generateMathProblem(mathType, mathLevel);
+            }
+            mathCurrentProblem = problem;
             document.getElementById('mathProblem').textContent = problem.text;
             mathCorrectAnswer = problem.answer;
 
@@ -3215,9 +3282,9 @@
             let num1, num2, answer, text;
 
             if (type === 'addition') {
-                if (level === 0) { // 1桁+1桁(答え1桁)
-                    num1 = Math.floor(Math.random() * 5) + 1;
-                    num2 = Math.floor(Math.random() * (9 - num1)) + 1;
+                if (level === 0) { // 1桁+1桁(答え10以下)
+                    num1 = Math.floor(Math.random() * 9) + 1;
+                    num2 = Math.floor(Math.random() * (10 - num1)) + 1;
                 } else if (level === 1) { // 1桁+1桁(答え2桁)
                     num1 = Math.floor(Math.random() * 5) + 5;
                     num2 = Math.floor(Math.random() * 5) + 5;
@@ -3343,18 +3410,79 @@
                 button.classList.add('wrong');
                 button.disabled = true;  // この選択肢のみ無効化
 
-                feedback.textContent = '😢 ちがうよ！もういちど！';
-                feedback.className = 'feedback wrong';
+                document.getElementById('mathQuestion').textContent = 'おしい！もういちど！';
+                feedback.textContent = '';
+                feedback.className = 'feedback';
                 playSound('wrong');
 
-                // 1秒後にフィードバックをクリア（問題は継続）
-                setTimeout(() => {
-                    feedback.textContent = '';
-                    feedback.className = 'feedback';
-                }, 1000);
+                // 通常モードで初めて間違えた問題を記録
+                if (!mathIsReviewMode && mathCurrentProblem) {
+                    const alreadyRecorded = mathSessionWrong.some(p => p.text === mathCurrentProblem.text);
+                    if (!alreadyRecorded) {
+                        mathSessionWrong.push(mathCurrentProblem);
+                    }
+                }
             }
 
             saveGameData(gameData);
+        }
+
+        // 算数復習チェック
+        function mathCheckForReview() {
+            if (mathSessionWrong.length > 0) {
+                // ポップアップで予告してから自動で復習へ
+                const popup = document.createElement('div');
+                popup.className = 'reward-popup';
+                popup.innerHTML = `
+                    <h2 style="color: #667eea; margin-bottom: 20px;">📚 ふくしゅうタイム！</h2>
+                    <div class="reward-icon-large">💪✨</div>
+                    <div style="font-size: 28px; font-weight: bold; margin: 20px 0; color: #333;">
+                        まちがえた <span style="color:#f5576c;">${mathSessionWrong.length}</span> もんだいを<br>ふくしゅうしよう！
+                    </div>
+                `;
+                document.body.appendChild(popup);
+                setTimeout(() => {
+                    popup.remove();
+                    startMathReviewMode();
+                }, 2500);
+            } else {
+                showMathResult();
+            }
+        }
+
+        // 算数復習モード開始
+        function startMathReviewMode() {
+            mathIsReviewMode = true;
+            mathReviewQuestions = [...mathSessionWrong];
+            mathSessionWrong = [];
+            mathCurrentQuestion = 0;
+            mathTotalQuestions = mathReviewQuestions.length;
+
+            hideAllScreens();
+            document.getElementById('mathGameScreen').classList.remove('hidden');
+            document.getElementById('mathTotalQuestions').textContent = mathTotalQuestions;
+            nextMathQuestion();
+        }
+
+        // 算数復習完了
+        function showMathReviewComplete() {
+            hideAllScreens();
+            const popup = document.createElement('div');
+            popup.className = 'reward-popup';
+            popup.innerHTML = `
+                <h2 style="color: #10b981; margin-bottom: 20px;">🎉 ふくしゅうかんりょう！</h2>
+                <div class="reward-icon-large">✨🏆✨</div>
+                <div style="font-size: 32px; font-weight: bold; margin: 20px 0; color: #333;">
+                    ぜんぶできたね！<br>すごい！
+                </div>
+            `;
+            document.body.appendChild(popup);
+            createConfetti();
+            playSound('correct');
+            setTimeout(() => {
+                popup.remove();
+                showMathResult();
+            }, 3000);
         }
 
         // 算数結果表示
@@ -3387,7 +3515,11 @@
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const mode = urlParams.get('mode');
-            if (mode === 'math') {
+            const mathParam = urlParams.get('math');
+            const validMathTypes = ['addition', 'subtraction', 'multiplication', 'division'];
+            if (mathParam && validMathTypes.includes(mathParam)) {
+                showMathLevel(mathParam);
+            } else if (mode === 'math') {
                 showMathSelect();
             } else if (mode === 'katakana') {
                 startGame();

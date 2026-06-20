@@ -12,8 +12,7 @@ function initAudio() {
   }
 }
 
-// ポップ音（丸みのある可愛い決定音）
-function playPopSound() {
+function playTone(startFreq, endFreq, duration, volume) {
   initAudio();
   if (!audioCtx) return;
 
@@ -21,133 +20,61 @@ function playPopSound() {
   const gainNode = audioCtx.createGain();
 
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-  // 周波数を一瞬で引き上げる（ぷにっとした音になる）
-  osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.08);
+  osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
 
-  gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.08);
-}
-
-// やさしい閉じる音
-function playCloseSound() {
-  initAudio();
-  if (!audioCtx) return;
-
-  const osc = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
-
-  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+  gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
   osc.connect(gainNode);
   gainNode.connect(audioCtx.destination);
 
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.1);
+  osc.stop(audioCtx.currentTime + duration);
 }
+
+function playPopSound()   { playTone(400, 700, 0.08, 0.15); }
+function playCloseSound() { playTone(500, 300, 0.10, 0.10); }
 
 /* ==========================================================================
    UI 要素 & イベント
    ========================================================================== */
-const cardMemory = document.getElementById('card-memory');
-const cardKatakana = document.getElementById('card-katakana');
-const cardMath = document.getElementById('card-math');
-const cardLowercase = document.getElementById('card-lowercase');
-const cardUppercase = document.getElementById('card-uppercase');
-const cardPlaceholder = document.getElementById('card-placeholder');
-const btnHelp = document.getElementById('btn-help');
-
-const msgModal = document.getElementById('msg-modal');
+const msgModal  = document.getElementById('msg-modal');
 const helpModal = document.getElementById('help-modal');
 
-const btnCloseMsg = document.getElementById('btn-close-msg');
-const btnCloseHelp = document.getElementById('btn-close-help');
-
-// 1. 神経衰弱カードのタップ（音を鳴らしてから遷移）
-cardMemory.addEventListener('click', (e) => {
-  e.preventDefault();
-  playPopSound();
-  const href = cardMemory.getAttribute('href');
-  setTimeout(() => {
-    window.location.href = href;
-  }, 100);
+// ゲームカード（遷移あり）— まとめてハンドル
+document.querySelectorAll('.game-card:not(.placeholder)').forEach(card => {
+  card.addEventListener('click', (e) => {
+    e.preventDefault();
+    playPopSound();
+    setTimeout(() => { window.location.href = card.getAttribute('href'); }, 100);
+  });
 });
 
-// 2. かたかなクイズカードのタップ（音を鳴らしてから遷移）
-cardKatakana.addEventListener('click', (e) => {
-  e.preventDefault();
-  playPopSound();
-  const href = cardKatakana.getAttribute('href');
-  setTimeout(() => {
-    window.location.href = href;
-  }, 100);
-});
-
-// 3. さんすうクイズカードのタップ（音を鳴らしてから遷移）
-cardMath.addEventListener('click', (e) => {
-  e.preventDefault();
-  playPopSound();
-  const href = cardMath.getAttribute('href');
-  setTimeout(() => {
-    window.location.href = href;
-  }, 100);
-});
-
-// 4. たいぴんぐ（こもじ）カードのタップ（音を鳴らしてから遷移）
-cardLowercase.addEventListener('click', (e) => {
-  e.preventDefault();
-  playPopSound();
-  const href = cardLowercase.getAttribute('href');
-  setTimeout(() => {
-    window.location.href = href;
-  }, 100);
-});
-
-// 5. たいぴんぐ（おおもじ）カードのタップ（音を鳴らしてから遷移）
-cardUppercase.addEventListener('click', (e) => {
-  e.preventDefault();
-  playPopSound();
-  const href = cardUppercase.getAttribute('href');
-  setTimeout(() => {
-    window.location.href = href;
-  }, 100);
-});
-
-// 2. プレースホルダー（準備中）カードのタップ
-cardPlaceholder.addEventListener('click', () => {
+// プレースホルダー（準備中）
+document.getElementById('card-placeholder').addEventListener('click', () => {
   playPopSound();
   msgModal.classList.add('active');
 });
 
-// 3. ヘルプボタンのタップ
-btnHelp.addEventListener('click', () => {
+// ヘルプボタン
+document.getElementById('btn-help').addEventListener('click', () => {
   playPopSound();
   helpModal.classList.add('active');
 });
 
-// 4. モーダルを閉じる
-btnCloseMsg.addEventListener('click', () => {
+// モーダルを閉じる
+document.getElementById('btn-close-msg').addEventListener('click', () => {
   playCloseSound();
   msgModal.classList.remove('active');
 });
 
-btnCloseHelp.addEventListener('click', () => {
+document.getElementById('btn-close-help').addEventListener('click', () => {
   playCloseSound();
   helpModal.classList.remove('active');
 });
 
-// モーダルの外側をクリックしたら閉じる
+// モーダル外側タップで閉じる
 [msgModal, helpModal].forEach(modal => {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
@@ -159,4 +86,4 @@ btnCloseHelp.addEventListener('click', () => {
 
 // タッチデバイスでのオーディオ再生許可用
 document.body.addEventListener('touchstart', initAudio, { once: true });
-document.body.addEventListener('click', initAudio, { once: true });
+document.body.addEventListener('click',      initAudio, { once: true });
