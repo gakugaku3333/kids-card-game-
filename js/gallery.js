@@ -84,6 +84,48 @@ document.getElementById('btn-close-help').addEventListener('click', () => {
   });
 });
 
+/* ==========================================================================
+   トークン残高 ＆ ショップ（共通 Store / shop.js を利用）
+   ========================================================================== */
+const siteTokensEl = document.getElementById('siteTokens');
+const shopModal     = document.getElementById('shop-modal');
+
+function refreshSiteTokens() {
+  if (siteTokensEl && window.Store) {
+    siteTokensEl.textContent = Store.getTokens();
+  }
+  const shopModalTokens = document.getElementById('shopModalTokens');
+  if (shopModalTokens && window.Store) {
+    shopModalTokens.textContent = Store.getTokens();
+  }
+}
+
+// 起動時 & 購入などでトークンが変化したら表示を更新
+refreshSiteTokens();
+document.addEventListener('tokens-changed', refreshSiteTokens);
+
+// ショップを開く
+const btnShop = document.getElementById('btn-shop');
+if (btnShop && shopModal) {
+  btnShop.addEventListener('click', () => {
+    playPopSound();
+    refreshSiteTokens();
+    if (typeof window.renderShop === 'function') {
+      window.renderShop(document.getElementById('shopModalItems'));
+    }
+    shopModal.classList.add('show');
+  });
+
+  const closeShop = () => {
+    playCloseSound();
+    shopModal.classList.remove('show');
+  };
+  document.getElementById('btn-close-shop').addEventListener('click', closeShop);
+  shopModal.addEventListener('click', (e) => {
+    if (e.target === shopModal) closeShop();
+  });
+}
+
 // タッチデバイスでのオーディオ再生許可用
 document.body.addEventListener('touchstart', initAudio, { once: true });
 document.body.addEventListener('click',      initAudio, { once: true });

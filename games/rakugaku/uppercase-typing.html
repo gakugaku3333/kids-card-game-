@@ -23,7 +23,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 20px 0;
         }
 
         .container {
@@ -311,6 +313,74 @@
                 box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3);
             }
         }
+
+        /* 横向き・画面が低いとき：要素を縮めて画面に収める */
+        @media (max-height: 700px) {
+            body {
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 20px 30px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                font-size: 30px;
+                margin-bottom: 10px;
+            }
+
+            .score-board {
+                font-size: 16px;
+                margin-bottom: 12px;
+                gap: 8px;
+            }
+
+            .score-item {
+                padding: 8px 16px;
+            }
+
+            .letter-display {
+                font-size: 110px;
+                margin: 12px 0;
+            }
+
+            .instruction {
+                font-size: 22px;
+                margin-bottom: 12px;
+            }
+
+            .feedback {
+                font-size: 28px;
+                min-height: 32px;
+                margin: 8px 0;
+            }
+
+            .keyboard-hint {
+                font-size: 16px;
+                padding: 8px 12px;
+                margin-top: 8px;
+            }
+
+            .visual-keyboard {
+                margin: 12px auto;
+            }
+
+            .key {
+                min-width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .timer-bar {
+                margin-bottom: 10px;
+            }
+
+            .combo {
+                font-size: 22px;
+                margin: 6px 0;
+            }
+        }
     </style>
 </head>
 
@@ -347,6 +417,9 @@
                 </div>
                 <div class="score-item">
                     ミス: <span id="miss">0</span>
+                </div>
+                <div class="score-item">
+                    ⭐ <span id="tokenCount">0</span>
                 </div>
                 <div class="score-item">
                     残り: <span id="timeLeft">60</span>秒
@@ -418,12 +491,18 @@
                 <div style="color: #667eea; margin: 10px 0;">
                     ⚡ 正確さ: <span id="accuracy"></span>%
                 </div>
+                <div style="color: #f59e0b; margin: 10px 0; font-weight: bold;">
+                    ⭐ <span id="earnedTokens">0</span> トークンゲット！
+                </div>
             </div>
             <div id="resultMessage" style="font-size: 32px; color: #555; margin: 20px 0;"></div>
             <button class="start-btn" onclick="location.reload()">もういちど！</button>
+            <button class="shop-btn" onclick="window.location.href='../../index.html'" style="margin-top: 16px;">🏠 メニューにもどる</button>
         </div>
     </div>
 
+    <!-- 共通トークン経済モジュール -->
+    <script src="../../js/store.js"></script>
     <script>
         // ゲーム変数
         let score = 0;
@@ -435,6 +514,7 @@
         let comboCount = 0;
         let gameActive = false;
         let hintTimer = null;
+        let tokensEarned = 0;
 
         // アルファベット配列
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -449,6 +529,7 @@
             missCount = 0;
             timeLeft = 60;
             comboCount = 0;
+            tokensEarned = 0;
             gameActive = true;
 
             updateDisplay();
@@ -547,6 +628,12 @@
                 comboCount++;
                 score += 10 + (comboCount > 1 ? comboCount * 2 : 0); // コンボボーナス
 
+                // トークンを獲得（共通 Store に加算）
+                tokensEarned++;
+                if (window.Store) Store.addTokens(1);
+                const tokenCountEl = document.getElementById('tokenCount');
+                if (tokenCountEl) tokenCountEl.textContent = tokensEarned;
+
                 feedback.textContent = '🎉 せいかい！';
                 feedback.className = 'feedback correct';
 
@@ -621,6 +708,7 @@
             document.getElementById('finalScore').textContent = score;
             document.getElementById('finalCorrect').textContent = correctCount;
             document.getElementById('finalMiss').textContent = missCount;
+            document.getElementById('earnedTokens').textContent = tokensEarned;
 
             const totalAttempts = correctCount + missCount;
             const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;

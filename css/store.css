@@ -1,0 +1,256 @@
+/* ==========================================================================
+   store.css — 共通トークン経済UI（残高バッジ・ショップモーダル）
+   gallery.css の変数・トーンに合わせる
+   ========================================================================== */
+
+/* --- トークン残高バッジ（ヘッダー） --- */
+.token-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ffd15c 0%, #ff9f43 100%);
+  color: #5c4c51;
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 20px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(255, 159, 67, 0.4);
+  border: 2px solid #fff;
+}
+
+.token-badge .token-star {
+  font-size: 22px;
+}
+
+/* --- ヘッダー操作ボタン列（ショップ・iPad など） --- */
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.shop-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ff7ebb 0%, #ff60aa 100%);
+  color: #fff;
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 18px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(212, 86, 142, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.shop-open-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(212, 86, 142, 0.5);
+}
+
+.shop-open-btn:active {
+  transform: translateY(-1px);
+}
+
+/* --- ショップモーダル --- */
+.store-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(92, 76, 81, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.store-modal.show {
+  display: flex;
+}
+
+.store-modal-box {
+  background: #fff;
+  border-radius: 28px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: storeModalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes storeModalUp {
+  from { transform: translateY(30px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.store-modal-title {
+  font-family: var(--g-font, sans-serif);
+  color: #ff7ebb;
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.store-modal-tokens {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ffd15c 0%, #ff9f43 100%);
+  color: #5c4c51;
+  font-weight: 700;
+  font-size: 22px;
+  padding: 8px 22px;
+  border-radius: 999px;
+  margin-bottom: 22px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(255, 159, 67, 0.35);
+}
+
+/* --- ショップアイテム グリッド --- */
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.shop-item {
+  background: linear-gradient(135deg, #fff 0%, #fdf2f8 100%);
+  border: 2px solid #ffe0ef;
+  border-radius: 18px;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.shop-item.owned {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+  border-color: #b2f5ea;
+}
+
+.shop-item-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.shop-item-name {
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: #5c4c51;
+}
+
+.shop-item-price {
+  font-weight: 700;
+  font-size: 16px;
+  color: #ff9f43;
+}
+
+.buy-btn {
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff7ebb 0%, #ff60aa 100%);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(212, 86, 142, 0.35);
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.buy-btn:active {
+  transform: scale(0.95);
+}
+
+.buy-btn:disabled {
+  background: #d8d2d4;
+  color: #fff;
+  cursor: default;
+  box-shadow: none;
+}
+
+.store-modal-close {
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 20px;
+  color: #5c4c51;
+  background: #ffe0ef;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 36px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* --- 購入ポップアップ＆紙吹雪（shop.js が生成） --- */
+.store-reward-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 48px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 1200;
+  animation: storeModalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-reward-title {
+  color: #ff60aa;
+  font-size: 26px;
+  margin-bottom: 16px;
+}
+
+.store-reward-icon {
+  font-size: 72px;
+  margin: 10px 0;
+}
+
+.store-reward-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #5c4c51;
+}
+
+.store-confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  z-index: 1100;
+  animation: storeConfettiFall 3s linear forwards;
+}
+
+@keyframes storeConfettiFall {
+  to {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .store-modal-title { font-size: 24px; }
+  .shop-items { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .shop-item-icon { font-size: 38px; }
+}

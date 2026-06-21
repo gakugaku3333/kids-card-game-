@@ -23,6 +23,9 @@ const DIFFICULTIES = {
   hard: { pairs: 10, gridClass: 'grid-hard' }
 };
 
+// クリア時のトークン報酬（難易度別）
+const TOKEN_REWARDS = { easy: 5, medium: 10, hard: 20 };
+
 /* ==========================================================================
    ゲーム状態管理
    ========================================================================== */
@@ -352,6 +355,12 @@ function handleWin() {
   // リザルト画面への値設定
   resultTime.textContent = `${gameState.secondsElapsed} びょう`;
   resultMiss.textContent = `${gameState.missCount} かい`;
+
+  // トークンを獲得（共通 Store に加算）
+  const reward = TOKEN_REWARDS[gameState.currentDifficulty] || 5;
+  if (window.Store) Store.addTokens(reward);
+  const resultTokensEl = document.getElementById('result-tokens');
+  if (resultTokensEl) resultTokensEl.textContent = `⭐ ${reward}`;
 
   // モーダルの表示
   modalClear.classList.add('active');

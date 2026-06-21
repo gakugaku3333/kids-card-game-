@@ -1183,6 +1183,8 @@
         </div>
     </div>
 
+    <!-- 共通トークン経済モジュール -->
+    <script src="../../js/store.js"></script>
     <script>
         // カタカナと読み方のデータ
         const katakanaData = [
@@ -1247,58 +1249,24 @@
         let reviewQuestions = [];      // 復習対象の問題リスト
         let currentKatakana = '';      // 現在の問題のカタカナ
 
-        // ゲームデータの保存・読み込み
-        const STORAGE_KEY = 'katakana_game_data';
+        // ゲームデータの保存・読み込み（共通 Store モジュールに集約）
+        const STORAGE_KEY = Store.STORAGE_KEY;
 
-        const shopItems = [
-            { id: 'badge_gold', name: 'きんのバッジ', icon: '🥇', price: 30, type: 'badge' },
-            { id: 'badge_silver', name: 'ぎんのバッジ', icon: '🥈', price: 20, type: 'badge' },
-            { id: 'badge_bronze', name: 'どうのバッジ', icon: '🥉', price: 10, type: 'badge' },
-            { id: 'avatar_cat', name: 'ねこアバター', icon: '🐱', price: 15, type: 'avatar' },
-            { id: 'avatar_rabbit', name: 'うさぎアバター', icon: '🐰', price: 15, type: 'avatar' },
-            { id: 'avatar_bear', name: 'くまアバター', icon: '🐻', price: 15, type: 'avatar' },
-            { id: 'avatar_unicorn', name: 'ゆにこーん', icon: '🦄', price: 25, type: 'avatar' },
-            { id: 'effect_rainbow', name: 'にじエフェクト', icon: '🌈', price: 20, type: 'effect' },
-            { id: 'effect_sparkle', name: 'きらきら', icon: '✨', price: 20, type: 'effect' },
-            { id: 'effect_heart', name: 'はーと', icon: '💕', price: 15, type: 'effect' },
-            { id: 'crown', name: 'おうかん', icon: '👑', price: 50, type: 'special' },
-            { id: 'trophy', name: 'トロフィー', icon: '🏆', price: 40, type: 'special' },
-            { id: 'game_mole', name: 'もぐらたたき', icon: '🔨', price: 10, type: 'game' },
-            { id: 'game_jump', name: 'うさぎジャンプ', icon: '🐰', price: 20, type: 'game' },
-            { id: 'game_simon', name: 'ひかるボタン', icon: '🎹', price: 25, type: 'game' },
-            { id: 'game_numbers', name: 'すうじタッチ', icon: '🔢', price: 20, type: 'game' },
-            { id: 'game_dodge', name: 'よけろ！', icon: '☄️', price: 25, type: 'game' },
-            { id: 'game_rps', name: 'じゃんけん', icon: '✌️', price: 15, type: 'game' },
-            { id: 'game_balloon', name: 'ふうせんわり', icon: '🎈', price: 15, type: 'game' },
-            { id: 'game_catch', name: 'フルーツキャッチ', icon: '🍎', price: 20, type: 'game' },
-            { id: 'game_color', name: 'いろあわせ', icon: '🎨', price: 15, type: 'game' },
-            { id: 'game_memory', name: 'しんけいすいじゃく', icon: '🃏', price: 25, type: 'game' },
-            { id: 'game_click', name: 'クリッククリック', icon: '👆', price: 5, type: 'game' },
-            { id: 'game_star', name: 'ほしあつめ', icon: '⭐', price: 18, type: 'game' },
-            { id: 'game_bubble', name: 'バブルわり', icon: '🫧', price: 12, type: 'game' },
-            { id: 'game_match3', name: 'えあわせ', icon: '🎯', price: 30, type: 'game' },
-            { id: 'game_draw', name: 'おえかき', icon: '🖍️', price: 8, type: 'game' }
-        ];
+        // ショップ商品カタログは共通モジュールを参照
+        const shopItems = Store.SHOP_ITEMS;
 
-        // ゲームデータの初期化
+        // gameData は Store が管理するライブオブジェクトと同じ参照を共有する。
+        // これにより既存の gameData.xxx 直接アクセスはそのまま動き、
+        // saveGameData() は Store.save() 経由で全ページ共有＋イベント通知される。
         function loadGameData() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (savedData) {
-                return JSON.parse(savedData);
-            }
-            return {
-                tokens: 0,
-                totalCorrect: 0,
-                totalAnswered: 0,
-                ownedItems: []
-            };
+            return Store.getData();
         }
 
         function saveGameData(data) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            Store.save();
         }
 
-        let gameData = loadGameData();
+        let gameData = Store.getData();
 
         // 初期化時にトークン表示を更新
         function updateTokenDisplay() {

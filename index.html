@@ -18,6 +18,7 @@
 
   <!-- スタイルシート -->
   <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/store.css">
 </head>
 <body>
   <!-- 背景デコレーション -->
@@ -41,6 +42,14 @@
         <span class="title-main">ゲームひろば</span>
       </h1>
       <p class="gallery-subtitle">すきな ゲームを えらんで あそんでね！</p>
+
+      <!-- トークン残高 ＆ ショップ入口 -->
+      <div class="header-actions">
+        <span class="token-badge">
+          <span class="token-star">⭐</span><span id="siteTokens">0</span> トークン
+        </span>
+        <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
+      </div>
     </header>
 
     <!-- ゲーム一覧グリッド -->
@@ -200,7 +209,22 @@
     </div>
   </div>
 
+  <!-- ショップモーダル -->
+  <div id="shop-modal" class="store-modal">
+    <div class="store-modal-box">
+      <h3 class="store-modal-title">🛍️ トークンショップ</h3>
+      <div class="store-modal-tokens">⭐ <span id="shopModalTokens">0</span> トークン</div>
+      <p style="color:#8f7d83; font-size:15px; margin-bottom:18px;">
+        ゲームで あつめた トークンで すてきな アイテムを かおう！
+      </p>
+      <div id="shopModalItems" class="shop-items"></div>
+      <button id="btn-close-shop" class="store-modal-close">とじる</button>
+    </div>
+  </div>
+
   <!-- JavaScript -->
+  <script src="js/store.js"></script>
+  <script src="js/shop.js"></script>
   <script src="js/gallery.js"></script>
 </body>
 </html>
