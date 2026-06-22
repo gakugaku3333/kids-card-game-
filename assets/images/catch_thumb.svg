@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250">
+  <defs>
+    <linearGradient id="csky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdeeff"/>
+      <stop offset="1" stop-color="#eafaff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="250" rx="20" fill="url(#csky)"/>
+  <!-- sun -->
+  <circle cx="60" cy="55" r="30" fill="#ffe08a"/>
+  <circle cx="60" cy="55" r="20" fill="#ffd23d"/>
+  <!-- clouds -->
+  <g fill="#ffffff" opacity="0.9">
+    <ellipse cx="300" cy="50" rx="34" ry="20"/>
+    <ellipse cx="330" cy="55" rx="26" ry="16"/>
+  </g>
+  <!-- falling fruits -->
+  <g>
+    <!-- apple -->
+    <g transform="translate(120 110)">
+      <circle r="20" fill="#ff5a5a"/>
+      <ellipse cx="-6" cy="-6" rx="5" ry="7" fill="#ff9a9a"/>
+      <rect x="-2" y="-26" width="4" height="10" rx="2" fill="#8b5a2b"/>
+      <ellipse cx="8" cy="-22" rx="8" ry="4" fill="#5fc47e" transform="rotate(20 8 -22)"/>
+    </g>
+    <!-- orange -->
+    <circle cx="250" cy="90" r="18" fill="#ff9d3d"/>
+    <circle cx="250" cy="90" r="18" fill="none" stroke="#ffb86b" stroke-width="3"/>
+    <!-- grape -->
+    <g transform="translate(300 130)" fill="#9b6bff">
+      <circle cx="0" cy="0" r="8"/><circle cx="12" cy="2" r="8"/><circle cx="6" cy="12" r="8"/>
+    </g>
+  </g>
+  <!-- ground -->
+  <rect y="200" width="400" height="50" fill="#aadfa6"/>
+  <ellipse cx="200" cy="200" rx="240" ry="18" fill="#bfe9bb"/>
+  <!-- basket -->
+  <g transform="translate(200 185)">
+    <path d="M -45 0 L 45 0 L 36 50 L -36 50 Z" fill="#c98a3a"/>
+    <path d="M -45 0 L 45 0 L 41 14 L -41 14 Z" fill="#e0a85a"/>
+    <g stroke="#a9712a" stroke-width="3">
+      <line x1="-28" y1="2" x2="-22" y2="50"/>
+      <line x1="0" y1="2" x2="0" y2="50"/>
+      <line x1="28" y1="2" x2="22" y2="50"/>
+    </g>
+    <!-- caught strawberry peeking -->
+    <g transform="translate(-12 -4)">
+      <path d="M -12 -6 Q 0 14 12 -6 Q 0 -16 -12 -6 Z" fill="#ff5a7a"/>
+      <path d="M -10 -8 Q 0 -18 10 -8" fill="#5fc47e"/>
+    </g>
+  </g>
+</svg>

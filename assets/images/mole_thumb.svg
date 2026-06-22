@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250">
+  <defs>
+    <linearGradient id="msky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6f5e3"/>
+      <stop offset="1" stop-color="#a8e6c4"/>
+    </linearGradient>
+    <radialGradient id="mhole" cx="0.5" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#6b4a2f"/>
+      <stop offset="0.6" stop-color="#4d3320"/>
+      <stop offset="1" stop-color="#36241400"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="250" rx="20" fill="url(#msky)"/>
+  <!-- ground -->
+  <rect y="150" width="400" height="100" fill="#7ac98a"/>
+  <ellipse cx="200" cy="150" rx="240" ry="26" fill="#8fd99f"/>
+  <!-- holes -->
+  <g>
+    <ellipse cx="95" cy="200" rx="46" ry="22" fill="url(#mhole)"/>
+    <ellipse cx="305" cy="205" rx="46" ry="22" fill="url(#mhole)"/>
+    <ellipse cx="200" cy="225" rx="50" ry="22" fill="url(#mhole)"/>
+  </g>
+  <!-- mole popping center -->
+  <g transform="translate(200 150)">
+    <ellipse cx="0" cy="40" rx="42" ry="40" fill="#9b7653"/>
+    <ellipse cx="0" cy="48" rx="26" ry="22" fill="#d8b48c"/>
+    <circle cx="-15" cy="30" r="6" fill="#3a2a1a"/>
+    <circle cx="15" cy="30" r="6" fill="#3a2a1a"/>
+    <circle cx="-13" cy="28" r="2" fill="#fff"/>
+    <circle cx="17" cy="28" r="2" fill="#fff"/>
+    <ellipse cx="0" cy="44" rx="7" ry="5" fill="#ff9aa9"/>
+    <ellipse cx="-22" cy="14" rx="9" ry="11" fill="#9b7653"/>
+    <ellipse cx="22" cy="14" rx="9" ry="11" fill="#9b7653"/>
+  </g>
+  <!-- little mole left -->
+  <g transform="translate(95 168) scale(0.6)">
+    <ellipse cx="0" cy="40" rx="42" ry="40" fill="#8a6a4a"/>
+    <circle cx="-15" cy="30" r="6" fill="#3a2a1a"/>
+    <circle cx="15" cy="30" r="6" fill="#3a2a1a"/>
+    <ellipse cx="0" cy="44" rx="7" ry="5" fill="#ff9aa9"/>
+  </g>
+  <!-- hammer -->
+  <g transform="translate(312 70) rotate(25)">
+    <rect x="-8" y="0" width="16" height="80" rx="8" fill="#c98a3a"/>
+    <rect x="-40" y="-34" width="80" height="44" rx="12" fill="#ff7a59"/>
+    <rect x="-40" y="-34" width="80" height="16" rx="8" fill="#ff9d80"/>
+  </g>
+</svg>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="子供向けのおえかきゲーム。ゆびでじゆうにおえかきしよう！">
+  <title>おえかき！</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../assets/images/favicon-16x16.png">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+      background: linear-gradient(160deg, #ffd9ec 0%, #e6d4ff 50%, #d4e4ff 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      min-height: 100%; overflow-y: auto; padding: 14px; color: #5a4a5a;
+      user-select: none; -webkit-user-select: none;
+    }
+    .game-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 8px; }
+    h1.title { font-weight: 900; font-size: 1.7rem; color: #fff; text-shadow: 0 2px 0 #c97fb8, 0 4px 6px rgba(0,0,0,.15); }
+    .home-btn {
+      font-family: inherit; font-weight: 900; text-decoration: none; color: #fff;
+      background: linear-gradient(#9bd4ff, #6bb8f5); box-shadow: 0 4px 0 #4a90d9; border-radius: 16px;
+      padding: 8px 14px; font-size: .95rem; white-space: nowrap;
+    }
+    .home-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a90d9; }
+
+    canvas#pad {
+      width: 100%; aspect-ratio: 4 / 3; background: #fff; border-radius: 20px;
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.6), 0 6px 16px rgba(0,0,0,.15);
+      touch-action: none; cursor: crosshair; display: block;
+    }
+
+    .tools { width: 100%; margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .swatch {
+      width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,.2); transition: transform .1s;
+    }
+    .swatch.active { transform: scale(1.2); border-color: #5a4a5a; }
+    .size-btn, .tool-btn {
+      font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 14px;
+      background: #fff; color: #7a6a7a; box-shadow: 0 3px 0 rgba(0,0,0,.12); padding: 8px 12px; font-size: .95rem;
+    }
+    .size-btn.active { background: #ffb3d9; color: #fff; }
+    .size-dot { display: inline-block; border-radius: 50%; background: currentColor; vertical-align: middle; }
+    .tool-btn:active, .size-btn:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(0,0,0,.12); }
+    .tool-btn.eraser.active { background: #c5b3ff; color: #fff; }
+
+    .actions { display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 4px; }
+    .btn {
+      font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 20px;
+      padding: 13px 22px; font-size: 1.1rem; color: #fff;
+      background: linear-gradient(#ff8ac4, #ff5fa8); box-shadow: 0 5px 0 #e03d86; transition: transform .08s, box-shadow .08s;
+    }
+    .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #e03d86; }
+    .btn.clear { background: linear-gradient(#bcbcc8, #9a9aae); box-shadow: 0 5px 0 #7a7a8e; }
+    .btn.clear:active { box-shadow: 0 1px 0 #7a7a8e; }
+    .btn.save { background: linear-gradient(#8ad6a0, #5fc47e); box-shadow: 0 5px 0 #3da55e; }
+    .btn.save:active { box-shadow: 0 1px 0 #3da55e; }
+
+    /* お祝いトースト */
+    .toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(120%);
+      background: #fff; border-radius: 24px; padding: 16px 26px; box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      font-weight: 900; font-size: 1.15rem; color: #e03d86; z-index: 60; transition: transform .4s cubic-bezier(.2,1.4,.5,1);
+      text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast .star { font-size: 1.3rem; }
+
+    @media (max-height: 700px) {
+      h1.title { font-size: 1.4rem; }
+      canvas#pad { aspect-ratio: auto; height: 48vh; }
+      .swatch { width: 32px; height: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="topbar">
+      <h1 class="title">🖍️ おえかき！</h1>
+      <a href="../../index.html" class="home-btn">🏠 メニュー</a>
+    </div>
+
+    <canvas id="pad"></canvas>
+
+    <div class="tools">
+      <div class="row" id="palette"></div>
+      <div class="row">
+        <button class="size-btn" data-size="4"><span class="size-dot" style="width:6px;height:6px;"></span> ほそい</button>
+        <button class="size-btn active" data-size="10"><span class="size-dot" style="width:11px;height:11px;"></span> ふつう</button>
+        <button class="size-btn" data-size="22"><span class="size-dot" style="width:18px;height:18px;"></span> ふとい</button>
+        <button class="tool-btn eraser" id="btn-eraser">🧽 けしゴム</button>
+      </div>
+      <div class="actions">
+        <button class="btn clear" id="btn-clear">🗑️ ぜんぶけす</button>
+        <button class="btn save" id="btn-save">💾 ほぞん</button>
+        <button class="btn" id="btn-done">✨ できた！</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="../../js/store.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var canvas = document.getElementById('pad');
+    var ctx = canvas.getContext('2d');
+    var COLORS = ['#000000', '#ff5a5a', '#ff9d3d', '#ffd23d', '#5fc47e', '#5aa9ff', '#9b6bff', '#ff7ac4', '#8b5a2b', '#ffffff'];
+    var curColor = '#000000', curSize = 10, erasing = false;
+    var drawing = false, lastX = 0, lastY = 0;
+    var dirtyStrokes = 0; // できた！ボタン用のお絵かき量
+
+    // Canvas解像度を表示サイズに合わせる（デバイス比考慮）
+    function fitCanvas() {
+      var ratio = window.devicePixelRatio || 1;
+      var rect = canvas.getBoundingClientRect();
+      // 既存の絵を退避
+      var snapshot = null;
+      if (canvas.width) { snapshot = document.createElement('canvas'); snapshot.width = canvas.width; snapshot.height = canvas.height; snapshot.getContext('2d').drawImage(canvas, 0, 0); }
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      // 背景を白に
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (snapshot) ctx.drawImage(snapshot, 0, 0);
+      ctx.restore();
+    }
+
+    function pos(e) {
+      var rect = canvas.getBoundingClientRect();
+      var p = e.touches ? e.touches[0] : e;
+      return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+    }
+
+    function start(e) {
+      e.preventDefault();
+      drawing = true;
+      var p = pos(e); lastX = p.x; lastY = p.y;
+      // 点を打つ（タップだけでも描ける）
+      ctx.beginPath();
+      ctx.fillStyle = erasing ? '#fff' : curColor;
+      ctx.arc(p.x, p.y, curSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    function move(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      var p = pos(e);
+      ctx.strokeStyle = erasing ? '#fff' : curColor;
+      ctx.lineWidth = curSize;
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+      dirtyStrokes++;
+    }
+    function end() { drawing = false; }
+
+    canvas.addEventListener('pointerdown', start);
+    canvas.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+
+    // パレット生成
+    var palette = document.getElementById('palette');
+    COLORS.forEach(function (c, i) {
+      var sw = document.createElement('div');
+      sw.className = 'swatch' + (i === 0 ? ' active' : '');
+      sw.style.background = c;
+      if (c === '#ffffff') sw.style.border = '3px solid #ddd';
+      sw.addEventListener('click', function () {
+        curColor = c; erasing = false;
+        document.getElementById('btn-eraser').classList.remove('active');
+        document.querySelectorAll('.swatch').forEach(function (s) { s.classList.remove('active'); });
+        sw.classList.add('active');
+      });
+      palette.appendChild(sw);
+    });
+
+    // 太さ
+    document.querySelectorAll('.size-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        curSize = +b.dataset.size;
+        document.querySelectorAll('.size-btn').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+
+    // けしゴム
+    var eraserBtn = document.getElementById('btn-eraser');
+    eraserBtn.addEventListener('click', function () {
+      erasing = !erasing;
+      eraserBtn.classList.toggle('active', erasing);
+      if (erasing) document.querySelectorAll('.swatch').forEach(function (s) { s.classList.remove('active'); });
+    });
+
+    // ぜんぶけす
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      dirtyStrokes = 0;
+    });
+
+    // ほぞん（PNGダウンロード）
+    document.getElementById('btn-save').addEventListener('click', function () {
+      var link = document.createElement('a');
+      link.download = 'oekaki.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('💾 ほぞんしたよ！', 0);
+    });
+
+    // できた！（トークン加算、クールダウン付き）
+    var COOLDOWN_KEY = 'oekaki_last_reward';
+    document.getElementById('btn-done').addEventListener('click', function () {
+      if (dirtyStrokes < 5) { showToast('もっと おえかき してね 🖍️', 0); return; }
+      var now = Date.now();
+      var last = +(localStorage.getItem(COOLDOWN_KEY) || 0);
+      if (now - last < 60 * 1000) {
+        showToast('すてきな え だね！✨', 0);
+        return;
+      }
+      localStorage.setItem(COOLDOWN_KEY, now);
+      var earned = 3;
+      if (window.Store) window.Store.addTokens(earned);
+      dirtyStrokes = 0;
+      showToast('じょうず！ ⭐' + earned + ' トークン ゲット！', earned);
+    });
+
+    function showToast(msg, stars) {
+      var t = document.getElementById('toast');
+      t.innerHTML = msg;
+      t.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    }
+
+    window.addEventListener('resize', fitCanvas);
+    // 初期化（フォント・レイアウト確定後にサイズ計測）
+    requestAnimationFrame(fitCanvas);
+  })();
+  </script>
+</body>
+</html>

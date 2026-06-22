@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250">
+  <defs>
+    <linearGradient id="dbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3f2"/>
+      <stop offset="1" stop-color="#e6dcff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="250" rx="20" fill="url(#dbg)"/>
+  <!-- paper -->
+  <g transform="rotate(-3 200 120)">
+    <rect x="70" y="40" width="260" height="170" rx="14" fill="#ffffff" stroke="#e7d3e7" stroke-width="3"/>
+    <!-- scribbles -->
+    <path d="M 100 90 Q 140 50 180 90 T 260 90" fill="none" stroke="#ff5a7a" stroke-width="9" stroke-linecap="round"/>
+    <path d="M 110 130 C 150 110 170 160 210 140 S 270 120 290 150" fill="none" stroke="#5aa9ff" stroke-width="9" stroke-linecap="round"/>
+    <!-- sun doodle -->
+    <circle cx="270" cy="80" r="20" fill="#ffd23d"/>
+    <g stroke="#ffb800" stroke-width="4" stroke-linecap="round">
+      <line x1="270" y1="48" x2="270" y2="40"/>
+      <line x1="298" y1="62" x2="305" y2="56"/>
+      <line x1="300" y1="92" x2="308" y2="96"/>
+    </g>
+    <!-- green hill scribble -->
+    <path d="M 95 185 Q 150 150 210 185 T 305 185" fill="none" stroke="#5fc47e" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <!-- crayon -->
+  <g transform="translate(300 150) rotate(40)">
+    <rect x="-12" y="0" width="24" height="90" rx="6" fill="#ff7ac4"/>
+    <rect x="-12" y="0" width="24" height="16" rx="6" fill="#ffa9d8"/>
+    <polygon points="-12,90 12,90 0,112" fill="#f4d9a0"/>
+    <polygon points="-5,103 5,103 0,112" fill="#ff7ac4"/>
+  </g>
+  <!-- palette dots -->
+  <g>
+    <circle cx="40" cy="210" r="13" fill="#ff5a5a"/>
+    <circle cx="72" cy="222" r="13" fill="#5aa9ff"/>
+    <circle cx="106" cy="226" r="13" fill="#ffd23d"/>
+  </g>
+</svg>
