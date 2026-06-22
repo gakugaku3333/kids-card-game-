@@ -68,6 +68,8 @@
     .btn.clear:active { box-shadow: 0 1px 0 #7a7a8e; }
     .btn.save { background: linear-gradient(#8ad6a0, #5fc47e); box-shadow: 0 5px 0 #3da55e; }
     .btn.save:active { box-shadow: 0 1px 0 #3da55e; }
+    .btn.photo-rm { background: linear-gradient(#ff9d3d, #ff7700); box-shadow: 0 5px 0 #cc5500; }
+    .btn.photo-rm:active { box-shadow: 0 1px 0 #cc5500; }
 
     /* お祝いトースト */
     .toast {
@@ -102,9 +104,11 @@
         <button class="size-btn active" data-size="10"><span class="size-dot" style="width:11px;height:11px;"></span> ふつう</button>
         <button class="size-btn" data-size="22"><span class="size-dot" style="width:18px;height:18px;"></span> ふとい</button>
         <button class="tool-btn eraser" id="btn-eraser">🧽 けしゴム</button>
+        <button class="tool-btn" id="btn-photo">📷 しゃしん</button>
       </div>
       <div class="actions">
         <button class="btn clear" id="btn-clear">🗑️ ぜんぶけす</button>
+        <button class="btn photo-rm" id="btn-photo-rm" style="display:none">📷 はずす</button>
         <button class="btn save" id="btn-save">💾 ほぞん</button>
         <button class="btn" id="btn-done">✨ できた！</button>
       </div>
@@ -112,6 +116,7 @@
   </div>
 
   <div id="toast" class="toast"></div>
+  <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
 
   <script src="../../js/store.js"></script>
   <script>
@@ -122,7 +127,21 @@
     var COLORS = ['#000000', '#ff5a5a', '#ff9d3d', '#ffd23d', '#5fc47e', '#5aa9ff', '#9b6bff', '#ff7ac4', '#8b5a2b', '#ffffff'];
     var curColor = '#000000', curSize = 10, erasing = false;
     var drawing = false, lastX = 0, lastY = 0;
-    var dirtyStrokes = 0; // できた！ボタン用のお絵かき量
+    var dirtyStrokes = 0;
+    var bgPhoto = null;
+
+    function redrawBg() {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      if (bgPhoto) {
+        var cw = canvas.getBoundingClientRect().width;
+        var ch = canvas.getBoundingClientRect().height;
+        var scale = Math.min(cw / bgPhoto.naturalWidth, ch / bgPhoto.naturalHeight);
+        var w = bgPhoto.naturalWidth * scale, h = bgPhoto.naturalHeight * scale;
+        ctx.drawImage(bgPhoto, (cw - w) / 2, (ch - h) / 2, w, h);
+      }
+    }
 
     // Canvas解像度を表示サイズに合わせる（デバイス比考慮）
     function fitCanvas() {
@@ -210,11 +229,36 @@
       if (erasing) document.querySelectorAll('.swatch').forEach(function (s) { s.classList.remove('active'); });
     });
 
-    // ぜんぶけす
+    // ぜんぶけす（写真が入っていれば写真を再描画、なければ白）
     document.getElementById('btn-clear').addEventListener('click', function () {
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.restore();
+      redrawBg();
+      dirtyStrokes = 0;
+    });
+
+    // 📷 写真を撮ってキャンバス背景に設定
+    document.getElementById('btn-photo').addEventListener('click', function () {
+      document.getElementById('photo-input').click();
+    });
+    document.getElementById('photo-input').addEventListener('change', function () {
+      var file = this.files[0];
+      if (!file) return;
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        bgPhoto = img;
+        redrawBg();
+        document.getElementById('btn-photo-rm').style.display = '';
+        dirtyStrokes = 0;
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+      this.value = '';
+    });
+    // 写真をはずす
+    document.getElementById('btn-photo-rm').addEventListener('click', function () {
+      bgPhoto = null;
+      redrawBg();
+      this.style.display = 'none';
       dirtyStrokes = 0;
     });
 
