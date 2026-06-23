@@ -1401,12 +1401,13 @@
                 updateTokenDisplay();
                 saveGameData(gameData);
 
-                // 復習モードで正解したらリストから削除
+                // 復習モードで正解したらリストから削除 + Firebase記録
                 if (isReviewMode) {
                     const index = reviewQuestions.indexOf(currentKatakana);
                     if (index > -1) {
                         reviewQuestions.splice(index, 1);
                     }
+                    if (window.FireLog) FireLog.markReviewed('katakana', currentKatakana);
                 }
 
                 createConfetti();
@@ -1433,6 +1434,7 @@
                 // 通常モードで不正解：間違いリストに追加
                 if (!isReviewMode && !currentSessionWrong.includes(currentKatakana)) {
                     currentSessionWrong.push(currentKatakana);
+                    if (window.FireLog) FireLog.logWrong('katakana', currentKatakana, currentAnswer);
                 }
 
                 // 1秒後にフィードバックをクリア（問題は継続）
@@ -1502,6 +1504,7 @@
             document.getElementById('resultScreen').classList.remove('hidden');
             document.getElementById('finalScore').textContent = score + ' / ' + (totalQuestions * 10);
             document.getElementById('earnedTokens').textContent = tokensEarned;
+            if (window.FireLog) FireLog.logSession('katakana', Math.round(score / 10), totalQuestions, tokensEarned);
 
             const resultEmoji = document.getElementById('resultEmoji');
             const resultMessage = document.getElementById('resultMessage');
@@ -3361,6 +3364,11 @@
                 updateTokenDisplay();
                 saveGameData(gameData);
 
+                // 復習モードで正解したらFirebaseに記録
+                if (mathIsReviewMode && window.FireLog && mathCurrentProblem) {
+                    FireLog.markReviewed('math-' + mathType, mathCurrentProblem.text);
+                }
+
                 createConfetti();
                 playSound('correct');
 
@@ -3388,6 +3396,7 @@
                     const alreadyRecorded = mathSessionWrong.some(p => p.text === mathCurrentProblem.text);
                     if (!alreadyRecorded) {
                         mathSessionWrong.push(mathCurrentProblem);
+                        if (window.FireLog) FireLog.logWrong('math-' + mathType, mathCurrentProblem.text, String(mathCorrectAnswer));
                     }
                 }
             }
@@ -3459,6 +3468,7 @@
             document.getElementById('mathResultScreen').classList.remove('hidden');
             document.getElementById('mathFinalScore').textContent = mathScore + ' / ' + (mathTotalQuestions * 10);
             document.getElementById('mathEarnedTokens').textContent = mathTokensEarned;
+            if (window.FireLog) FireLog.logSession('math-' + mathType, Math.round(mathScore / 10), mathTotalQuestions, mathTokensEarned);
 
             const resultEmoji = document.getElementById('mathResultEmoji');
             const resultMessage = document.getElementById('mathResultMessage');
@@ -3479,6 +3489,47 @@
             }
         }
 
+        // Firebase復習モード（ホーム画面の「ふくしゅうしよう！」から起動）
+        function startFirebaseReview() {
+            if (!window.FireLog) {
+                document.getElementById('startScreen').classList.remove('hidden');
+                return;
+            }
+            hideAllScreens();
+            const container = document.querySelector('.container');
+            const loading = document.createElement('div');
+            loading.style.cssText = 'text-align:center;padding:80px 20px;font-size:1.3rem;font-weight:900;color:#667eea;';
+            loading.textContent = '📚 ふくしゅうもんだいを よみこんでいます...';
+            container.appendChild(loading);
+
+            FireLog.getReviewDue(function (items) {
+                loading.remove();
+                const katakanaItems = items.filter(i => i.game === 'katakana');
+                const mathItems = items.filter(i => i.game && i.game.startsWith('math-'));
+
+                if (katakanaItems.length === 0 && mathItems.length === 0) {
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'text-align:center;padding:80px 20px;';
+                    msg.innerHTML = `
+                        <div style="font-size:3.5rem">🎉</div>
+                        <p style="font-size:1.3rem;font-weight:900;color:#667eea;margin:14px 0">きょうの ふくしゅうは ぜんぶ おわったよ！</p>
+                        <p style="color:#888;margin-bottom:28px">またあとで あそんでね！</p>
+                        <a href="../../index.html" style="display:inline-block;padding:12px 28px;background:linear-gradient(#ff8ac4,#ff5fa8);color:white;border-radius:24px;text-decoration:none;font-weight:900;font-size:1.1rem;box-shadow:0 4px 0 #e03d86">🏠 ホームにもどる</a>`;
+                    container.appendChild(msg);
+                    return;
+                }
+
+                if (katakanaItems.length > 0) {
+                    currentSessionWrong = katakanaItems.map(i => i.question);
+                    startReviewMode();
+                } else {
+                    mathType = mathItems[0].game.replace('math-', '');
+                    mathSessionWrong = mathItems.map(i => ({ text: i.question, answer: Number(i.answer) }));
+                    startMathReviewMode();
+                }
+            });
+        }
+
         // URLパラメータのチェック（起動時に特定の画面を自動表示）
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -3491,9 +3542,16 @@
                 showMathSelect();
             } else if (mode === 'katakana') {
                 startGame();
+            } else if (mode === 'fb-review') {
+                startFirebaseReview();
             }
         });
     </script>
+  <!-- Firebase SDK + ログモジュール -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="../../js/firebase-log.js"></script>
+
   <a href="../../index.html" class="float-home-btn">🏠 HOME</a>
   <style>
   .float-home-btn {

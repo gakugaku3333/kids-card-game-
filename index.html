@@ -19,6 +19,42 @@
   <!-- スタイルシート -->
   <link rel="stylesheet" href="css/gallery.css">
   <link rel="stylesheet" href="css/store.css">
+  <style>
+    /* ログインモーダル入力 */
+    #nickname-input {
+      display: block; width: 100%; max-width: 220px; margin: 12px auto;
+      padding: 11px 16px; font-size: 1.15rem; font-family: var(--g-font);
+      font-weight: 700; color: var(--g-color-text);
+      border: 3px solid #e8c5e0; border-radius: 20px;
+      text-align: center; outline: none; background: #fff;
+    }
+    #nickname-input:focus { border-color: var(--g-color-primary); }
+    /* 復習バナー */
+    .review-banner {
+      margin: -20px 0 18px; width: 100%; display: flex; justify-content: center;
+    }
+    .review-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; text-decoration: none; font-weight: 900; font-size: 1rem;
+      padding: 11px 26px; border-radius: 30px;
+      box-shadow: 0 4px 0 #4a38a0, 0 6px 16px rgba(102,126,234,.35);
+      animation: review-pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes review-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    /* ユーザーチップ */
+    .user-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,.7); border-radius: 20px;
+      padding: 6px 12px; font-weight: 900; font-size: .85rem;
+      color: #5c4c51; cursor: pointer; border: 2px solid rgba(255,255,255,.8);
+      white-space: nowrap; font-family: var(--g-font);
+    }
+    .user-chip:hover { opacity: .8; }
+  </style>
 </head>
 <body>
   <!-- 背景デコレーション -->
@@ -45,12 +81,22 @@
 
       <!-- トークン残高 ＆ ショップ入口 -->
       <div class="header-actions">
+        <span id="user-chip" class="user-chip" style="display:none;" onclick="window._showLoginModal()">
+          👤 <span id="user-chip-name"></span>
+        </span>
         <span class="token-badge">
           <span class="token-star">⭐</span><span id="siteTokens">0</span> トークン
         </span>
         <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
       </div>
     </header>
+
+    <!-- 復習バナー（復習問題があるときのみ表示） -->
+    <div id="review-banner" class="review-banner" style="display:none;">
+      <a id="review-link" href="games/rakugaku/index.html?mode=fb-review" class="review-link">
+        📚 ふくしゅうしよう！ <span id="review-count">0</span>もん あるよ！
+      </a>
+    </div>
 
     <!-- ゲーム一覧グリッド -->
     <main class="games-grid">
@@ -207,6 +253,17 @@
     </footer>
   </div>
 
+  <!-- ログインモーダル -->
+  <div id="login-modal" class="g-modal">
+    <div class="g-modal-content">
+      <div class="g-modal-icon">👋</div>
+      <h3 class="g-modal-title">はじめまして！</h3>
+      <p class="g-modal-message">なまえを おしえてね</p>
+      <input type="text" id="nickname-input" placeholder="なまえ（10もじまで）" maxlength="10" autocomplete="off">
+      <button id="btn-login" class="g-btn">はじめる！ 🎮</button>
+    </div>
+  </div>
+
   <!-- ポップアップモーダル (準備中用) -->
   <div id="msg-modal" class="g-modal">
     <div class="g-modal-content">
@@ -262,5 +319,59 @@
   <script src="js/store.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/gallery.js"></script>
+
+  <!-- Firebase SDK + ログモジュール -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-log.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    function showLoginModal() {
+      document.getElementById('login-modal').classList.add('active');
+      setTimeout(function () { document.getElementById('nickname-input').focus(); }, 150);
+    }
+    window._showLoginModal = showLoginModal;
+
+    function hideLoginModal() {
+      document.getElementById('login-modal').classList.remove('active');
+    }
+
+    function applyUser(name) {
+      document.getElementById('user-chip-name').textContent = name;
+      document.getElementById('user-chip').style.display = '';
+      hideLoginModal();
+      // 復習バナーを確認
+      if (window.FireLog) {
+        FireLog.getReviewDue(function (items) {
+          if (items.length > 0) {
+            document.getElementById('review-count').textContent = items.length;
+            document.getElementById('review-banner').style.display = '';
+          }
+        });
+      }
+    }
+
+    document.getElementById('btn-login').addEventListener('click', function () {
+      var name = document.getElementById('nickname-input').value.trim();
+      if (!name) { document.getElementById('nickname-input').focus(); return; }
+      if (window.FireLog) FireLog.setUser(name);
+      applyUser(name);
+    });
+
+    document.getElementById('nickname-input').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+
+    // 起動時：保存済みニックネームがあればそのまま復元、なければログイン画面
+    var saved = window.FireLog ? FireLog.getSavedUser() : localStorage.getItem('kids_game_nickname');
+    if (saved) {
+      applyUser(saved);
+    } else {
+      showLoginModal();
+    }
+  })();
+  </script>
 </body>
 </html>
