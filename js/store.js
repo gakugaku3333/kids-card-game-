@@ -11,7 +11,10 @@
     'use strict';
 
     var STORAGE_KEY = 'katakana_game_data'; // 既存データ互換のためキー名は据え置き
-    var DEFAULTS = { tokens: 0, totalCorrect: 0, totalAnswered: 0, ownedItems: [] };
+    var DEFAULTS = { tokens: 0, totalCorrect: 0, totalAnswered: 0, ownedItems: [], avatar: { base: null, accessory: null, effect: null } };
+
+    // ショップ商品の type を、着せ替えアバターのスロットへ対応づける
+    var SLOT_OF = { avatar: 'base', badge: 'accessory', special: 'accessory', effect: 'effect' };
 
     // ショップ商品カタログ（rakugaku から移設した27品 + ゲーム）
     var SHOP_ITEMS = [
@@ -52,11 +55,17 @@
             data = null;
         }
         if (!data || typeof data !== 'object') data = {};
+        var av = (data.avatar && typeof data.avatar === 'object') ? data.avatar : {};
         return {
             tokens: typeof data.tokens === 'number' ? data.tokens : 0,
             totalCorrect: typeof data.totalCorrect === 'number' ? data.totalCorrect : 0,
             totalAnswered: typeof data.totalAnswered === 'number' ? data.totalAnswered : 0,
-            ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : []
+            ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : [],
+            avatar: {
+                base: typeof av.base === 'string' ? av.base : null,
+                accessory: typeof av.accessory === 'string' ? av.accessory : null,
+                effect: typeof av.effect === 'string' ? av.effect : null
+            }
         };
     }
 
@@ -68,7 +77,7 @@
         // 同一ページ内のトークン表示を自動更新するためのイベント
         try {
             document.dispatchEvent(new CustomEvent('tokens-changed', {
-                detail: { tokens: data.tokens, ownedItems: data.ownedItems }
+                detail: { tokens: data.tokens, ownedItems: data.ownedItems, avatar: data.avatar }
             }));
         } catch (e) { /* CustomEvent 非対応環境は無視 */ }
     }
@@ -112,6 +121,31 @@
         save();
     }
 
+    // アイテムIDから着せ替えスロット名を返す（不明なら null）
+    function slotOf(id) {
+        for (var i = 0; i < SHOP_ITEMS.length; i++) {
+            if (SHOP_ITEMS[i].id === id) return SLOT_OF[SHOP_ITEMS[i].type] || null;
+        }
+        return null;
+    }
+
+    // スロットにアイテムを装備。id===null なら外す。
+    // 所持済みかつスロットが一致するときのみ装備して true を返す。
+    function equip(slot, id) {
+        if (slot !== 'base' && slot !== 'accessory' && slot !== 'effect') return false;
+        if (id === null) {
+            data.avatar[slot] = null;
+            save();
+            return true;
+        }
+        if (owns(id) && slotOf(id) === slot) {
+            data.avatar[slot] = id;
+            save();
+            return true;
+        }
+        return false;
+    }
+
     window.Store = {
         STORAGE_KEY: STORAGE_KEY,
         SHOP_ITEMS: SHOP_ITEMS,
@@ -123,6 +157,9 @@
         owns: owns,
         buy: buy,
         recordAnswer: recordAnswer,
+        getAvatar: function () { return data.avatar; },
+        slotOf: slotOf,
+        equip: equip,
         save: save,
         reload: function () { data = load(); return data; }
     };

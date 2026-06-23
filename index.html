@@ -19,6 +19,7 @@
   <!-- スタイルシート -->
   <link rel="stylesheet" href="css/gallery.css">
   <link rel="stylesheet" href="css/store.css">
+  <link rel="stylesheet" href="css/avatar.css">
   <style>
     /* ログインモーダル入力 */
     #nickname-input {
@@ -82,12 +83,13 @@
       <!-- トークン残高 ＆ ショップ入口 -->
       <div class="header-actions">
         <span id="user-chip" class="user-chip" style="display:none;" onclick="window._showLoginModal()">
-          👤 <span id="user-chip-name"></span>
+          <span id="user-chip-avatar">👤</span> <span id="user-chip-name"></span>
         </span>
         <span class="token-badge">
           <span class="token-star">⭐</span><span id="siteTokens">0</span> トークン
         </span>
         <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
+        <button id="btn-dressup" class="dressup-open-btn">👗 きせかえ</button>
       </div>
     </header>
 
@@ -315,9 +317,22 @@
     </div>
   </div>
 
+  <!-- 着せ替えモーダル -->
+  <div id="dressup-modal" class="store-modal">
+    <div class="store-modal-box">
+      <h3 class="store-modal-title">👗 きせかえ</h3>
+      <p style="color:#8f7d83; font-size:15px; margin-bottom:18px;">
+        ショップで かった アイテムで じぶんの アバターを きせかえしよう！
+      </p>
+      <div id="dressupBody"></div>
+      <button id="btn-close-dressup" class="store-modal-close">とじる</button>
+    </div>
+  </div>
+
   <!-- JavaScript -->
   <script src="js/store.js"></script>
   <script src="js/shop.js"></script>
+  <script src="js/avatar.js"></script>
   <script src="js/gallery.js"></script>
 
   <!-- Firebase SDK + ログモジュール -->
@@ -341,6 +356,9 @@
     function applyUser(name) {
       document.getElementById('user-chip-name').textContent = name;
       document.getElementById('user-chip').style.display = '';
+      if (typeof window.renderAvatar === 'function') {
+        window.renderAvatar(document.getElementById('user-chip-avatar'), { size: 'chip' });
+      }
       hideLoginModal();
       // 復習バナーを確認
       if (window.FireLog) {

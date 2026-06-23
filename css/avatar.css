@@ -1,0 +1,203 @@
+/* ==========================================================================
+   avatar.css — アバター合成表示＆着せ替えUI
+   store.css / gallery.css のトーンに合わせる
+   ========================================================================== */
+
+/* --- 合成アバターのステージ --- */
+.avatar-display {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.avatar-base {
+  position: relative;
+  z-index: 2;
+}
+
+/* かざりは右上に重ねる */
+.avatar-accessory {
+  position: absolute;
+  top: -0.15em;
+  right: -0.25em;
+  z-index: 3;
+  font-size: 0.6em;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+/* エフェクトのオーラ層（背面） */
+.avatar-aura {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* サイズ: チップ（小）／プロフィール（特大） */
+.avatar-chip { font-size: 20px; }
+.avatar-profile { font-size: 92px; }
+
+/* エフェクト別アニメーション */
+.avatar-aura.effect-rainbow {
+  animation: avatar-spin 6s linear infinite;
+}
+.avatar-aura.effect-sparkle {
+  animation: avatar-sparkle 1.6s ease-in-out infinite;
+}
+.avatar-aura.effect-heart {
+  animation: avatar-float 2.4s ease-in-out infinite;
+}
+
+@keyframes avatar-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes avatar-sparkle {
+  0%, 100% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+@keyframes avatar-float {
+  0%, 100% { transform: translateY(4%); opacity: 0.6; }
+  50% { transform: translateY(-8%); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-aura.effect-rainbow,
+  .avatar-aura.effect-sparkle,
+  .avatar-aura.effect-heart {
+    animation: none;
+  }
+}
+
+/* --- 着せ替えボタン（ヘッダー、ショップボタンと並ぶ） --- */
+.dressup-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: #fff;
+  font-family: var(--g-font, sans-serif);
+  font-weight: 700;
+  font-size: 18px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(124, 86, 212, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.dressup-open-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(124, 86, 212, 0.5);
+}
+.dressup-open-btn:active {
+  transform: translateY(-1px);
+}
+
+/* チップ内アバター（👤 の置き換え） */
+#user-chip-avatar .avatar-display {
+  vertical-align: middle;
+}
+
+/* --- 着せ替え画面（store-modal を流用） --- */
+.dressup-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.dressup-preview .avatar-display {
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%);
+  border: 3px solid #ffe0ef;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dressup-name {
+  font-family: var(--g-font, sans-serif);
+  font-weight: 900;
+  font-size: 22px;
+  color: #5c4c51;
+}
+
+.dressup-section {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.dressup-section-title {
+  font-family: var(--g-font, sans-serif);
+  font-weight: 800;
+  font-size: 17px;
+  color: #8b5cf6;
+  margin-bottom: 10px;
+}
+
+.dressup-hint {
+  font-size: 14px;
+  color: #b0a0a6;
+  margin: 0 0 4px;
+}
+
+.dressup-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dressup-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 84px;
+  padding: 10px 6px;
+  background: #fff;
+  border: 2px solid #ffe0ef;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: var(--g-font, sans-serif);
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.dressup-option:active {
+  transform: scale(0.95);
+}
+
+.dressup-option.selected {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  box-shadow: 0 4px 12px rgba(124, 86, 212, 0.25);
+}
+
+.dressup-option-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.dressup-option-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c4c51;
+}
+
+@media (max-width: 480px) {
+  .avatar-profile { font-size: 76px; }
+  .dressup-preview .avatar-display { width: 120px; height: 120px; }
+  .dressup-option { width: 72px; }
+  .dressup-option-icon { font-size: 30px; }
+}

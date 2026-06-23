@@ -72,6 +72,23 @@
 - **解決策**: ゲームを非同期起動してから eval を返し（タイムアウトを避ける）、完了後に別の eval 呼び出しで `result-modal.classList.contains('show')` や localStorage を読んで結果を確認する2段階方式にする。
 - **教訓**: preview_eval は 30 秒で強制終了する。それ以上かかる非同期処理は「起動だけして返す → 後で状態確認」に分割すること。
 
+## 12. preview_start で同じポートを再利用するとブラウザが古いJSをキャッシュし続ける
+
+- **状況**: `store.js` に新API（`equip`, `getAvatar`, `slotOf`）を追加したが、`preview_start` で同じポート(8765)を止めて再起動しても `typeof Store.equip` が `"undefined"` のまま変わらなかった。`avatar.js`（新規ファイル）は問題なく読まれるのに `store.js` だけ古い版が使われ続けた。
+- **原因**: 既存ファイルへの変更はブラウザが aggressive にキャッシュする。新規ファイルはキャッシュに無いため必ず取得される。
+- **解決策**:
+  1. `fetch('js/store.js?cb='+Date.now()).then(r=>r.text()).then(t=>t.indexOf('function equip')>-1 ? 'DISK_OK' : 'DISK_OLD')` でサーバ上のファイルが更新済みかを確認（ディスクは正しかった）。
+  2. `.claude/launch.json` のポートを `8765→8766` に変更して `preview_start("static")` を再実行 → ブラウザが初回取得するため全ファイルが最新に。
+  3. 確認後ポートを 8765 に戻す。
+- **教訓**: 「修正を加えた既存ファイルがブラウザに反映されない」場合はポートを変えて新鮮な origin を作ることで確実にキャッシュを回避できる。`location.reload()` では不十分なことがある。`eval(fetchedText)` でインラインに注入して動作確認する方法（スクリプト再評価）も有効だが、本番テストはポート切替が確実。
+
+## 13. preview_screenshot は固定グラデーション背景のページでblankになることがある
+
+- **状況**: 着せ替えモーダルを開いた状態でスクリーンショットを撮ったが、何度撮っても真っ白（薄ピンク一色）の画像しか取得できなかった。
+- **原因**: `preview_screenshot` は CSS `background-image: linear-gradient(...)` や `animation` が絡む固定背景レイアウトでキャプチャタイミングがズレることがある。DOM自体は正しく描画されている。
+- **解決策**: 表示確認は `preview_snapshot`（アクセシビリティツリー）と `preview_eval` で DOM の innerHTML・classList・getBoundingClientRect を直接読む。これで構造・テキスト・レイアウトの全てが確認できる。スクリーンショットは補足的なもので、動作確認の主軸にしない。
+- **教訓**: 動作確認の主役は `preview_eval` + `preview_snapshot`。`preview_screenshot` は補足証拠として使い、blank でも慌てず DOM で確認する。
+
 ## 5. サムネイル画像管理: 1ゲーム1画像の原則
 - **状況**: 当初、算数クイズ4種（たしざん・ひきざん・かけざん・わりざん）が同一の `math_thumb.png` を共有し、タイピング2種（こもじ・おおもじ）が同一の `rakugaku_thumb.png` を共有していた。
 - **問題**: ゲームの区別がつきにくく、ユーザーから全てのサムネイルを個別にしたいとの要望があった。

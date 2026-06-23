@@ -98,6 +98,11 @@ function refreshSiteTokens() {
   if (shopModalTokens && window.Store) {
     shopModalTokens.textContent = Store.getTokens();
   }
+  // ヘッダーチップのアバターも最新の装備で再描画（購入・着せ替えで即反映）
+  const chipAvatar = document.getElementById('user-chip-avatar');
+  if (chipAvatar && typeof window.renderAvatar === 'function') {
+    window.renderAvatar(chipAvatar, { size: 'chip' });
+  }
 }
 
 // 起動時 & 購入などでトークンが変化したら表示を更新
@@ -123,6 +128,28 @@ if (btnShop && shopModal) {
   document.getElementById('btn-close-shop').addEventListener('click', closeShop);
   shopModal.addEventListener('click', (e) => {
     if (e.target === shopModal) closeShop();
+  });
+}
+
+// 着せ替えを開く
+const btnDressup  = document.getElementById('btn-dressup');
+const dressupModal = document.getElementById('dressup-modal');
+if (btnDressup && dressupModal) {
+  btnDressup.addEventListener('click', () => {
+    playPopSound();
+    if (typeof window.renderDressUp === 'function') {
+      window.renderDressUp(document.getElementById('dressupBody'));
+    }
+    dressupModal.classList.add('show');
+  });
+
+  const closeDressup = () => {
+    playCloseSound();
+    dressupModal.classList.remove('show');
+  };
+  document.getElementById('btn-close-dressup').addEventListener('click', closeDressup);
+  dressupModal.addEventListener('click', (e) => {
+    if (e.target === dressupModal) closeDressup();
   });
 }
 
