@@ -49,13 +49,17 @@
         var effItem = itemById(av.effect);
         var effClass = effItem ? ' effect-' + effItem.id.replace('effect_', '') : '';
 
+        var baseIconHtml = Store.getIconHtml(baseIcon, 'ベースアバター');
+        var accIconHtml = accIcon ? Store.getIconHtml(accIcon, 'かざり') : '';
+        var effIconHtml = effItem ? Store.getIconHtml(effItem.icon, 'エフェクト') : '';
+
         var html = '<div class="avatar-display avatar-' + size + '">';
         if (effItem) {
-            html += '<span class="avatar-aura' + effClass + '" aria-hidden="true">' + effItem.icon + '</span>';
+            html += '<span class="avatar-aura' + effClass + '" aria-hidden="true">' + effIconHtml + '</span>';
         }
-        html += '<span class="avatar-base">' + baseIcon + '</span>';
+        html += '<span class="avatar-base">' + baseIconHtml + '</span>';
         if (accIcon) {
-            html += '<span class="avatar-accessory">' + accIcon + '</span>';
+            html += '<span class="avatar-accessory">' + accIconHtml + '</span>';
         }
         html += '</div>';
         el.innerHTML = html;
@@ -138,8 +142,10 @@
 
         var btn = document.createElement('button');
         btn.className = 'dressup-option' + (selected ? ' selected' : '');
+        
+        var iconHtml = Store.getIconHtml(icon, name);
         btn.innerHTML =
-            '<span class="dressup-option-icon">' + icon + '</span>' +
+            '<span class="dressup-option-icon">' + iconHtml + '</span>' +
             '<span class="dressup-option-name">' + name + '</span>';
         btn.addEventListener('click', function () {
             Store.equip(slot, id);

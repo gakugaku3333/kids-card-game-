@@ -18,9 +18,11 @@
     function showPurchasePopup(item) {
         var popup = document.createElement('div');
         popup.className = 'store-reward-popup';
+        
+        var iconHtml = Store.getIconHtml(item.icon, item.name);
         popup.innerHTML =
             '<h2 class="store-reward-title">🎉 ゲット！</h2>' +
-            '<div class="store-reward-icon">' + item.icon + '</div>' +
+            '<div class="store-reward-icon">' + iconHtml + '</div>' +
             '<div class="store-reward-name">' + item.name + '</div>';
         document.body.appendChild(popup);
         createConfetti();
@@ -64,8 +66,10 @@
             var owned = Store.owns(item.id);
             var div = document.createElement('div');
             div.className = 'shop-item' + (owned ? ' owned' : '');
+            
+            var iconHtml = Store.getIconHtml(item.icon, item.name);
             div.innerHTML =
-                '<div class="shop-item-icon">' + item.icon + '</div>' +
+                '<div class="shop-item-icon">' + iconHtml + '</div>' +
                 '<div class="shop-item-name">' + item.name + '</div>' +
                 '<div class="shop-item-price">⭐ ' + item.price + '</div>';
 

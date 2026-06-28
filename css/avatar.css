@@ -201,3 +201,25 @@
   .dressup-option { width: 72px; }
   .dressup-option-icon { font-size: 30px; }
 }
+
+/* 画像アバター用の共通スタイル */
+.avatar-icon-img {
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* アバターベース画像調整 */
+.avatar-base img.avatar-icon-img {
+  display: block;
+}
+
+/* 着せ替えオプション内の画像調整 */
+.dressup-option-icon img.avatar-icon-img {
+  width: 1em;
+  height: 1em;
+}
+

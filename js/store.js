@@ -25,6 +25,11 @@
         { id: 'avatar_rabbit', name: 'うさぎアバター', icon: '🐰', price: 15, type: 'avatar' },
         { id: 'avatar_bear', name: 'くまアバター', icon: '🐻', price: 15, type: 'avatar' },
         { id: 'avatar_unicorn', name: 'ゆにこーん', icon: '🦄', price: 25, type: 'avatar' },
+        { id: 'avatar_magic_girl', name: 'まほうしょうじょ', icon: 'assets/images/avatars/avatar_magic_girl.png', price: 30, type: 'avatar' },
+        { id: 'avatar_princess', name: 'プリンセス', icon: 'assets/images/avatars/avatar_princess.png', price: 30, type: 'avatar' },
+        { id: 'avatar_rabbit_fairy', name: 'うさぎのようせい', icon: 'assets/images/avatars/avatar_rabbit_fairy.png', price: 30, type: 'avatar' },
+        { id: 'avatar_kitty_girl', name: 'ねこみみガール', icon: 'assets/images/avatars/avatar_kitty_girl.png', price: 30, type: 'avatar' },
+        { id: 'avatar_angel_girl', name: 'てんしちゃん', icon: 'assets/images/avatars/avatar_angel_girl.png', price: 30, type: 'avatar' },
         { id: 'effect_rainbow', name: 'にじエフェクト', icon: '🌈', price: 20, type: 'effect' },
         { id: 'effect_sparkle', name: 'きらきら', icon: '✨', price: 20, type: 'effect' },
         { id: 'effect_heart', name: 'はーと', icon: '💕', price: 15, type: 'effect' },
@@ -161,6 +166,13 @@
         slotOf: slotOf,
         equip: equip,
         save: save,
-        reload: function () { data = load(); return data; }
+        reload: function () { data = load(); return data; },
+        getIconHtml: function (icon, altText) {
+            if (!icon) return '';
+            if (icon.indexOf('/') !== -1 || icon.match(/\.(png|jpg|jpeg|webp|gif|svg)$/i)) {
+                return '<img src="' + icon + '" class="avatar-icon-img" alt="' + (altText || '') + '" />';
+            }
+            return icon;
+        }
     };
 })();
