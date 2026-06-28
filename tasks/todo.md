@@ -1,3 +1,54 @@
+# タスク完了: 学習履歴を見る画面の追加
+
+## 完了日: 2026-06-29
+
+### 機能概要
+クイズで遊んだ結果（日付・ゲーム・正解数・獲得トークン）を後から振り返れる「📖 きろく」画面を `index.html` に追加。
+保存自体は既存の `FireLog.logSession()`（Firestore `users/{nickname}/sessions`）が**すでに**行っていたが、表示する手段がなかったため、取得APIと表示モーダルのみを新設した。
+
+### 変更したファイル
+| ファイル | 変更内容 |
+|---------|---------|
+| `js/firebase-log.js` | `getSessions(limit, cb)` を追加（sessionsを `timestamp desc` で取得） |
+| `index.html` | ヘッダーに「📖 きろく」ボタン・`#history-modal`・履歴描画JS（サマリ集計＋日付グループ化）を追加 |
+| `css/store.css` | `.history-summary` / `.history-row` / `.history-day` 等のスタイルを追加 |
+
+### 使い方（再利用ポイント）
+- **履歴を読む**: `FireLog.getSessions(50, function(sessions){ ... })`。各要素は `{game, correct, total, tokens, timestamp(Firestore Timestamp)}`。未ログイン時は `[]`。
+- **モーダル開閉**: `#history-modal` は `.store-modal` なので **`.show`** クラスで開閉（`.g-modal` の `.active` ではない → [lessons.md #15](lessons.md)）。
+- **他ゲームも履歴に出したい場合**: クリア時に `FireLog.logSession(game, correct, total, tokens)` を1行呼ぶだけ。現状クイズ2種のみが呼んでいる。ゲーム名ラベルは `index.html` の `GAME_LABELS` に追記すると表示名・アイコンが付く（未登録は `🎮 + 生のgame名`）。
+
+### 検証
+preview（port 8765）で：コンソールエラーなし／実Firestore問い合わせで空状態表示OK／モックデータでサマリ集計（3かい24せいかい⭐24）と日付グループ化（6/29に2件・6/27に1件）をスクリーンショットで確認。
+
+---
+
+# 進行中のタスク: 画像生成による女の子向けアバターの追加
+
+- [x] 女の子向けアバター画像の生成と配置（5種類）
+  - [x] 魔法少女 (`avatar_magic_girl.png`)
+  - [x] プリンセス (`avatar_princess.png`)
+  - [x] うさぎのようせい (`avatar_rabbit_fairy.png`)
+  - [x] ねこみみガール (`avatar_kitty_girl.png`)
+  - [x] てんしちゃん (`avatar_angel_girl.png`)
+- [x] 共通モジュール `js/store.js` の改修
+  - [x] 画像対応用の `Store.getIconHtml` メソッドの実装
+  - [x] 新規アバター（5種類）を `SHOP_ITEMS` に追加（画像パスを icon に設定）
+- [x] 着せ替え機能 `js/avatar.js` の改修
+  - [x] `renderAvatar` で画像アイコンが正常に表示されるよう `Store.getIconHtml` を適用
+  - [x] `makeOption` の選択肢ボタンでの画像表示対応
+- [x] ショップ機能 `js/shop.js` の改修
+  - [x] 商品一覧および購入ポップアップでの画像表示対応
+- [x] CSS (`css/avatar.css`, `css/store.css`) の改修
+  - [x] 画像アバターが枠に綺麗に収まり、円形になるようなスタイル設定
+  - [x] サイズ（チップサイズ 20px / プロフィールサイズ 92px）に画像が連動するよう設定 (`1em`)
+- [x] ローカル環境での動作確認と検証
+
+## レビュー (2026-06-25)
+女の子向けの可愛いアバター5種（まほうしょうじょ、プリンセス、うさぎのようせい、ねこみみガール、てんしちゃん）を画像生成AIで生成し、ショップで購入してアバターきせかえで使用できるようにしました。絵文字アバターと混在しても、CSSの `em` 指定により、チップアバターやプロフィールサイズに合わせて画像が自動でサイズスケーリングされ、綺麗に円形に表示されます。文法チェックも実行し問題ないことを確認しました。
+
+---
+
 # タスク完了: 新ゲーム3本追加（もぐらたたき・フルーツキャッチ・おえかき）
 
 ## 完了日: 2026-06-22

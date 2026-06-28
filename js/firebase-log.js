@@ -172,6 +172,32 @@
         tokens: tokens,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       }).catch(function (e) { console.warn('[FireLog] logSession:', e); });
+    },
+
+    /**
+     * 学習履歴（過去のゲームセッション）を新しい順で取得
+     * @param {number}   limit    - 取得する最大件数（省略時は50）
+     * @param {function} callback - callback(sessions: Array)。未ログイン時は []
+     */
+    getSessions: function (limit, callback) {
+      if (typeof limit === 'function') { callback = limit; limit = 50; }
+      var ref = userRef();
+      if (!ref) { callback([]); return; }
+      ref.collection('sessions')
+        .orderBy('timestamp', 'desc')
+        .limit(limit || 50)
+        .get()
+        .then(function (snap) {
+          var items = [];
+          snap.forEach(function (doc) {
+            items.push(Object.assign({ id: doc.id }, doc.data()));
+          });
+          callback(items);
+        })
+        .catch(function (e) {
+          console.warn('[FireLog] getSessions:', e);
+          callback([]);
+        });
     }
   };
 })();

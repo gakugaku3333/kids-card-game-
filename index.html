@@ -90,6 +90,7 @@
         </span>
         <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
         <button id="btn-dressup" class="dressup-open-btn">👗 きせかえ</button>
+        <button id="btn-history" class="dressup-open-btn">📖 きろく</button>
       </div>
     </header>
 
@@ -329,6 +330,16 @@
     </div>
   </div>
 
+  <!-- 学習のきろくモーダル -->
+  <div id="history-modal" class="store-modal">
+    <div class="store-modal-box">
+      <h3 class="store-modal-title">📖 がくしゅうの きろく</h3>
+      <div id="historySummary" class="history-summary"></div>
+      <div id="historyBody" class="history-body"></div>
+      <button id="btn-close-history" class="store-modal-close">とじる</button>
+    </div>
+  </div>
+
   <!-- JavaScript -->
   <script src="js/store.js"></script>
   <script src="js/shop.js"></script>
@@ -380,6 +391,109 @@
 
     document.getElementById('nickname-input').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+
+    // ===== 学習のきろく =====
+    var GAME_LABELS = {
+      'katakana': { name: 'かたかなクイズ', icon: '🔤' },
+      'math-addition': { name: 'たしざんクイズ', icon: '➕' },
+      'math-subtraction': { name: 'ひきざんクイズ', icon: '➖' },
+      'math-multiplication': { name: 'かけざんクイズ', icon: '✖️' },
+      'math-division': { name: 'わりざんクイズ', icon: '➗' }
+    };
+
+    function labelOf(game) {
+      return GAME_LABELS[game] || { name: game, icon: '🎮' };
+    }
+
+    // Firestore Timestamp / Date / null を「6/29」「6/29 14:05」へ整形
+    function fmtDate(ts, withTime) {
+      var d = null;
+      if (ts && typeof ts.toDate === 'function') d = ts.toDate();
+      else if (ts instanceof Date) d = ts;
+      if (!d) return '';
+      var s = (d.getMonth() + 1) + '/' + d.getDate();
+      if (withTime) {
+        var mm = ('0' + d.getMinutes()).slice(-2);
+        s += ' ' + d.getHours() + ':' + mm;
+      }
+      return s;
+    }
+
+    function dayKey(ts) {
+      var d = (ts && typeof ts.toDate === 'function') ? ts.toDate()
+            : (ts instanceof Date ? ts : null);
+      if (!d) return 'いつか';
+      return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+    }
+
+    function renderHistory(sessions) {
+      var summary = document.getElementById('historySummary');
+      var body = document.getElementById('historyBody');
+
+      if (!sessions || sessions.length === 0) {
+        summary.innerHTML = '';
+        body.innerHTML = '<p class="history-empty">まだ きろくが ないよ。<br>クイズで あそぶと ここに たまるよ！ 🌱</p>';
+        return;
+      }
+
+      // サマリ集計
+      var plays = sessions.length, totalCorrect = 0, totalQ = 0, totalTokens = 0;
+      sessions.forEach(function (s) {
+        totalCorrect += (s.correct || 0);
+        totalQ += (s.total || 0);
+        totalTokens += (s.tokens || 0);
+      });
+      summary.innerHTML =
+        '<div class="hs-card"><span class="hs-num">' + plays + '</span><span class="hs-label">かい あそんだ</span></div>' +
+        '<div class="hs-card"><span class="hs-num">' + totalCorrect + '</span><span class="hs-label">せいかい</span></div>' +
+        '<div class="hs-card"><span class="hs-num">⭐' + totalTokens + '</span><span class="hs-label">トークン</span></div>';
+
+      // 日付ごとにグループ化（取得は新しい順なので順序は保たれる）
+      var groups = [], byDay = {};
+      sessions.forEach(function (s) {
+        var k = dayKey(s.timestamp);
+        if (!byDay[k]) { byDay[k] = []; groups.push(k); }
+        byDay[k].push(s);
+      });
+
+      var html = '';
+      groups.forEach(function (k) {
+        var first = byDay[k][0];
+        html += '<div class="history-day">' + (fmtDate(first.timestamp) || k) + '</div>';
+        byDay[k].forEach(function (s) {
+          var L = labelOf(s.game);
+          var score = (s.correct || 0) + '/' + (s.total || 0);
+          html += '<div class="history-row">' +
+            '<span class="hr-icon">' + L.icon + '</span>' +
+            '<span class="hr-name">' + L.name + '</span>' +
+            '<span class="hr-score">' + score + 'もん</span>' +
+            '<span class="hr-tokens">⭐' + (s.tokens || 0) + '</span>' +
+          '</div>';
+        });
+      });
+      body.innerHTML = html;
+    }
+
+    function openHistory() {
+      var modal = document.getElementById('history-modal');
+      document.getElementById('historySummary').innerHTML = '';
+      document.getElementById('historyBody').innerHTML = '<p class="history-empty">よみこみちゅう… ⏳</p>';
+      modal.classList.add('show');
+      if (window.FireLog && FireLog.getSavedUser()) {
+        FireLog.getSessions(50, renderHistory);
+      } else {
+        document.getElementById('historyBody').innerHTML =
+          '<p class="history-empty">なまえを とうろくすると<br>きろくが のこせるよ！</p>';
+      }
+    }
+
+    document.getElementById('btn-history').addEventListener('click', openHistory);
+    document.getElementById('btn-close-history').addEventListener('click', function () {
+      document.getElementById('history-modal').classList.remove('show');
+    });
+    document.getElementById('history-modal').addEventListener('click', function (e) {
+      if (e.target === this) this.classList.remove('show');
     });
 
     // 起動時：保存済みニックネームがあればそのまま復元、なければログイン画面

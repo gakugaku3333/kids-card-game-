@@ -254,3 +254,101 @@
   .shop-items { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
   .shop-item-icon { font-size: 38px; }
 }
+
+/* ショップ内画像アバターアイコンの調整 */
+.shop-item-icon img.avatar-icon-img {
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto;
+}
+
+.store-reward-icon img.avatar-icon-img {
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ===== 学習のきろく モーダル ===== */
+.history-summary {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.history-summary .hs-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  padding: 12px 10px;
+  background: linear-gradient(135deg, #fef3f8, #f0f4ff);
+  border-radius: 16px;
+  border: 2px solid #f0d9ea;
+}
+.history-summary .hs-num {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f5576c;
+  line-height: 1.1;
+}
+.history-summary .hs-label {
+  font-size: .75rem;
+  color: #8f7d83;
+  margin-top: 2px;
+}
+
+.history-body {
+  max-height: 48vh;
+  overflow-y: auto;
+  text-align: left;
+}
+.history-day {
+  font-weight: 900;
+  font-size: .9rem;
+  color: #7a6b9d;
+  margin: 14px 4px 6px;
+  padding-left: 4px;
+}
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  margin-bottom: 6px;
+  background: #fff;
+  border: 2px solid #f3e7f0;
+  border-radius: 14px;
+}
+.history-row .hr-icon { font-size: 1.2rem; }
+.history-row .hr-name {
+  flex: 1;
+  font-weight: 700;
+  font-size: .92rem;
+  color: #5c4c51;
+}
+.history-row .hr-score {
+  font-weight: 900;
+  font-size: .9rem;
+  color: #4a9d6e;
+  white-space: nowrap;
+}
+.history-row .hr-tokens {
+  font-weight: 900;
+  font-size: .9rem;
+  color: #e8a33d;
+  white-space: nowrap;
+}
+.history-empty {
+  text-align: center;
+  color: #8f7d83;
+  font-weight: 700;
+  padding: 30px 10px;
+  line-height: 1.7;
+}
