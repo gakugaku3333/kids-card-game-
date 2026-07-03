@@ -1,0 +1,92 @@
+{
+  "games": [
+    {
+      "id": "memory",
+      "title": "しんけいすいじゃく",
+      "path": "games/memory/index.html",
+      "thumb": "assets/images/memory_game_thumb.png",
+      "desc": "おなじ えの カードを あてよう！ロップイヤーもうさぎもいるよ！",
+      "category": "アクション"
+    },
+    {
+      "id": "quiz-katakana",
+      "title": "かたかなクイズ",
+      "path": "games/rakugaku/index.html?mode=katakana",
+      "thumb": "assets/images/katakana_thumb.png",
+      "desc": "カタカナを よんでみよう！せいかいすると トークンが もらえるよ！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "math-addition",
+      "title": "たしざんクイズ",
+      "path": "games/rakugaku/index.html?math=addition",
+      "thumb": "assets/images/addition_thumb.png",
+      "desc": "➕ たしざんに ちょうせん！レベルを えらんで あそぼう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "math-subtraction",
+      "title": "ひきざんクイズ",
+      "path": "games/rakugaku/index.html?math=subtraction",
+      "thumb": "assets/images/subtraction_thumb.png",
+      "desc": "➖ ひきざんに ちょうせん！レベルを えらんで あそぼう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "math-multiplication",
+      "title": "かけざんクイズ",
+      "path": "games/rakugaku/index.html?math=multiplication",
+      "thumb": "assets/images/multiplication_thumb.png",
+      "desc": "✖️ かけざんに ちょうせん！レベルを えらんで あそぼう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "math-division",
+      "title": "わりざんクイズ",
+      "path": "games/rakugaku/index.html?math=division",
+      "thumb": "assets/images/division_thumb.png",
+      "desc": "➗ わりざんに ちょうせん！レベルを えらんで あそぼう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "typing-lower",
+      "title": "たいぴんぐ (こもじ)",
+      "path": "games/rakugaku/lowercase-typing.html",
+      "thumb": "assets/images/lowercase_typing_thumb.png",
+      "desc": "キーボードで アルファベットの こもじを タイピングしよう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "typing-upper",
+      "title": "たいぴんぐ (おおもじ)",
+      "path": "games/rakugaku/uppercase-typing.html",
+      "thumb": "assets/images/uppercase_typing_thumb.png",
+      "desc": "キーボードで アルファベットの おおもじを タイピングしよう！",
+      "category": "べんきょう"
+    },
+    {
+      "id": "mole",
+      "title": "もぐらたたき",
+      "path": "games/mole/index.html",
+      "thumb": "assets/images/mole_thumb.svg",
+      "desc": "🔨 あなから でてくる もぐらを タップ！ばくだんは よけてね！",
+      "category": "アクション"
+    },
+    {
+      "id": "catch",
+      "title": "フルーツキャッチ",
+      "path": "games/catch/index.html",
+      "thumb": "assets/images/catch_thumb.svg",
+      "desc": "🧺 カゴを うごかして おちてくる フルーツを うけとめよう！",
+      "category": "アクション"
+    },
+    {
+      "id": "draw",
+      "title": "おえかき",
+      "path": "games/draw/index.html",
+      "thumb": "assets/images/draw_thumb.svg",
+      "desc": "🖍️ ゆびで じゆうに おえかき！すきな いろで かいてみよう！",
+      "category": "おえかき"
+    }
+  ]
+}

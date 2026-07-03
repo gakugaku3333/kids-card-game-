@@ -1,3 +1,29 @@
+# 進行中: リニューアル Phase 0・Phase 1（一部）
+
+## 完了日: 2026-07-04
+
+[リニューアル指示書.md](リニューアル指示書.md) に基づく段階移行。今回実施した範囲:
+
+### Phase 0（安全網）
+- `tasks/smoke-test.md` を新設（各フェーズ完了時の動作確認チェックリスト）
+- `git tag v1-legacy` をリニューアル着手前の状態に打って push 済み
+
+### Phase 1（一部: ハブのみ。ゲーム個別ページは未着手）
+- `data/games.json` を新設 — ゲーム一覧（タイトル・パス・サムネ・説明・カテゴリ）の唯一の管理場所に
+- `index.html` のハードコードされた11枚のカードを撤去し、起動時に `data/games.json` を fetch して動的生成する方式に変更（表示・挙動は完全に維持）
+- `core/modal.js` を新設 — `.g-modal`(`.active`) / `.store-modal`(`.show`) の混在を吸収する統一 `openModal`/`closeModal`/`closeOnOverlayClick` API
+- `index.html` の末尾スクリプトと `js/gallery.js` を `type="module"` 化し、モーダル開閉をすべて `core/modal.js` 経由に置換（login/msg/help/shop/dressup/history の全6モーダル）
+
+### 検証（`tasks/smoke-test.md` 該当行参照）
+preview（ポート一時変更 8765→8767 でキャッシュ回避）でハブのみ確認: games.json駆動の11カード表示、ログイン、ショップ購入UI、きせかえUI、きろく表示、各モーダルの開閉（クローズボタン）が正常動作。コンソールエラーなし。スクリーンショットで見た目が変更前と同一であることを確認。
+
+### 未着手（次セッションで継続）
+- `js/store.js` `js/firebase-log.js` `js/shop.js` `js/avatar.js` の `core/` へのES Modules移設（各ゲームページを1つずつ移行する必要があり、影響範囲が大きいため今回は見送り）
+- `styles/tokens.css`（既存 `css/gallery.css` の `:root` に同等のCSS変数が既にあるため、実質的な重複を避けて保留）
+- Phase 2以降（`core/shell.js`、クイズエンジン統合、音・PWA等）
+
+---
+
 # タスク完了: 学習履歴を見る画面の追加
 
 ## 完了日: 2026-06-29

@@ -101,142 +101,10 @@
       </a>
     </div>
 
-    <!-- ゲーム一覧グリッド -->
-    <main class="games-grid">
-      
-      <!-- 1. 神経衰弱ゲーム -->
-      <a href="games/memory/index.html" class="game-card" id="card-memory">
-        <div class="card-image-wrapper">
-          <img src="assets/images/memory_game_thumb.png" alt="しんけいすいじゃく" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">しんけいすいじゃく</h2>
-          <p class="card-desc">おなじ えの カードを あてよう！ロップイヤーもうさぎもいるよ！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
+    <!-- ゲーム一覧グリッド（data/games.json から動的生成。単一の一覧管理場所） -->
+    <main class="games-grid" id="games-grid">
 
-      <!-- 2. かたかなクイズ -->
-      <a href="games/rakugaku/index.html?mode=katakana" class="game-card" id="card-katakana">
-        <div class="card-image-wrapper">
-          <img src="assets/images/katakana_thumb.png" alt="かたかなクイズ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">かたかなクイズ</h2>
-          <p class="card-desc">カタカナを よんでみよう！せいかいすると トークンが もらえるよ！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 3. さんすうクイズ（たしざん） -->
-      <a href="games/rakugaku/index.html?math=addition" class="game-card" id="card-math-addition">
-        <div class="card-image-wrapper">
-          <img src="assets/images/addition_thumb.png" alt="たしざんクイズ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">たしざんクイズ</h2>
-          <p class="card-desc">➕ たしざんに ちょうせん！レベルを えらんで あそぼう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 4. さんすうクイズ（ひきざん） -->
-      <a href="games/rakugaku/index.html?math=subtraction" class="game-card" id="card-math-subtraction">
-        <div class="card-image-wrapper">
-          <img src="assets/images/subtraction_thumb.png" alt="ひきざんクイズ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">ひきざんクイズ</h2>
-          <p class="card-desc">➖ ひきざんに ちょうせん！レベルを えらんで あそぼう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 5. さんすうクイズ（かけざん） -->
-      <a href="games/rakugaku/index.html?math=multiplication" class="game-card" id="card-math-multiplication">
-        <div class="card-image-wrapper">
-          <img src="assets/images/multiplication_thumb.png" alt="かけざんクイズ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">かけざんクイズ</h2>
-          <p class="card-desc">✖️ かけざんに ちょうせん！レベルを えらんで あそぼう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 6. さんすうクイズ（わりざん） -->
-      <a href="games/rakugaku/index.html?math=division" class="game-card" id="card-math-division">
-        <div class="card-image-wrapper">
-          <img src="assets/images/division_thumb.png" alt="わりざんクイズ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">わりざんクイズ</h2>
-          <p class="card-desc">➗ わりざんに ちょうせん！レベルを えらんで あそぼう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 7. たいぴんぐ（こもじ） -->
-      <a href="games/rakugaku/lowercase-typing.html" class="game-card" id="card-lowercase">
-        <div class="card-image-wrapper">
-          <img src="assets/images/lowercase_typing_thumb.png" alt="たいぴんぐ こもじ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">たいぴんぐ (こもじ)</h2>
-          <p class="card-desc">キーボードで アルファベットの こもじを タイピングしよう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 8. たいぴんぐ（おおもじ） -->
-      <a href="games/rakugaku/uppercase-typing.html" class="game-card" id="card-uppercase">
-        <div class="card-image-wrapper">
-          <img src="assets/images/uppercase_typing_thumb.png" alt="たいぴんぐ おおもじ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">たいぴんぐ (おおもじ)</h2>
-          <p class="card-desc">キーボードで アルファベットの おおもじを タイピングしよう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 9. もぐらたたき -->
-      <a href="games/mole/index.html" class="game-card" id="card-mole">
-        <div class="card-image-wrapper">
-          <img src="assets/images/mole_thumb.svg" alt="もぐらたたき" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">もぐらたたき</h2>
-          <p class="card-desc">🔨 あなから でてくる もぐらを タップ！ばくだんは よけてね！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 10. フルーツキャッチ -->
-      <a href="games/catch/index.html" class="game-card" id="card-catch">
-        <div class="card-image-wrapper">
-          <img src="assets/images/catch_thumb.svg" alt="フルーツキャッチ" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">フルーツキャッチ</h2>
-          <p class="card-desc">🧺 カゴを うごかして おちてくる フルーツを うけとめよう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 11. おえかき -->
-      <a href="games/draw/index.html" class="game-card" id="card-draw">
-        <div class="card-image-wrapper">
-          <img src="assets/images/draw_thumb.svg" alt="おえかき" class="card-thumb">
-        </div>
-        <div class="card-info">
-          <h2 class="card-title">おえかき</h2>
-          <p class="card-desc">🖍️ ゆびで じゆうに おえかき！すきな いろで かいてみよう！</p>
-          <span class="play-tag">あそぶ！</span>
-        </div>
-      </a>
-
-      <!-- 12. つぎのゲーム（プレースホルダー） -->
+      <!-- つぎのゲーム（プレースホルダー） -->
       <div class="game-card placeholder" id="card-placeholder">
         <div class="card-image-wrapper">
           <img src="assets/images/placeholder_game.png" alt="つぎのゲーム" class="card-thumb">
@@ -344,24 +212,54 @@
   <script src="js/store.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/avatar.js"></script>
-  <script src="js/gallery.js"></script>
+  <script>
+  // ゲーム一覧を data/games.json から描画（唯一の一覧管理場所。カードを増やす時はJSONに1行追加するだけ）
+  // カード描画が終わってから gallery.js（カードのクリック挙動）を読み込む
+  (function () {
+    'use strict';
+    fetch('data/games.json')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var placeholder = document.getElementById('card-placeholder');
+        var html = (data.games || []).map(function (g) {
+          return '<a href="' + g.path + '" class="game-card" id="card-' + g.id + '">' +
+            '<div class="card-image-wrapper"><img src="' + g.thumb + '" alt="' + g.title + '" class="card-thumb"></div>' +
+            '<div class="card-info">' +
+              '<h2 class="card-title">' + g.title + '</h2>' +
+              '<p class="card-desc">' + g.desc + '</p>' +
+              '<span class="play-tag">あそぶ！</span>' +
+            '</div>' +
+          '</a>';
+        }).join('');
+        placeholder.insertAdjacentHTML('beforebegin', html);
+      })
+      .catch(function (e) { console.warn('[games.json] load error:', e); })
+      .then(function () {
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = 'js/gallery.js';
+        document.body.appendChild(s);
+      });
+  })();
+  </script>
 
   <!-- Firebase SDK + ログモジュール -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-log.js"></script>
-  <script>
+  <script type="module">
+  import { openModal, closeModal, closeOnOverlayClick } from './core/modal.js';
   (function () {
     'use strict';
 
     function showLoginModal() {
-      document.getElementById('login-modal').classList.add('active');
+      openModal(document.getElementById('login-modal'));
       setTimeout(function () { document.getElementById('nickname-input').focus(); }, 150);
     }
     window._showLoginModal = showLoginModal;
 
     function hideLoginModal() {
-      document.getElementById('login-modal').classList.remove('active');
+      closeModal(document.getElementById('login-modal'));
     }
 
     function applyUser(name) {
@@ -479,7 +377,7 @@
       var modal = document.getElementById('history-modal');
       document.getElementById('historySummary').innerHTML = '';
       document.getElementById('historyBody').innerHTML = '<p class="history-empty">よみこみちゅう… ⏳</p>';
-      modal.classList.add('show');
+      openModal(modal);
       if (window.FireLog && FireLog.getSavedUser()) {
         FireLog.getSessions(50, renderHistory);
       } else {
@@ -490,11 +388,9 @@
 
     document.getElementById('btn-history').addEventListener('click', openHistory);
     document.getElementById('btn-close-history').addEventListener('click', function () {
-      document.getElementById('history-modal').classList.remove('show');
+      closeModal(document.getElementById('history-modal'));
     });
-    document.getElementById('history-modal').addEventListener('click', function (e) {
-      if (e.target === this) this.classList.remove('show');
-    });
+    closeOnOverlayClick(document.getElementById('history-modal'));
 
     // 起動時：保存済みニックネームがあればそのまま復元、なければログイン画面
     var saved = window.FireLog ? FireLog.getSavedUser() : localStorage.getItem('kids_game_nickname');

@@ -1,3 +1,5 @@
+import { openModal, closeModal } from '../core/modal.js';
+
 /* ==========================================================================
    オーディオ設定 (Web Audio API)
    ========================================================================== */
@@ -54,24 +56,24 @@ document.querySelectorAll('.game-card:not(.placeholder)').forEach(card => {
 // プレースホルダー（準備中）
 document.getElementById('card-placeholder').addEventListener('click', () => {
   playPopSound();
-  msgModal.classList.add('active');
+  openModal(msgModal);
 });
 
 // ヘルプボタン
 document.getElementById('btn-help').addEventListener('click', () => {
   playPopSound();
-  helpModal.classList.add('active');
+  openModal(helpModal);
 });
 
 // モーダルを閉じる
 document.getElementById('btn-close-msg').addEventListener('click', () => {
   playCloseSound();
-  msgModal.classList.remove('active');
+  closeModal(msgModal);
 });
 
 document.getElementById('btn-close-help').addEventListener('click', () => {
   playCloseSound();
-  helpModal.classList.remove('active');
+  closeModal(helpModal);
 });
 
 // モーダル外側タップで閉じる
@@ -79,7 +81,7 @@ document.getElementById('btn-close-help').addEventListener('click', () => {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       playCloseSound();
-      modal.classList.remove('active');
+      closeModal(modal);
     }
   });
 });
@@ -118,12 +120,12 @@ if (btnShop && shopModal) {
     if (typeof window.renderShop === 'function') {
       window.renderShop(document.getElementById('shopModalItems'));
     }
-    shopModal.classList.add('show');
+    openModal(shopModal);
   });
 
   const closeShop = () => {
     playCloseSound();
-    shopModal.classList.remove('show');
+    closeModal(shopModal);
   };
   document.getElementById('btn-close-shop').addEventListener('click', closeShop);
   shopModal.addEventListener('click', (e) => {
@@ -140,12 +142,12 @@ if (btnDressup && dressupModal) {
     if (typeof window.renderDressUp === 'function') {
       window.renderDressUp(document.getElementById('dressupBody'));
     }
-    dressupModal.classList.add('show');
+    openModal(dressupModal);
   });
 
   const closeDressup = () => {
     playCloseSound();
-    dressupModal.classList.remove('show');
+    closeModal(dressupModal);
   };
   document.getElementById('btn-close-dressup').addEventListener('click', closeDressup);
   dressupModal.addEventListener('click', (e) => {
