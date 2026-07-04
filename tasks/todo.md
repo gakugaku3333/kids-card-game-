@@ -1,3 +1,26 @@
+# タスク完了: クイズエンジンのデータ駆動化（rakugaku 3570行の解消）
+
+## 完了日: 2026-07-04
+
+[リニューアル指示書.md](リニューアル指示書.md) 2.4節・Phase 2の残タスク。`games/rakugaku/index.html`(3570行)を解析した結果、ハブ(`data/games.json`)から実際に到達可能なのは「かたかなクイズ」「算数4種(たし/ひき/かけ/わり)」「ふくしゅう導線」の6経路のみで、ファイル内に同居していた15個のミニゲーム(もぐらたたき/バルーン割り等)・独自のショップ/とうけい/ゲーム一覧画面はハブのstartScreen到達導線が既に存在せず、死んだコードだったと判明（もぐら/キャッチ/おえかき等は既に`games/`配下に独立したシェル対応版が存在）。
+
+### 新設: `games/quiz/`（データ駆動クイズエンジン）
+- `engine.js`（211行）: `QuizEngine`クラスが出題・採点・トークン加算・`FireLog.logWrong/markReviewed/logSession`・復習モードを一手に担う汎用エンジン。算数の出題は`sum/diff/product/quotientExact/quotientRemainder`の5種の生成カーネルをJSON側の`kind`で選択する方式にし、新しい算数テーマはJSONのrange指定だけで追加できるようにした
+- `index.html`（182行）: `?set=<quizId>`で通常プレイ、`?mode=fb-review`でFirestore誤答復習に対応。`core/shell.js`のヘッダー/リザルトモーダルを利用
+- `data/quizzes/*.json`: `katakana.json`（type:"choice", 46問）、`math-addition/subtraction/multiplication/division.json`（type:"math", レベルごとのrange設定）。たしざんレベル1のみ「答えが10以下になる組み合わせ45通りを全出題」する特別なpresetを維持（元のロジックと同一挙動）
+- 正解するまで同じ問題に留まる（不正解ボタンのみ無効化）という元の挙動を保持。スコア/トークンは問題完了時にまとめて`shell.showResult`経由で加算（memory/catch/draw移行時と同じ方式に統一。元は正解ごとに即時加算していたが、シェル基盤の他ゲームと挙動を揃えた）
+
+### 旧 `games/rakugaku/index.html` → リダイレクトシムに縮小（26行）
+- 旧URL(`?mode=katakana`/`?math=xxx`/`?mode=fb-review`)を`games/quiz/index.html`の新URLへ`location.replace`する薄いシムのみ残置（ブックマーク・外部リンク互換のため）
+- `data/games.json`の6エントリと`index.html`の「📖 ふくしゅう」リンクを新URL(`games/quiz/index.html?set=...`)に更新
+
+### 意図的に見送った範囲
+- `games/rakugaku/lowercase-typing.html`/`uppercase-typing.html`（タイピングエンジン統合）は今回対象外。指示書2.4節では別項目（`games/typing/`統合）として扱われており、ハブは既に直接this2ファイルにリンクしているため今回の変更の影響を受けない
+- 削除した15ミニゲーム＋rakugaku独自のショップ/とうけい画面は、ハブの`data/games.json`にもindex.htmlのstartScreenからも到達導線が無かったことを確認した上での削除。もし将来的にこれらのミニゲームを復活させたい場合はgit履歴（このコミット以前）から復元可能
+- 検証: previewでかたかなクイズ(3択・正誤両分岐・トークン蓄積)、たしざんレベル1(プリセット総数45を確認)、わりざんレベル3(あまり生成: 38÷5→あまり3を数値確認)、旧URLからのリダイレクト、ふくしゅう導線(該当なし時の表示)、ハブのカード一覧とトークン共有、コンソール/ネットワークエラー無しを確認
+
+---
+
 # タスク完了: Phase 1残り（memory/catch/drawをcore/へ移行）＋Phase 2（シェル対応）
 
 ## 完了日: 2026-07-04

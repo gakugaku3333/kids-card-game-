@@ -1,0 +1,41 @@
+{
+  "id": "math-addition",
+  "title": "たしざん",
+  "emoji": "➕",
+  "type": "math",
+  "totalQuestions": 10,
+  "choiceCount": 4,
+  "reward": { "perCorrect": 2 },
+  "levels": [
+    {
+      "name": "レベル1: 1けた+1けた (こたえ10いか)",
+      "desc": "3+7=10",
+      "preset": "sumLe10",
+      "choiceRange": 10
+    },
+    {
+      "name": "レベル2: 1けた+1けた (こたえ2けた)",
+      "desc": "7+8=15",
+      "kind": "sum",
+      "num1Range": [5, 9],
+      "num2Range": [5, 9],
+      "choiceRange": 10
+    },
+    {
+      "name": "レベル3: 2けた+1けた",
+      "desc": "12+3=15",
+      "kind": "sum",
+      "num1Range": [10, 99],
+      "num2Range": [1, 9],
+      "choiceRange": 20
+    },
+    {
+      "name": "レベル4: 2けた+2けた",
+      "desc": "12+34=46",
+      "kind": "sum",
+      "num1Range": [10, 99],
+      "num2Range": [10, 99],
+      "choiceRange": 20
+    }
+  ]
+}

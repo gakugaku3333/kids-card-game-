@@ -1,0 +1,35 @@
+{
+  "id": "math-division",
+  "title": "わりざん",
+  "emoji": "➗",
+  "type": "math",
+  "totalQuestions": 10,
+  "choiceCount": 4,
+  "reward": { "perCorrect": 2 },
+  "levels": [
+    {
+      "name": "レベル1: 1けた÷1けた",
+      "desc": "6÷2=3",
+      "kind": "quotientExact",
+      "divisorRange": [2, 9],
+      "quotientRange": [1, 9],
+      "choiceRange": 10
+    },
+    {
+      "name": "レベル2: 2けた÷1けた (わりきれる)",
+      "desc": "12÷3=4",
+      "kind": "quotientExact",
+      "divisorRange": [2, 9],
+      "quotientRange": [1, 9],
+      "choiceRange": 10
+    },
+    {
+      "name": "レベル3: 2けた÷1けた (あまりあり)",
+      "desc": "13÷3=4あまり1",
+      "kind": "quotientRemainder",
+      "divisorRange": [2, 9],
+      "quotientRange": [1, 9],
+      "choiceRange": 10
+    }
+  ]
+}

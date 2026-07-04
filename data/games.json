@@ -11,7 +11,7 @@
     {
       "id": "quiz-katakana",
       "title": "かたかなクイズ",
-      "path": "games/rakugaku/index.html?mode=katakana",
+      "path": "games/quiz/index.html?set=katakana",
       "thumb": "assets/images/katakana_thumb.png",
       "desc": "カタカナを よんでみよう！せいかいすると トークンが もらえるよ！",
       "category": "べんきょう"
@@ -19,7 +19,7 @@
     {
       "id": "math-addition",
       "title": "たしざんクイズ",
-      "path": "games/rakugaku/index.html?math=addition",
+      "path": "games/quiz/index.html?set=math-addition",
       "thumb": "assets/images/addition_thumb.png",
       "desc": "➕ たしざんに ちょうせん！レベルを えらんで あそぼう！",
       "category": "べんきょう"
@@ -27,7 +27,7 @@
     {
       "id": "math-subtraction",
       "title": "ひきざんクイズ",
-      "path": "games/rakugaku/index.html?math=subtraction",
+      "path": "games/quiz/index.html?set=math-subtraction",
       "thumb": "assets/images/subtraction_thumb.png",
       "desc": "➖ ひきざんに ちょうせん！レベルを えらんで あそぼう！",
       "category": "べんきょう"
@@ -35,7 +35,7 @@
     {
       "id": "math-multiplication",
       "title": "かけざんクイズ",
-      "path": "games/rakugaku/index.html?math=multiplication",
+      "path": "games/quiz/index.html?set=math-multiplication",
       "thumb": "assets/images/multiplication_thumb.png",
       "desc": "✖️ かけざんに ちょうせん！レベルを えらんで あそぼう！",
       "category": "べんきょう"
@@ -43,7 +43,7 @@
     {
       "id": "math-division",
       "title": "わりざんクイズ",
-      "path": "games/rakugaku/index.html?math=division",
+      "path": "games/quiz/index.html?set=math-division",
       "thumb": "assets/images/division_thumb.png",
       "desc": "➗ わりざんに ちょうせん！レベルを えらんで あそぼう！",
       "category": "べんきょう"
