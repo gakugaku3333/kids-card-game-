@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規ゲームのひな形</title>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ここはゲーム固有の見た目だけを書く。ヘッダー・横向き対応・リザルトモーダルは core/shell.js が用意する */
+    body { background: linear-gradient(160deg, #fff0f5 0%, #e6f2ff 100%); min-height: 100vh; margin: 0; }
+    .game-container { max-width: 480px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; }
+    #btn-start { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 16px 34px; font-size: 1.3rem; color: #fff; background: linear-gradient(#ff9ec7, #ff7ebb); box-shadow: 0 5px 0 #d4568e; margin-top: 24px; }
+    .question { font-size: 2.4rem; margin: 30px 0 16px; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn { font-family: inherit; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer; }
+    .choice-btn.correct { background: #c8f7d6; }
+    .choice-btn.wrong { background: #ffd6d6; }
+    #play-screen, #start-screen { display: none; }
+    #play-screen.active, #start-screen.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen" class="active">
+      <p style="font-size:1.1rem;">これは新規ゲーム用のひな形だよ。<br>コピーして games/新しいゲーム名/ にリネームして使ってね。</p>
+      <button id="btn-start">スタート！</button>
+    </section>
+
+    <section id="play-screen">
+      <div class="question" id="question-text">?</div>
+      <div class="choices" id="choices"></div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { GameShell } from '../../core/shell.js';
+
+    const shell = new GameShell({ gameId: 'template-demo', title: 'ひな形デモ' });
+
+    // ダミーの問題データ（実際のゲームでは data/quizzes/*.json 等から読み込む）
+    const QUESTIONS = [
+      { q: '1 + 1 = ?', choices: ['1', '2', '3', '4'], answer: '2' },
+      { q: '2 + 2 = ?', choices: ['3', '4', '5', '6'], answer: '4' },
+      { q: '3 + 3 = ?', choices: ['5', '6', '7', '8'], answer: '6' }
+    ];
+
+    let index = 0;
+    let correct = 0;
+
+    function showQuestion() {
+      const q = QUESTIONS[index];
+      document.getElementById('question-text').textContent = q.q;
+      const box = document.getElementById('choices');
+      box.innerHTML = '';
+      q.choices.forEach((c) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = c;
+        btn.addEventListener('click', () => onAnswer(c === q.answer, btn));
+        box.appendChild(btn);
+      });
+    }
+
+    function onAnswer(isCorrect, btn) {
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+      shell.sound.play(isCorrect ? 'correct' : 'wrong');
+      if (isCorrect) correct++;
+      document.querySelectorAll('.choice-btn').forEach((b) => (b.disabled = true));
+
+      setTimeout(() => {
+        index++;
+        if (index < QUESTIONS.length) {
+          showQuestion();
+        } else {
+          shell.showResult({ correct, total: QUESTIONS.length, tokens: correct });
+        }
+      }, 500);
+    }
+
+    function play() {
+      index = 0;
+      correct = 0;
+      showQuestion();
+    }
+
+    document.getElementById('btn-start').addEventListener('click', () => {
+      document.getElementById('start-screen').classList.remove('active');
+      document.getElementById('play-screen').classList.add('active');
+      shell.startGame(play);
+    });
+    shell.onRetry(play);
+  </script>
+</body>
+</html>

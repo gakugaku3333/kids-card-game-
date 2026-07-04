@@ -1,4 +1,4 @@
-# 進行中: リニューアル Phase 0・Phase 1（一部）
+# 進行中: リニューアル Phase 0・Phase 1（一部）・Phase 2（基盤のみ）
 
 ## 完了日: 2026-07-04
 
@@ -17,10 +17,22 @@
 ### 検証（`tasks/smoke-test.md` 該当行参照）
 preview（ポート一時変更 8765→8767 でキャッシュ回避）でハブのみ確認: games.json駆動の11カード表示、ログイン、ショップ購入UI、きせかえUI、きろく表示、各モーダルの開閉（クローズボタン）が正常動作。コンソールエラーなし。スクリーンショットで見た目が変更前と同一であることを確認。
 
+### Phase 2（基盤のみ。既存ゲームは無改修）
+新規ゲームを「テンプレコピー＋games.jsonに1行追加」の2ステップにするための土台を新設。
+- `core/store.js` — `js/store.js` と同一スキーマ・同一 localStorage キーのESM版（新規ゲーム用。既存ページの `js/store.js` はそのまま）
+- `core/firelog.js` — `js/firebase-log.js` のESM版。Firebase未読込ページでも例外を握って無音でno-opになる
+- `core/sound.js` — WebAudioでコード生成する効果音（`correct`/`wrong`/`clear`/`coin`）。ミュート状態はlocalStorageに保存
+- `core/shell.js` — `GameShell` クラス。生成するだけで共通ヘッダー（もどるボタン・トークンバッジ）・横向き対応CSS・統一リザルトモーダル・タイマーの冪等クリーンアップ（`setInterval`/`requestAnimationFrame` をラップ）が付いてくる
+- `games/_template/index.html` — 3問クイズのデモを使ってシェルの使い方を示すひな形。コピーして新規ゲームの出発点にする
+
+### 検証（`tasks/smoke-test.md` 該当行参照）
+`games/_template/` で3問プレイ→正解ごとに効果音→トークン+3加算→ヘッダーのトークン表示が即時更新→リザルトモーダル(3/3, ⭐3)表示→「もういちど あそぶ」で再スタート→`localStorage`の`katakana_game_data`スキーマが壊れていないことを確認。コンソールエラーなし（Firebase未読込による警告のみ、想定通り）。
+
 ### 未着手（次セッションで継続）
 - `js/store.js` `js/firebase-log.js` `js/shop.js` `js/avatar.js` の `core/` へのES Modules移設（各ゲームページを1つずつ移行する必要があり、影響範囲が大きいため今回は見送り）
 - `styles/tokens.css`（既存 `css/gallery.css` の `:root` に同等のCSS変数が既にあるため、実質的な重複を避けて保留）
-- Phase 2以降（`core/shell.js`、クイズエンジン統合、音・PWA等）
+- 既存ゲーム（memory/rakugaku/mole/catch/draw）をシェル対応に改修（Phase 2残り）
+- クイズエンジン統合・音のショップ全体反映・PWA・レベル/ずかん等（Phase 3以降）
 
 ---
 
