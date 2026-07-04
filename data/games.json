@@ -66,11 +66,29 @@
     },
     {
       "id": "mole",
-      "title": "もぐらたたき",
+      "title": "もぐらたたき 🔨（ふたりでも！）",
       "path": "games/mole/index.html",
       "thumb": "assets/images/mole_thumb.svg",
-      "desc": "🔨 あなから でてくる もぐらを タップ！ばくだんは よけてね！",
+      "desc": "🔨 あなから でてくる もぐらを タップ！ふたりで たいせんも できるよ！",
       "category": "アクション"
+    },
+    {
+      "id": "clock-1",
+      "title": "とけいよみ ⏰",
+      "path": "games/clock/index.html",
+      "thumb": "assets/images/clock_thumb.svg",
+      "desc": "⏰ とけいの はりを よんで こたえよう！レベルを えらんで ちょうせん！",
+      "category": "べんきょう",
+      "new": true
+    },
+    {
+      "id": "shopping",
+      "title": "おかいものやさん 🛒",
+      "path": "games/shopping/index.html",
+      "thumb": "assets/images/shopping_thumb.svg",
+      "desc": "🛒 おみせで おかいもの！たしざんと おかねの けいさんを れんしゅうしよう！",
+      "category": "べんきょう",
+      "new": true
     },
     {
       "id": "catch",

@@ -1,0 +1,19 @@
+{
+  "items": [
+    { "id": "apple", "name": "りんご", "emoji": "🍎", "price": 10 },
+    { "id": "banana", "name": "ばなな", "emoji": "🍌", "price": 10 },
+    { "id": "donut", "name": "ドーナツ", "emoji": "🍩", "price": 40 },
+    { "id": "candy", "name": "あめ", "emoji": "🍬", "price": 5 },
+    { "id": "juice", "name": "ジュース", "emoji": "🧃", "price": 30 },
+    { "id": "rice_ball", "name": "おにぎり", "emoji": "🍙", "price": 30 },
+    { "id": "cake", "name": "ケーキ", "emoji": "🍰", "price": 50 },
+    { "id": "icecream", "name": "アイス", "emoji": "🍦", "price": 20 },
+    { "id": "cookie", "name": "クッキー", "emoji": "🍪", "price": 15 },
+    { "id": "grape", "name": "ぶどう", "emoji": "🍇", "price": 20 },
+    { "id": "bread", "name": "パン", "emoji": "🍞", "price": 25 },
+    { "id": "milk", "name": "ぎゅうにゅう", "emoji": "🥛", "price": 15 },
+    { "id": "pudding", "name": "プリン", "emoji": "🍮", "price": 35 },
+    { "id": "chocolate", "name": "チョコ", "emoji": "🍫", "price": 25 },
+    { "id": "strawberry", "name": "いちご", "emoji": "🍓", "price": 20 }
+  ]
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="子供向けのとけいよみクイズ。アナログ時計を読んで答えよう！">
+  <title>とけいよみクイズ</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/images/apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #fff7e0 0%, #ffe6c9 100%); min-height: 100vh; margin: 0; }
+    .game-container { max-width: 480px; margin: 0 auto; padding: 8px 18px 40px; text-align: center; }
+
+    .level-btn {
+      display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+      border-radius: 20px; padding: 16px; font-size: 1.15rem; color: #fff; margin: 10px 0;
+      background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 5px 0 #e07e22;
+    }
+    .level-btn.l2 { background: linear-gradient(#9bd4ff, #6bb8f5); box-shadow: 0 5px 0 #4a90d9; }
+    .level-btn.l3 { background: linear-gradient(#c9a0ff, #a06bf5); box-shadow: 0 5px 0 #7a4ad9; }
+
+    .progress { font-weight: 900; color: #b0793a; margin: 6px 0 10px; }
+    .clock-wrap { width: 220px; height: 220px; margin: 0 auto 16px; }
+    .question-text { font-size: 1.4rem; font-weight: 900; color: #5c4c51; margin-bottom: 16px; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn {
+      font-family: inherit; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 18px;
+      padding: 16px 8px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer;
+    }
+    .choice-btn.correct { background: #c8f7d6; box-shadow: 0 4px 0 #4caf8a; }
+    .choice-btn.wrong { background: #ffd6d6; box-shadow: 0 4px 0 #e05656; }
+    .feedback { font-size: 1.1rem; font-weight: 900; min-height: 1.6em; margin-top: 10px; }
+    .feedback.ok { color: #3aa76d; }
+    .feedback.ng { color: #e05656; }
+
+    #start-screen, #play-screen { display: none; }
+    #start-screen.active, #play-screen.active { display: block; }
+
+    @media (max-height: 700px) {
+      .clock-wrap { width: 160px; height: 160px; }
+      .question-text { font-size: 1.1rem; margin-bottom: 10px; }
+      .choice-btn { padding: 10px 6px; font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen" class="active">
+      <p style="font-size:1.1rem; font-weight:700; color:#5c4c51;">とけいを よんで こたえてね！</p>
+      <button class="level-btn" id="btn-level-1">レベル1「なんじ？」</button>
+      <button class="level-btn l2" id="btn-level-2">レベル2「なんじはん？」</button>
+      <button class="level-btn l3" id="btn-level-3">レベル3「なんじなんぷん？」</button>
+    </section>
+
+    <section id="play-screen">
+      <div class="progress">もんだい <span id="q-index">1</span>/10</div>
+      <div class="clock-wrap" id="clock"></div>
+      <div class="question-text">いま なんじ？</div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { GameShell } from '../../core/shell.js';
+    import { renderClock, formatTime } from './clock-face.js';
+
+    const shell = new GameShell({ gameId: 'clock', title: 'とけいよみ ⏰' });
+
+    const TOTAL_QUESTIONS = 10;
+    const MINUTES_L3 = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+    let level = 1;
+    let qIndex = 0;
+    let correctCount = 0;
+    let current = null;
+    let answering = false;
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function randHour() { return 1 + Math.floor(Math.random() * 12); }
+    function otherHour(h) {
+      let r = h;
+      while (r === h) r = randHour();
+      return r;
+    }
+    function otherMinute(m) {
+      let r = m;
+      while (r === m) r = MINUTES_L3[Math.floor(Math.random() * MINUTES_L3.length)];
+      return r;
+    }
+
+    // 子供が実際にやりがちな間違え方（時間のずれ・分の読み違い）を選択肢に混ぜる
+    function makeQuestion() {
+      const hour = randHour();
+      let minute;
+      if (level === 1) minute = 0;
+      else if (level === 2) minute = Math.random() < 0.5 ? 0 : 30;
+      else minute = MINUTES_L3[Math.floor(Math.random() * MINUTES_L3.length)];
+
+      const correctLabel = formatTime(hour, minute, level);
+      const labels = new Set([correctLabel]);
+      let guard = 0;
+      while (labels.size < 4 && guard < 50) {
+        guard++;
+        const kind = Math.floor(Math.random() * 3);
+        let h = hour, m = minute;
+        if (kind === 0) h = ((hour) % 12) + 1;            // 1時間すすめる
+        else if (kind === 1) h = ((hour + 10) % 12) + 1;  // 1時間もどす
+        else if (level >= 2) m = (level === 2) ? (minute === 0 ? 30 : 0) : otherMinute(minute);
+        else h = otherHour(hour);
+        labels.add(formatTime(h, m, level));
+      }
+
+      return { hour, minute, label: correctLabel, choices: shuffle(Array.from(labels)) };
+    }
+
+    function showQuestion() {
+      current = makeQuestion();
+      answering = true;
+      document.getElementById('q-index').textContent = qIndex + 1;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = 'feedback';
+      renderClock(document.getElementById('clock'), { hour: current.hour, minute: current.minute });
+
+      const box = document.getElementById('choices');
+      box.innerHTML = '';
+      current.choices.forEach((label) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = label;
+        btn.addEventListener('click', () => onAnswer(label, btn));
+        box.appendChild(btn);
+      });
+    }
+
+    function onAnswer(label, btn) {
+      if (!answering) return;
+      answering = false;
+      const isCorrect = label === current.label;
+      const fb = document.getElementById('feedback');
+
+      if (isCorrect) {
+        correctCount++;
+        btn.classList.add('correct');
+        shell.sound.play('correct');
+        fb.textContent = 'せいかい！ 🎉';
+        fb.className = 'feedback ok';
+      } else {
+        btn.classList.add('wrong');
+        shell.sound.play('wrong');
+        shell.fireLog.logWrong('clock', current.label, current.label);
+        Array.from(document.querySelectorAll('.choice-btn')).forEach((b) => {
+          if (b.textContent === current.label) b.classList.add('correct');
+        });
+        fb.textContent = `せいかいは 「${current.label}」だよ`;
+        fb.className = 'feedback ng';
+      }
+      document.querySelectorAll('.choice-btn').forEach((b) => (b.disabled = true));
+
+      setTimeout(() => {
+        qIndex++;
+        if (qIndex < TOTAL_QUESTIONS) {
+          showQuestion();
+        } else {
+          const tokens = correctCount + (correctCount === TOTAL_QUESTIONS ? 3 : 0);
+          shell.showResult({ correct: correctCount, total: TOTAL_QUESTIONS, tokens });
+        }
+      }, 1200);
+    }
+
+    function startLevel(lv) {
+      level = lv;
+      qIndex = 0;
+      correctCount = 0;
+      document.getElementById('start-screen').classList.remove('active');
+      document.getElementById('play-screen').classList.add('active');
+      shell.startGame(showQuestion);
+    }
+
+    document.getElementById('btn-level-1').addEventListener('click', () => startLevel(1));
+    document.getElementById('btn-level-2').addEventListener('click', () => startLevel(2));
+    document.getElementById('btn-level-3').addEventListener('click', () => startLevel(3));
+
+    shell.onRetry(() => {
+      document.getElementById('play-screen').classList.remove('active');
+      document.getElementById('start-screen').classList.add('active');
+    });
+  </script>
+</body>
+</html>

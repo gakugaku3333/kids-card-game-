@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="子供向けのかわいいもぐらたたきゲーム。タップしてもぐらをたたこう！">
+  <meta name="description" content="子供向けのかわいいもぐらたたきゲーム。タップしてもぐらをたたこう！ふたりで対戦もできるよ。">
   <title>もぐらたたき！</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="../../assets/images/favicon-16x16.png">
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     html, body { height: 100%; }
     body {
       font-family: 'M PLUS Rounded 1c', sans-serif;
@@ -79,6 +79,14 @@
     }
     @keyframes floatUp { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -40px); } }
 
+    /* ふたりモード */
+    .vs-timer { font-weight: 900; font-size: 1.3rem; background: #fff; border-radius: 20px; padding: 6px 18px; margin: 8px 0; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+    .vs-layout { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .vs-player { width: 100%; }
+    .vs-score { text-align: center; font-weight: 900; font-size: 1.2rem; background: #fff; border-radius: 14px; padding: 6px; margin: 6px 0; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+    .board-rotated { transform: rotate(180deg); }
+    .board-small { gap: 8px; }
+
     /* 結果モーダル */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; align-items: center; justify-content: center; padding: 18px; }
     .modal.show { display: flex; }
@@ -99,6 +107,7 @@
       .subtitle { margin-bottom: 12px; }
       .mole-emoji { font-size: 2.4rem; }
       .board { max-width: 62vh; }
+      .vs-layout .board { max-width: 46vh; }
     }
   </style>
 </head>
@@ -109,11 +118,12 @@
       <div class="mole-emoji">🐹</div>
       <h1 class="title">もぐらたたき！</h1>
       <p class="subtitle">あなから でてくる もぐらを<br>タップして やっつけよう！<br>💣ばくだんは たたいちゃ だめだよ</p>
-      <button id="btn-start" class="btn">スタート！</button>
+      <button id="btn-start-solo" class="btn">ひとりで あそぶ</button>
+      <button id="btn-start-vs" class="btn secondary">👫 ふたりで たいせん</button>
       <a href="../../index.html" class="btn secondary home-link">🏠 メニューにもどる</a>
     </section>
 
-    <!-- プレイ画面 -->
+    <!-- ひとりプレイ画面 -->
     <section id="play-screen" class="screen">
       <div class="hud">
         <div class="hud-box"><span class="hud-label">てんすう</span><span id="hud-score" class="hud-value">0</span></div>
@@ -121,129 +131,265 @@
       </div>
       <div id="board" class="board"></div>
     </section>
+
+    <!-- ふたりプレイ画面 -->
+    <section id="play-screen-vs" class="screen">
+      <div class="vs-timer">⏱ <span id="vs-timer-value">60</span></div>
+      <div class="vs-layout">
+        <div class="vs-player vs-player-top">
+          <div class="vs-score">2P てん <span id="score-p2">0</span></div>
+          <div id="board-p2" class="board board-small board-rotated"></div>
+        </div>
+        <div class="vs-player vs-player-bottom">
+          <div id="board-p1" class="board board-small"></div>
+          <div class="vs-score">1P てん <span id="score-p1">0</span></div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- 結果モーダル -->
   <div id="result-modal" class="modal">
     <div class="modal-card">
-      <div class="modal-emoji">🎉</div>
-      <h2>おわり！</h2>
-      <div class="result-row">
+      <div class="modal-emoji" id="r-emoji">🎉</div>
+      <h2 id="r-title">おわり！</h2>
+
+      <div class="result-row" id="r-solo-row">
         <div class="result-item"><span class="r-label">てんすう</span><span id="r-score" class="r-value">0</span></div>
         <div class="result-item"><span class="r-label">ゲット⭐</span><span id="r-tokens" class="r-value">0</span></div>
       </div>
+
+      <div class="result-row" id="r-vs-row" style="display:none;">
+        <div class="result-item"><span class="r-label">1P てん</span><span id="r-score-p1" class="r-value">0</span></div>
+        <div class="result-item"><span class="r-label">2P てん</span><span id="r-score-p2" class="r-value">0</span></div>
+        <div class="result-item"><span class="r-label">ゲット⭐</span><span id="r-tokens-vs" class="r-value">0</span></div>
+      </div>
+
       <button id="btn-again" class="btn">もういちど あそぶ</button>
       <a href="../../index.html" class="btn secondary home-link">🏠 メニューにもどる</a>
     </div>
   </div>
 
   <script src="../../js/store.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="../../js/firebase-log.js"></script>
   <script>
   (function () {
     'use strict';
-    var GAME_TIME = 30;
-    var board = document.getElementById('board');
-    var holes = [];
-    var score = 0, timeLeft = GAME_TIME;
-    var spawnTimer = null, countdownTimer = null, running = false;
 
-    // 9個の穴をつくる
-    for (var i = 0; i < 9; i++) {
-      var hole = document.createElement('div');
-      hole.className = 'hole';
-      var critter = document.createElement('span');
-      critter.className = 'critter';
-      hole.appendChild(critter);
-      hole.dataset.index = i;
-      hole.addEventListener('pointerdown', onHit);
-      board.appendChild(hole);
-      holes.push({ el: hole, critter: critter, type: null });
+    // もぐら盤面1つぶんのロジックをクラスに抽出（ひとり=1個、ふたり=2個 生成する）
+    function MoleBoard(el) {
+      this.el = el;
+      this.score = 0;
+      this.holes = [];
+      this._build();
     }
-
-    function onHit(e) {
-      if (!running) return;
-      var idx = +this.dataset.index;
-      var h = holes[idx];
-      if (!h.type) return;                 // 何も出ていない穴
-      if (this.classList.contains('bonk')) return; // 既にたたいた
-      if (h.type === 'mole') {
-        score += 1;
-        showFloat(this, '+1', '#3aa76d');
-      } else { // bomb
-        score = Math.max(0, score - 2);
-        showFloat(this, '-2', '#e05656');
+    MoleBoard.prototype._build = function () {
+      this.el.innerHTML = '';
+      this.holes = [];
+      for (var i = 0; i < 9; i++) {
+        var hole = document.createElement('div');
+        hole.className = 'hole';
+        var critter = document.createElement('span');
+        critter.className = 'critter';
+        hole.appendChild(critter);
+        hole.dataset.index = i;
+        var self = this;
+        (function (idx, holeEl) {
+          holeEl.addEventListener('pointerdown', function () { self._onHit(idx, holeEl); });
+        })(i, hole);
+        this.el.appendChild(hole);
+        this.holes.push({ el: hole, critter: critter, type: null });
       }
-      this.classList.add('bonk');
-      this.classList.remove('up');
+    };
+    MoleBoard.prototype._onHit = function (idx, holeEl) {
+      var h = this.holes[idx];
+      if (!h.type) return;
+      if (holeEl.classList.contains('bonk')) return;
+      var delta = 0, text = '', color = '';
+      if (h.type === 'bomb') { delta = -2; text = '-2'; color = '#e05656'; }
+      else if (h.type === 'gold') { delta = 3; text = '+3'; color = '#e0a300'; }
+      else { delta = 1; text = '+1'; color = '#3aa76d'; }
+      this.score = Math.max(0, this.score + delta);
+      this._float(holeEl, text, color);
+      holeEl.classList.add('bonk');
+      holeEl.classList.remove('up');
       h.type = null;
-      updateScore();
-    }
-
-    function showFloat(holeEl, text, color) {
+      if (this.onScore) this.onScore(this.score);
+    };
+    MoleBoard.prototype._float = function (holeEl, text, color) {
       var f = document.createElement('span');
       f.className = 'hit-float';
       f.textContent = text;
       f.style.color = color;
       holeEl.appendChild(f);
       setTimeout(function () { f.remove(); }, 600);
-    }
-
-    function updateScore() { document.getElementById('hud-score').textContent = score; }
-
-    function popUp() {
-      // 空いている穴を集める
-      var free = holes.filter(function (h) { return !h.type && !h.el.classList.contains('up'); });
-      if (!free.length) return;
-      var h = free[Math.floor(Math.random() * free.length)];
-      var isBomb = Math.random() < 0.25; // 25%で爆弾
-      h.type = isBomb ? 'bomb' : 'mole';
-      h.critter.textContent = isBomb ? '💣' : (Math.random() < 0.5 ? '🐹' : '🐭');
+    };
+    MoleBoard.prototype.freeIndexes = function () {
+      var list = [];
+      this.holes.forEach(function (h, i) {
+        if (!h.type && !h.el.classList.contains('up')) list.push(i);
+      });
+      return list;
+    };
+    MoleBoard.prototype.spawnAt = function (idx, type) {
+      var h = this.holes[idx];
+      if (!h || h.type || h.el.classList.contains('up')) return false;
+      h.type = type;
+      h.critter.textContent = type === 'bomb' ? '💣' : type === 'gold' ? '🌟' : (Math.random() < 0.5 ? '🐹' : '🐭');
       h.el.classList.remove('bonk');
       h.el.classList.add('up');
+      var self = this;
       var stay = 700 + Math.random() * 700;
-      setTimeout(function () { hideHole(h); }, stay);
-    }
-
-    function hideHole(h) {
+      setTimeout(function () { self._hide(h); }, stay);
+      return true;
+    };
+    MoleBoard.prototype._hide = function (h) {
       h.el.classList.remove('up');
-      // 引っ込んだ後に当たり判定を消す
       setTimeout(function () { h.type = null; h.el.classList.remove('bonk'); }, 150);
+    };
+    MoleBoard.prototype.reset = function () {
+      this.score = 0;
+      this.holes.forEach(function (h) { h.el.classList.remove('up', 'bonk'); h.type = null; });
+    };
+
+    /* ===================== ひとりプレイ ===================== */
+    var GAME_TIME_SOLO = 30;
+    var soloBoard = new MoleBoard(document.getElementById('board'));
+    var soloSpawnTimer = null, soloCountdownTimer = null;
+    var soloTimeLeft = GAME_TIME_SOLO;
+
+    soloBoard.onScore = function (score) {
+      document.getElementById('hud-score').textContent = score;
+    };
+
+    function soloPopUp() {
+      var free = soloBoard.freeIndexes();
+      if (!free.length) return;
+      var idx = free[Math.floor(Math.random() * free.length)];
+      var isBomb = Math.random() < 0.25;
+      soloBoard.spawnAt(idx, isBomb ? 'bomb' : 'mole');
     }
 
-    function startGame() {
-      clearInterval(spawnTimer); clearInterval(countdownTimer); // 念のため前回ぶんを掃除
-      score = 0; timeLeft = GAME_TIME; running = true;
-      updateScore();
-      document.getElementById('hud-timer').textContent = timeLeft;
+    function startSolo() {
+      clearInterval(soloSpawnTimer); clearInterval(soloCountdownTimer); // 念のため前回ぶんを掃除（冪等ガード）
+      soloBoard.reset();
+      soloTimeLeft = GAME_TIME_SOLO;
+      document.getElementById('hud-score').textContent = 0;
+      document.getElementById('hud-timer').textContent = soloTimeLeft;
       document.getElementById('hud-time').classList.remove('warn');
       show('play-screen');
 
-      var spawnDelay = 850;
-      spawnTimer = setInterval(function () {
-        popUp();
-        if (Math.random() < 0.3) setTimeout(popUp, 250); // たまに2匹
-      }, spawnDelay);
+      soloSpawnTimer = setInterval(function () {
+        soloPopUp();
+        if (Math.random() < 0.3) setTimeout(soloPopUp, 250);
+      }, 850);
 
-      countdownTimer = setInterval(function () {
-        timeLeft--;
-        document.getElementById('hud-timer').textContent = timeLeft;
-        if (timeLeft <= 5) document.getElementById('hud-time').classList.add('warn');
-        if (timeLeft <= 0) endGame();
+      soloCountdownTimer = setInterval(function () {
+        soloTimeLeft--;
+        document.getElementById('hud-timer').textContent = soloTimeLeft;
+        if (soloTimeLeft <= 5) document.getElementById('hud-time').classList.add('warn');
+        if (soloTimeLeft <= 0) endSolo();
       }, 1000);
     }
 
-    function endGame() {
-      running = false;
-      clearInterval(spawnTimer);
-      clearInterval(countdownTimer);
-      holes.forEach(function (h) { h.el.classList.remove('up', 'bonk'); h.type = null; });
+    function endSolo() {
+      clearInterval(soloSpawnTimer);
+      clearInterval(soloCountdownTimer);
 
-      var earned = Math.ceil(score / 5);
+      var finalScore = soloBoard.score;
+      var earned = Math.ceil(finalScore / 5);
+      soloBoard.reset();
+
+      if (window.FireLog) FireLog.logSession('mole', finalScore, 0, earned);
       if (earned > 0 && window.Store) window.Store.addTokens(earned);
-      document.getElementById('r-score').textContent = score;
+
+      document.getElementById('r-emoji').textContent = '🎉';
+      document.getElementById('r-title').textContent = 'おわり！';
+      document.getElementById('r-solo-row').style.display = '';
+      document.getElementById('r-vs-row').style.display = 'none';
+      document.getElementById('r-score').textContent = finalScore;
       document.getElementById('r-tokens').textContent = earned;
+      currentMode = 'solo';
       document.getElementById('result-modal').classList.add('show');
     }
+
+    /* ===================== ふたりプレイ ===================== */
+    var GAME_TIME_VS = 60;
+    var boardP1 = new MoleBoard(document.getElementById('board-p1'));
+    var boardP2 = new MoleBoard(document.getElementById('board-p2'));
+    var vsSpawnTimer = null, vsCountdownTimer = null;
+    var vsTimeLeft = GAME_TIME_VS;
+
+    boardP1.onScore = function (score) { document.getElementById('score-p1').textContent = score; };
+    boardP2.onScore = function (score) { document.getElementById('score-p2').textContent = score; };
+
+    function vsPopUp() {
+      // 公平性のため、両盤面で「空いている」共通のマスだけを対象に、同じマス番号・同じ種別を同時出現させる
+      var freeA = boardP1.freeIndexes();
+      var freeBSet = {};
+      boardP2.freeIndexes().forEach(function (i) { freeBSet[i] = true; });
+      var freeBoth = freeA.filter(function (i) { return freeBSet[i]; });
+      if (!freeBoth.length) return;
+      var idx = freeBoth[Math.floor(Math.random() * freeBoth.length)];
+      var r = Math.random();
+      var type = r < 0.06 ? 'gold' : (r < 0.26 ? 'bomb' : 'mole');
+      boardP1.spawnAt(idx, type);
+      boardP2.spawnAt(idx, type);
+    }
+
+    function startVersus() {
+      clearInterval(vsSpawnTimer); clearInterval(vsCountdownTimer); // 冪等ガード
+      boardP1.reset();
+      boardP2.reset();
+      vsTimeLeft = GAME_TIME_VS;
+      document.getElementById('score-p1').textContent = 0;
+      document.getElementById('score-p2').textContent = 0;
+      document.getElementById('vs-timer-value').textContent = vsTimeLeft;
+      show('play-screen-vs');
+
+      vsSpawnTimer = setInterval(function () {
+        vsPopUp();
+      }, 850);
+
+      vsCountdownTimer = setInterval(function () {
+        vsTimeLeft--;
+        document.getElementById('vs-timer-value').textContent = vsTimeLeft;
+        if (vsTimeLeft <= 0) endVersus();
+      }, 1000);
+    }
+
+    function endVersus() {
+      clearInterval(vsSpawnTimer);
+      clearInterval(vsCountdownTimer);
+
+      var scoreA = boardP1.score, scoreB = boardP2.score;
+      boardP1.reset();
+      boardP2.reset();
+
+      var tokensA, tokensB, title;
+      if (scoreA === scoreB) { tokensA = 2; tokensB = 2; title = 'ひきわけ！'; }
+      else if (scoreA > scoreB) { tokensA = 3; tokensB = 1; title = '1P の かち！'; }
+      else { tokensA = 1; tokensB = 3; title = '2P の かち！'; }
+      var totalTokens = tokensA + tokensB; // Storeは共有ウォレットなので加算は1回だけ
+
+      if (totalTokens > 0 && window.Store) window.Store.addTokens(totalTokens);
+      if (window.FireLog) FireLog.logSession('mole-vs', Math.max(scoreA, scoreB), scoreA + scoreB, totalTokens);
+
+      document.getElementById('r-emoji').textContent = scoreA === scoreB ? '🤝' : '🏆';
+      document.getElementById('r-title').textContent = title;
+      document.getElementById('r-solo-row').style.display = 'none';
+      document.getElementById('r-vs-row').style.display = '';
+      document.getElementById('r-score-p1').textContent = scoreA;
+      document.getElementById('r-score-p2').textContent = scoreB;
+      document.getElementById('r-tokens-vs').textContent = totalTokens;
+      currentMode = 'vs';
+      document.getElementById('result-modal').classList.add('show');
+    }
+
+    /* ===================== 共通 ===================== */
+    var currentMode = 'solo';
 
     function show(id) {
       var screens = document.querySelectorAll('.screen');
@@ -251,10 +397,11 @@
       document.getElementById(id).classList.add('active');
     }
 
-    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-start-solo').addEventListener('click', startSolo);
+    document.getElementById('btn-start-vs').addEventListener('click', startVersus);
     document.getElementById('btn-again').addEventListener('click', function () {
       document.getElementById('result-modal').classList.remove('show');
-      startGame();
+      if (currentMode === 'vs') startVersus(); else startSolo();
     });
   })();
   </script>

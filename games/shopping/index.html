@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="子供向けのおかいものゲーム。たしざん・おかねの計算を学べるよ。">
+  <title>おかいものやさん</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/images/apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #fff0f5 0%, #e6f2ff 100%); min-height: 100vh; margin: 0; }
+    .game-container { max-width: 520px; margin: 0 auto; padding: 8px 16px 40px; text-align: center; }
+
+    .level-btn {
+      display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+      border-radius: 20px; padding: 16px; font-size: 1.1rem; color: #fff; margin: 10px 0;
+      background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 5px 0 #e07e22;
+    }
+    .level-btn.l2 { background: linear-gradient(#9bd4ff, #6bb8f5); box-shadow: 0 5px 0 #4a90d9; }
+    .level-btn.l3 { background: linear-gradient(#c9a0ff, #a06bf5); box-shadow: 0 5px 0 #7a4ad9; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .errand-header { font-weight: 900; color: #5c4c51; margin: 6px 0 4px; }
+    .memo-box { background: #fffbe8; border: 3px dashed #ffb347; border-radius: 16px; padding: 12px; margin-bottom: 14px; font-weight: 700; }
+
+    .shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .shelf-item {
+      font-family: inherit; border: none; border-radius: 14px; padding: 10px 4px; cursor: pointer;
+      background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); min-height: 44px;
+    }
+    .shelf-item:disabled, .shelf-item.picked { opacity: .35; }
+    .shelf-emoji { font-size: 1.8rem; }
+    .shelf-name { font-size: .8rem; font-weight: 900; color: #5c4c51; }
+    .shelf-price { font-size: .75rem; color: #b0793a; font-weight: 700; }
+
+    .cart-box { min-height: 1.6em; font-weight: 700; color: #5c4c51; margin-bottom: 10px; }
+    .add-expr { font-size: 1.4rem; font-weight: 900; color: #5c4c51; margin: 10px 0; }
+    #add-keypad, #change-keypad { display: none; }
+    .num-input {
+      width: 120px; font-size: 1.4rem; text-align: center; font-family: inherit; font-weight: 900;
+      border: 3px solid #ffb347; border-radius: 14px; padding: 8px; margin-right: 8px;
+    }
+    .submit-btn {
+      font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px;
+      padding: 12px 24px; font-size: 1.1rem; color: #fff; background: linear-gradient(#ff9ec7, #ff7ebb);
+      box-shadow: 0 4px 0 #d4568e; min-height: 44px;
+    }
+    .feedback { font-size: 1.05rem; font-weight: 900; min-height: 1.6em; margin-top: 10px; }
+    .feedback.ok { color: #3aa76d; }
+    .feedback.ng { color: #e05656; }
+
+    .bill-box { font-size: 1.3rem; font-weight: 900; color: #5c4c51; background: #fff; border-radius: 16px; padding: 10px; margin-bottom: 12px; }
+    .wallet-box, .tray-box { background: #fff; border-radius: 16px; padding: 10px; margin-bottom: 12px; }
+    .wallet-box h3, .tray-box h3 { margin: 0 0 8px; font-size: .9rem; color: #8a7a80; }
+    .wallet, .tray { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; justify-content: center; }
+    .coin-btn { border: none; background: transparent; padding: 0; cursor: pointer; min-width: 44px; min-height: 44px; }
+    .tray-total { font-weight: 900; color: #b0793a; }
+
+    #start-screen p { font-size: 1.05rem; font-weight: 700; color: #5c4c51; }
+
+    @media (max-height: 700px) {
+      .shelf-emoji { font-size: 1.4rem; }
+      .memo-box { padding: 8px; margin-bottom: 8px; }
+      .wallet, .tray { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="screen-start" class="screen active">
+      <p>おつかいで おかねの けいさんを れんしゅうしよう！</p>
+      <button class="level-btn" id="btn-level-1">レベル1「やさしい」</button>
+      <button class="level-btn l2" id="btn-level-2">レベル2「ふつう」</button>
+      <button class="level-btn l3" id="btn-level-3">レベル3「むずかしい」</button>
+    </section>
+
+    <section id="screen-stage-a" class="screen">
+      <div class="errand-header">おつかい <span id="errand-index">1</span>/3</div>
+      <div class="memo-box">📝 おつかいメモ: <span id="memo-list"></span> を かってきてね</div>
+      <div class="shelf" id="shelf"></div>
+      <div class="cart-box" id="cart-list"></div>
+      <div class="add-expr" id="add-expr"></div>
+      <div id="add-keypad">
+        <input type="number" inputmode="numeric" class="num-input" id="add-input" placeholder="？">
+        <button class="submit-btn" id="btn-add-submit">こたえる</button>
+      </div>
+      <div class="feedback" id="add-feedback"></div>
+    </section>
+
+    <section id="screen-stage-b" class="screen">
+      <div class="bill-box">ぜんぶで <span id="bill-amount">0</span> えんです！</div>
+      <div class="wallet-box">
+        <h3>おさいふ（タップで えらぶ）</h3>
+        <div class="wallet" id="wallet"></div>
+      </div>
+      <div class="tray-box">
+        <h3>トレイ（いま <span id="tray-total">0</span> えん）</h3>
+        <div class="tray" id="tray"></div>
+      </div>
+      <button class="submit-btn" id="btn-pay">はらう！</button>
+      <div class="feedback" id="pay-feedback"></div>
+    </section>
+
+    <section id="screen-stage-c" class="screen">
+      <div class="add-expr" id="change-question"></div>
+      <div>
+        <input type="number" inputmode="numeric" class="num-input" id="change-input" placeholder="？">
+        <button class="submit-btn" id="btn-change-submit">こたえる</button>
+      </div>
+      <div class="feedback" id="change-feedback"></div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
