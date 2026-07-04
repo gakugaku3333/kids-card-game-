@@ -1,3 +1,7 @@
+import { GameShell } from '../../../core/shell.js';
+
+const shell = new GameShell({ gameId: 'memory', title: 'しんけいすいじゃく 🃏' });
+
 /* ==========================================================================
    定数とアセットデータ
    ========================================================================== */
@@ -356,9 +360,10 @@ function handleWin() {
   resultTime.textContent = `${gameState.secondsElapsed} びょう`;
   resultMiss.textContent = `${gameState.missCount} かい`;
 
-  // トークンを獲得（共通 Store に加算）
+  // トークンを獲得（core/store 経由）＋ 学習履歴に記録
   const reward = TOKEN_REWARDS[gameState.currentDifficulty] || 5;
-  if (window.Store) Store.addTokens(reward);
+  shell.store.addTokens(reward);
+  shell.fireLog.logSession('memory', gameState.totalPairs, gameState.totalPairs, reward);
   const resultTokensEl = document.getElementById('result-tokens');
   if (resultTokensEl) resultTokensEl.textContent = `⭐ ${reward}`;
 

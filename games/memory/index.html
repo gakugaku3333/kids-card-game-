@@ -74,8 +74,8 @@
     <!-- プレイ画面 -->
     <section id="play-screen" class="screen">
       <header class="game-header">
-        <button id="btn-back" class="btn back-btn" aria-label="もどる">もどる</button>
-        
+        <button id="btn-back" class="btn back-btn" aria-label="レベルせんたくへ">◀ レベルせんたく</button>
+
         <div class="game-stats">
           <div class="stat-item">
             <span class="stat-label">あわせた数:</span>
@@ -121,22 +121,8 @@
   </div>
 
   <!-- JavaScript -->
-  <!-- 共通トークン経済モジュール -->
-  <script src="../../js/store.js"></script>
-  <script src="js/game.js"></script>
-  <a href="../../index.html" class="float-home-btn">🏠 HOME</a>
-  <style>
-  .float-home-btn {
-    position: fixed; top: 10px; left: 10px; z-index: 9999;
-    background: rgba(255,255,255,.88); border-radius: 50px;
-    padding: 8px 14px; font-size: 1rem; font-weight: 900;
-    color: #5a4632; text-decoration: none;
-    box-shadow: 0 3px 10px rgba(0,0,0,.22); backdrop-filter: blur(4px);
-    display: flex; align-items: center; gap: 4px;
-    font-family: 'M PLUS Rounded 1c', Arial, sans-serif;
-    transition: opacity .15s;
-  }
-  .float-home-btn:hover, .float-home-btn:active { opacity: .7; }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module" src="js/game.js"></script>
 </body>
 </html>

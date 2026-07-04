@@ -24,16 +24,7 @@
       min-height: 100%; overflow-y: auto; padding: 14px; color: #5a4a5a;
       user-select: none; -webkit-user-select: none;
     }
-    .game-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
-
-    .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 8px; }
-    h1.title { font-weight: 900; font-size: 1.7rem; color: #fff; text-shadow: 0 2px 0 #c97fb8, 0 4px 6px rgba(0,0,0,.15); }
-    .home-btn {
-      font-family: inherit; font-weight: 900; text-decoration: none; color: #fff;
-      background: linear-gradient(#9bd4ff, #6bb8f5); box-shadow: 0 4px 0 #4a90d9; border-radius: 16px;
-      padding: 8px 14px; font-size: .95rem; white-space: nowrap;
-    }
-    .home-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a90d9; }
+    .game-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; margin-top: 6px; }
 
     canvas#pad {
       width: 100%; aspect-ratio: 4 / 3; background: #fff; border-radius: 20px;
@@ -90,11 +81,6 @@
 </head>
 <body>
   <div class="game-container">
-    <div class="topbar">
-      <h1 class="title">🖍️ おえかき！</h1>
-      <a href="../../index.html" class="home-btn">🏠 メニュー</a>
-    </div>
-
     <canvas id="pad"></canvas>
 
     <div class="tools">
@@ -118,10 +104,10 @@
   <div id="toast" class="toast"></div>
   <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
 
-  <script src="../../js/store.js"></script>
-  <script>
-  (function () {
-    'use strict';
+  <script type="module">
+    import { GameShell } from '../../core/shell.js';
+    const shell = new GameShell({ gameId: 'draw', title: 'おえかき 🖍️' });
+
     var canvas = document.getElementById('pad');
     var ctx = canvas.getContext('2d');
     var COLORS = ['#000000', '#ff5a5a', '#ff9d3d', '#ffd23d', '#5fc47e', '#5aa9ff', '#9b6bff', '#ff7ac4', '#8b5a2b', '#ffffff'];
@@ -283,7 +269,7 @@
       }
       localStorage.setItem(COOLDOWN_KEY, now);
       var earned = 3;
-      if (window.Store) window.Store.addTokens(earned);
+      shell.store.addTokens(earned);
       dirtyStrokes = 0;
       showToast('じょうず！ ⭐' + earned + ' トークン ゲット！', earned);
     });
@@ -299,21 +285,6 @@
     window.addEventListener('resize', fitCanvas);
     // 初期化（フォント・レイアウト確定後にサイズ計測）
     requestAnimationFrame(fitCanvas);
-  })();
   </script>
-  <a href="../../index.html" class="float-home-btn">🏠 HOME</a>
-  <style>
-  .float-home-btn {
-    position: fixed; top: 10px; left: 10px; z-index: 9999;
-    background: rgba(255,255,255,.88); border-radius: 50px;
-    padding: 8px 14px; font-size: 1rem; font-weight: 900;
-    color: #5a4632; text-decoration: none;
-    box-shadow: 0 3px 10px rgba(0,0,0,.22); backdrop-filter: blur(4px);
-    display: flex; align-items: center; gap: 4px;
-    font-family: 'M PLUS Rounded 1c', Arial, sans-serif;
-    transition: opacity .15s;
-  }
-  .float-home-btn:hover, .float-home-btn:active { opacity: .7; }
-  </style>
 </body>
 </html>
