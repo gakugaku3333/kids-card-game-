@@ -121,7 +121,7 @@ export class ToddlerShell {
   }
 
   _openHomeConfirm() {
-    Voice.speak('おうちにかえる？');
+    Voice.speak('home-confirm');
     this._homeConfirm.classList.remove('hidden');
   }
 
@@ -246,9 +246,9 @@ export class ToddlerShell {
     img.src = asset(sticker.file);
     img.alt = sticker.id;
     this.resultModal.classList.remove('hidden');
-    Voice.speak(isNew ? 'できたね！あたらしいシールだよ！' : 'できたね！シールゲット！');
+    Voice.speak(isNew ? 'result-new' : 'result-again');
     if (newTheme) {
-      setTimeout(() => Voice.speak('あたらしいせかいが ひらいたよ！'), 1800);
+      setTimeout(() => Voice.speak('new-theme'), 1800);
     }
   }
 

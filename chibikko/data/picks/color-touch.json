@@ -4,12 +4,12 @@
   "totalQuestions": 5,
   "choiceCount": 3,
   "pool": [
-    { "id": "red", "label": "あか", "color": "#ff4d4d" },
-    { "id": "blue", "label": "あお", "color": "#4da3ff" },
-    { "id": "yellow", "label": "きいろ", "color": "#ffd93d" },
-    { "id": "green", "label": "みどり", "color": "#5cd65c" },
-    { "id": "pink", "label": "ピンク", "color": "#ff8fc7" },
-    { "id": "purple", "label": "むらさき", "color": "#b06de0" },
-    { "id": "orange", "label": "オレンジ", "color": "#ff9f40" }
+    { "id": "red", "label": "あか", "color": "#ff4d4d", "askVoiceId": "color-red-q" },
+    { "id": "blue", "label": "あお", "color": "#4da3ff", "askVoiceId": "color-blue-q" },
+    { "id": "yellow", "label": "きいろ", "color": "#ffd93d", "askVoiceId": "color-yellow-q" },
+    { "id": "green", "label": "みどり", "color": "#5cd65c", "askVoiceId": "color-green-q" },
+    { "id": "pink", "label": "ピンク", "color": "#ff8fc7", "askVoiceId": "color-pink-q" },
+    { "id": "purple", "label": "むらさき", "color": "#b06de0", "askVoiceId": "color-purple-q" },
+    { "id": "orange", "label": "オレンジ", "color": "#ff9f40", "askVoiceId": "color-orange-q" }
   ]
 }

@@ -64,7 +64,7 @@
     btn.className = 'game-card';
     btn.innerHTML = `<img src="${asset(g.icon)}" alt="${g.title}" />`;
     btn.addEventListener('click', () => {
-      Voice.speak(g.title);
+      Voice.speak(`game-${g.id}`);
       setTimeout(() => { window.location.href = g.path; }, 500);
     });
     cardsEl.appendChild(btn);

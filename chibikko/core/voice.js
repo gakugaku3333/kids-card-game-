@@ -1,11 +1,18 @@
 /*
- * core/voice.js — speechSynthesis ラッパー（ちびっこひろば版）
+ * core/voice.js — 音声再生モジュール（ちびっこひろば版）
  *
  * 文字を読ませない3歳向け設計の要。すべての指示・出題・ほめ言葉は音声で伝える。
- * iOS Safari は無音発話を挟まないと初回タップ後もしゃべらないことがあるため unlock() を用意。
+ * 本文はブラウザ標準の speechSynthesis だとカタコトになるため、
+ * Gemini TTS(gemini-3.1-flash-tts-preview)で事前生成した音声ファイル(assets/voice/<id>.wav)
+ * を data/voice-lines.json のIDで再生する。ファイル未着・読み込み失敗時のみ
+ * speechSynthesis にフォールバックする（テキストは voice-lines.json 側に保持）。
  */
+import { asset } from './paths.js';
+
 let unlocked = false;
 let jaVoice = null;
+let linesPromise = null;
+const audioCache = new Map();
 
 function pickJaVoice() {
   if (typeof speechSynthesis === 'undefined') return null;
@@ -13,9 +20,18 @@ function pickJaVoice() {
   return voices.find((v) => v.lang === 'ja-JP') || voices.find((v) => v.lang && v.lang.startsWith('ja')) || null;
 }
 
+function loadLines() {
+  if (!linesPromise) {
+    linesPromise = fetch(asset('chibikko/data/voice-lines.json')).then((r) => r.json());
+  }
+  return linesPromise;
+}
+
 export function unlock() {
-  if (unlocked || typeof speechSynthesis === 'undefined') return;
+  if (unlocked) return;
   unlocked = true;
+  loadLines();
+  if (typeof speechSynthesis === 'undefined') return;
   const warmup = new SpeechSynthesisUtterance('');
   warmup.volume = 0;
   speechSynthesis.speak(warmup);
@@ -25,36 +41,50 @@ export function unlock() {
   }
 }
 
-/**
- * @param {string} text
- * @param {object} [opts] - { onEnd, interrupt = true }
- */
-export function speak(text, opts) {
-  if (typeof speechSynthesis === 'undefined') {
-    if (opts && opts.onEnd) opts.onEnd();
-    return;
-  }
-  const interrupt = !opts || opts.interrupt !== false;
-  if (interrupt) speechSynthesis.cancel();
+function fallbackSpeak(text) {
+  if (typeof speechSynthesis === 'undefined' || !text) return;
+  speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
   utter.rate = 0.9;
   utter.pitch = 1.1;
   if (jaVoice) utter.voice = jaVoice;
-  if (opts && opts.onEnd) utter.addEventListener('end', opts.onEnd, { once: true });
   speechSynthesis.speak(utter);
 }
 
-export function cancel() {
+function getAudio(id) {
+  let audio = audioCache.get(id);
+  if (!audio) {
+    audio = new Audio(asset(`chibikko/assets/voice/${id}.wav`));
+    audioCache.set(id, audio);
+  }
+  return audio;
+}
+
+/**
+ * data/voice-lines.json のIDで音声を再生する。
+ * @param {string} id
+ */
+export async function speak(id) {
+  const lines = await loadLines();
+  const line = lines[id];
+  if (!line) return;
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  const audio = getAudio(id);
+  audio.currentTime = 0;
+  try {
+    await audio.play();
+  } catch (e) {
+    fallbackSpeak(line.text);
+  }
 }
 
-const PRAISE = ['やったね！', 'すごい！', 'せいかい！', 'かんぺき！', 'じょうずだね！'];
+const PRAISE_IDS = ['praise1', 'praise2', 'praise3', 'praise4', 'praise5'];
 export function praise() {
-  speak(PRAISE[Math.floor(Math.random() * PRAISE.length)]);
+  speak(PRAISE_IDS[Math.floor(Math.random() * PRAISE_IDS.length)]);
 }
 
-const ENCOURAGE = ['おしい！', 'もういっかい！', 'だいじょうぶ！'];
+const ENCOURAGE_IDS = ['encourage1', 'encourage2', 'encourage3'];
 export function encourage() {
-  speak(ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]);
+  speak(ENCOURAGE_IDS[Math.floor(Math.random() * ENCOURAGE_IDS.length)]);
 }

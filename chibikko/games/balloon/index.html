@@ -32,13 +32,13 @@
   const stage = document.getElementById('stage');
 
   const COLORS = [
-    { label: 'あか', color: '#ff4d4d' },
-    { label: 'あお', color: '#4da3ff' },
-    { label: 'きいろ', color: '#ffd93d' },
-    { label: 'みどり', color: '#5cd65c' },
-    { label: 'ピンク', color: '#ff8fc7' },
-    { label: 'むらさき', color: '#b06de0' },
-    { label: 'オレンジ', color: '#ff9f40' }
+    { label: 'あか', voiceId: 'color-red', color: '#ff4d4d' },
+    { label: 'あお', voiceId: 'color-blue', color: '#4da3ff' },
+    { label: 'きいろ', voiceId: 'color-yellow', color: '#ffd93d' },
+    { label: 'みどり', voiceId: 'color-green', color: '#5cd65c' },
+    { label: 'ピンク', voiceId: 'color-pink', color: '#ff8fc7' },
+    { label: 'むらさき', voiceId: 'color-purple', color: '#b06de0' },
+    { label: 'オレンジ', voiceId: 'color-orange', color: '#ff9f40' }
   ];
   const TARGET_POPS = 8;
 
@@ -70,7 +70,7 @@
     setTimeout(() => burst.remove(), 500);
     el.remove();
     shell.sound.play('pop');
-    shell.voice.speak(c.label);
+    shell.voice.speak(c.voiceId);
     popped++;
     if (popped >= TARGET_POPS) {
       finished = true;
@@ -90,7 +90,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '🎈', greeting: 'ふうせんぽん、はじめるよ！', onStart: () => startGame() });
+  shell.showStartScreen({ emoji: '🎈', greeting: 'start-balloon', onStart: () => startGame() });
 </script>
 </body>
 </html>

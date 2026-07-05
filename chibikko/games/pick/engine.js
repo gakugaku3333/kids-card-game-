@@ -72,7 +72,7 @@ export class PickEngine {
       this.dom.choicesEl.appendChild(btn);
     });
 
-    setTimeout(() => this.shell.voice.speak(`${target.label}は どれかな？`), 300);
+    setTimeout(() => this.shell.voice.speak(target.askVoiceId), 300);
   }
 
   _nextCount() {
@@ -105,7 +105,7 @@ export class PickEngine {
       this.dom.choicesEl.appendChild(btn);
     });
 
-    setTimeout(() => this.shell.voice.speak('いくつかな？'), 300);
+    setTimeout(() => this.shell.voice.speak('count-question'), 300);
   }
 
   _buildChoicePool(pool, target, key) {

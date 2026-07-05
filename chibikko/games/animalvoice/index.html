@@ -63,7 +63,7 @@
 
   function onTap(a, btn) {
     shell.sound.play('correct');
-    shell.voice.speak(`${a.cry}！ ${a.name}`);
+    shell.voice.speak(`animal-${a.id}`);
     btn.classList.add('bounce');
     setTimeout(() => btn.classList.remove('bounce'), 400);
     if (!found.has(a.id)) {
@@ -81,7 +81,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '🐶', greeting: 'どうぶつを ぜんぶ タッチしてね！', onStart: () => startGame() });
+  shell.showStartScreen({ emoji: '🐶', greeting: 'start-animal-voice', onStart: () => startGame() });
 </script>
 </body>
 </html>
