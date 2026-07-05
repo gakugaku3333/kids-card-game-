@@ -45,7 +45,7 @@
     onFinish: (result) => shell.showResult(result)
   });
   shell.onRetry(() => engine.start());
-  shell.showStartScreen({ emoji: '🎨', greeting: 'start-color-touch', onStart: () => engine.start() });
+  shell.autoStart({ greeting: 'start-color-touch', onStart: () => engine.start() });
 </script>
 </body>
 </html>

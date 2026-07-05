@@ -174,7 +174,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '🖍️', greeting: 'start-coloring', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-coloring', onStart: () => startGame() });
 </script>
 </body>
 </html>

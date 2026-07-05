@@ -81,7 +81,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '🐶', greeting: 'start-animal-voice', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-animal-voice', onStart: () => startGame() });
 </script>
 </body>
 </html>

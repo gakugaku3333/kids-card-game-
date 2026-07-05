@@ -4,7 +4,7 @@
  * 3歳児設計原則（tasks/3歳向けゲームひろば計画書.md 2章）をコード化:
  *   - 文字を読ませない → 音声(voice.js)＋アイコンのみのUI
  *   - 誤タップで壊れない → ホームボタンは確認ワンクッション、設定はペアレンタルゲート(2秒長押し)
- *   - タイマー冪等クリーンアップ / 横向き対応 / 音声unlock込みスタート画面
+ *   - タイマー冪等クリーンアップ / 横向き対応 / 確認画面なしの即時スタート（最初のタップで音声unlock）
  *   - 「できたね！」リザルト＋シール排出演出（失敗が存在しないので正解数は参考表示のみ）
  */
 import * as Store from './store.js';
@@ -14,7 +14,6 @@ import * as Confetti from './confetti.js';
 import { asset } from './paths.js';
 
 const HEADER_ID = 'toddler-header';
-const START_OVERLAY_ID = 'toddler-start-overlay';
 const RESULT_MODAL_ID = 'toddler-result-modal';
 const GATE_MODAL_ID = 'toddler-gate-modal';
 const HOME_CONFIRM_ID = 'toddler-home-confirm';
@@ -155,28 +154,17 @@ export class ToddlerShell {
   }
 
   /**
-   * 音声unlockを兼ねたスタート画面を表示する。
-   * @param {object} opts - { emoji, greeting, onStart }
+   * 確認画面なしでゲームを即開始する。音声unlockは最初のタップに便乗させる
+   * （二度タップの手間をなくすため、専用のスタート画面は挟まない）。
+   * @param {object} opts - { greeting, onStart }
    */
-  showStartScreen({ emoji, greeting, onStart }) {
-    if (!document.getElementById(START_OVERLAY_ID)) {
-      const overlay = document.createElement('div');
-      overlay.id = START_OVERLAY_ID;
-      overlay.className = 'toddler-overlay';
-      overlay.innerHTML = `
-        <div class="toddler-card">
-          <div class="toddler-emoji">${emoji || '🎮'}</div>
-          <button class="toddler-btn" id="toddler-start-btn">▶️</button>
-        </div>`;
-      document.body.appendChild(overlay);
-      overlay.querySelector('#toddler-start-btn').addEventListener('click', () => {
-        Voice.unlock();
-        sound.resume();
-        overlay.remove();
-        if (greeting) Voice.speak(greeting);
-        this.startGame(onStart);
-      });
-    }
+  autoStart({ greeting, onStart }) {
+    document.body.addEventListener('pointerdown', () => {
+      Voice.unlock();
+      sound.resume();
+      if (greeting) Voice.speak(greeting);
+    }, { once: true });
+    this.startGame(onStart);
   }
 
   _ensureResultModal() {

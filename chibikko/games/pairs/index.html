@@ -107,7 +107,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '🃏', greeting: 'start-pairs', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-pairs', onStart: () => startGame() });
 </script>
 </body>
 </html>

@@ -126,7 +126,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '✨', greeting: 'start-sticker-play', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-sticker-play', onStart: () => startGame() });
 </script>
 </body>
 </html>

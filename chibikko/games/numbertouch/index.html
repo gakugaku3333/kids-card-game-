@@ -49,7 +49,7 @@
     onFinish: (result) => shell.showResult(result)
   });
   shell.onRetry(() => engine.start());
-  shell.showStartScreen({ emoji: '🍎', greeting: 'start-number-touch', onStart: () => engine.start() });
+  shell.autoStart({ greeting: 'start-number-touch', onStart: () => engine.start() });
 </script>
 </body>
 </html>

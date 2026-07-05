@@ -103,7 +103,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '⭐', greeting: 'start-shape-fit', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-shape-fit', onStart: () => startGame() });
 </script>
 </body>
 </html>

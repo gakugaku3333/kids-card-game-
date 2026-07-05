@@ -45,7 +45,7 @@
     onFinish: (result) => shell.showResult(result)
   });
   shell.onRetry(() => engine.start());
-  shell.showStartScreen({ emoji: '🔍', greeting: 'start-nakama', onStart: () => engine.start() });
+  shell.autoStart({ greeting: 'start-nakama', onStart: () => engine.start() });
 </script>
 </body>
 </html>

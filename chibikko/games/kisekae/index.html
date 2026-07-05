@@ -152,7 +152,7 @@
   }
 
   shell.onRetry(() => startGame());
-  shell.showStartScreen({ emoji: '👗', greeting: 'start-kisekae', onStart: () => startGame() });
+  shell.autoStart({ greeting: 'start-kisekae', onStart: () => startGame() });
 </script>
 </body>
 </html>
