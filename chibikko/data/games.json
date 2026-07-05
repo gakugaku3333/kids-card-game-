@@ -23,6 +23,36 @@
       "title": "かずタッチ",
       "path": "games/numbertouch/index.html",
       "icon": "assets/icons/number-touch.png"
+    },
+    {
+      "id": "shape-fit",
+      "title": "かたちはめ",
+      "path": "games/shapefit/index.html",
+      "icon": "assets/icons/shape-fit.png"
+    },
+    {
+      "id": "compare",
+      "title": "おおきいのどっち",
+      "path": "games/compare/index.html",
+      "icon": "assets/icons/compare.png"
+    },
+    {
+      "id": "nakama",
+      "title": "なかまさがし",
+      "path": "games/nakama/index.html",
+      "icon": "assets/icons/grouping.png"
+    },
+    {
+      "id": "pairs",
+      "title": "ぺあさがし",
+      "path": "games/pairs/index.html",
+      "icon": "assets/icons/pair-match.png"
+    },
+    {
+      "id": "feelings",
+      "title": "どっちのきもち",
+      "path": "games/feelings/index.html",
+      "icon": "assets/icons/feelings.png"
     }
   ]
 }

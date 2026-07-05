@@ -53,6 +53,9 @@ export class PickEngine {
     this.dom.choicesEl.innerHTML = '';
 
     if (this.set.mode === 'count') this._nextCount();
+    else if (this.set.mode === 'category') this._nextCategory();
+    else if (this.set.mode === 'emotion') this._nextEmotion();
+    else if (this.set.mode === 'compare') this._nextCompare();
     else this._nextSwatch();
   }
 
@@ -106,6 +109,94 @@ export class PickEngine {
     });
 
     setTimeout(() => this.shell.voice.speak('count-question'), 300);
+  }
+
+  _nextCategory() {
+    const categories = this.set.categories;
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const inCategory = this.set.pool.filter((p) => p.category === category.id);
+    const outCategory = this.set.pool.filter((p) => p.category !== category.id);
+    const target = inCategory[Math.floor(Math.random() * inCategory.length)];
+    const distractors = shuffle(outCategory).slice(0, this.choiceCount - 1);
+    const choices = shuffle([target, ...distractors]);
+
+    choices.forEach((choice) => {
+      const btn = document.createElement('button');
+      btn.className = 'pick-choice pick-image';
+      btn.innerHTML = `<img src="${asset(choice.file)}" alt="${choice.id}" />`;
+      btn.addEventListener('click', () => this._onAnswer(choice.category === category.id, btn));
+      this.dom.choicesEl.appendChild(btn);
+    });
+
+    setTimeout(() => this.shell.voice.speak(category.askVoiceId), 300);
+  }
+
+  _nextEmotion() {
+    const pool = this.set.pool;
+    const target = pool[Math.floor(Math.random() * pool.length)];
+    const distractors = shuffle(pool.filter((p) => p.id !== target.id)).slice(0, this.choiceCount - 1);
+    const choices = shuffle([target, ...distractors]);
+
+    const scene = document.createElement('img');
+    scene.src = asset(target.scene);
+    scene.className = 'pick-emotion-scene';
+    scene.alt = target.id;
+    this.dom.stageEl.appendChild(scene);
+
+    choices.forEach((choice) => {
+      const btn = document.createElement('button');
+      btn.className = 'pick-choice pick-image';
+      btn.innerHTML = `<img src="${asset(choice.face)}" alt="${choice.id}" />`;
+      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn));
+      this.dom.choicesEl.appendChild(btn);
+    });
+
+    setTimeout(() => this.shell.voice.speak(this.set.askVoiceId), 300);
+  }
+
+  _nextCompare() {
+    const type = this.set.types[Math.floor(Math.random() * this.set.types.length)];
+    const [a, b] = this._buildComparePair(type.id);
+    const biggerIsA = a.value > b.value;
+
+    [a, b].forEach((item, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'pick-choice pick-compare';
+      btn.innerHTML = item.svg;
+      btn.addEventListener('click', () => this._onAnswer((idx === 0) === biggerIsA, btn));
+      this.dom.choicesEl.appendChild(btn);
+    });
+
+    setTimeout(() => this.shell.voice.speak(type.askVoiceId), 300);
+  }
+
+  _buildComparePair(type) {
+    const lo = randInt(1, 3);
+    const hi = randInt(lo + 2, lo + 5);
+    const [small, big] = shuffle([lo, hi]);
+    return [small, big].map((v) => ({ value: v, svg: this._compareSvg(type, v) }));
+  }
+
+  _compareSvg(type, v) {
+    if (type === 'size') {
+      const r = 16 + v * 8;
+      return `<svg viewBox="0 0 160 160" width="140" height="140"><circle cx="80" cy="80" r="${r}" fill="#ff9a3d"/></svg>`;
+    }
+    if (type === 'length') {
+      const w = 20 + v * 20;
+      return `<svg viewBox="0 0 160 80" width="140" height="70"><rect x="10" y="25" width="${w}" height="30" rx="14" fill="#4da3ff"/></svg>`;
+    }
+    if (type === 'height') {
+      const h = 20 + v * 18;
+      return `<svg viewBox="0 0 80 160" width="70" height="140"><rect x="20" y="${140 - h}" width="40" height="${h}" rx="14" fill="#5cd65c"/></svg>`;
+    }
+    // count
+    const dots = Array.from({ length: v }, (_, i) => {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      return `<circle cx="${30 + col * 45}" cy="${30 + row * 45}" r="16" fill="#ff8fc7"/>`;
+    }).join('');
+    return `<svg viewBox="0 0 160 160" width="140" height="140">${dots}</svg>`;
   }
 
   _buildChoicePool(pool, target, key) {

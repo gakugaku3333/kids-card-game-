@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>おおきいのどっち</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#eafcff, #cdf3ff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 560px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #choices { display: flex; justify-content: center; align-items: flex-end; gap: 34px; margin-top: 20px; }
+  .pick-choice.pick-compare {
+    width: 170px; height: 170px; border-radius: 24px; border: none; background: #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,.15); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pick-choice.pick-correct { outline: 6px solid #ffd93d; transform: scale(1.05); }
+  .pick-choice.pick-wrong { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    .pick-choice.pick-compare { width: 130px; height: 130px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="stage"></div>
+  <div id="choices"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { loadPick, PickEngine } from '../pick/engine.js';
+
+  const shell = new ToddlerShell({ gameId: 'compare' });
+  const dom = { stageEl: document.getElementById('stage'), choicesEl: document.getElementById('choices') };
+
+  const set = await loadPick('compare');
+  const engine = new PickEngine(shell, set, dom, {
+    onFinish: (result) => shell.showResult(result)
+  });
+  shell.onRetry(() => engine.start());
+  shell.showStartScreen({ emoji: '⚖️', greeting: 'start-compare', onStart: () => engine.start() });
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "id": "compare",
+  "mode": "compare",
+  "totalQuestions": 5,
+  "types": [
+    { "id": "size", "askVoiceId": "compare-size-q" },
+    { "id": "length", "askVoiceId": "compare-length-q" },
+    { "id": "count", "askVoiceId": "compare-count-q" },
+    { "id": "height", "askVoiceId": "compare-height-q" }
+  ]
+}

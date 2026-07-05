@@ -1,0 +1,13 @@
+{
+  "id": "feelings",
+  "mode": "emotion",
+  "totalQuestions": 5,
+  "choiceCount": 3,
+  "askVoiceId": "feelings-q",
+  "pool": [
+    { "id": "ureshii", "scene": "assets/feelings/scene-ureshii.png", "face": "assets/feelings/face-ureshii.png" },
+    { "id": "kanashii", "scene": "assets/feelings/scene-kanashii.png", "face": "assets/feelings/face-kanashii.png" },
+    { "id": "okotta", "scene": "assets/feelings/scene-okotta.png", "face": "assets/feelings/face-okotta.png" },
+    { "id": "bikkuri", "scene": "assets/feelings/scene-bikkuri.png", "face": "assets/feelings/face-bikkuri.png" }
+  ]
+}

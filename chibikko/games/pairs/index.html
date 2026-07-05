@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ぺあさがし</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#e9fff0, #cdf7dd);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 460px; padding: 90px 16px 24px; box-sizing: border-box; }
+  #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card {
+    aspect-ratio: 1; border-radius: 20px; border: none; cursor: pointer;
+    background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 6px 12px rgba(0,0,0,.18);
+    display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
+    padding: 10px;
+  }
+  .card img { width: 100%; height: 100%; object-fit: contain; display: none; }
+  .card.open { background: #fff; }
+  .card.open img { display: block; }
+  .card.open .card-back { display: none; }
+  .card.matched { outline: 6px solid #ffd93d; }
+  .card.wrong { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  @media (max-height: 700px) { .game-wrap { padding-top: 70px; } }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="grid"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'pairs' });
+  const grid = document.getElementById('grid');
+
+  const ANIMALS = [
+    { id: 'inu', file: 'assets/animals/inu.png' },
+    { id: 'neko', file: 'assets/animals/neko.png' },
+    { id: 'ushi', file: 'assets/animals/ushi.png' }
+  ];
+
+  let flipped = [];
+  let locked = false;
+  let matchedCount = 0;
+
+  function buildDeck() {
+    const deck = [...ANIMALS, ...ANIMALS].map((a, i) => ({ ...a, key: `${a.id}-${i}` }));
+    return deck.sort(() => Math.random() - 0.5);
+  }
+
+  function render() {
+    grid.innerHTML = '';
+    buildDeck().forEach((card) => {
+      const btn = document.createElement('button');
+      btn.className = 'card';
+      btn.dataset.id = card.id;
+      btn.innerHTML = `<span class="card-back">❓</span><img src="${asset(card.file)}" alt="${card.id}" />`;
+      btn.addEventListener('click', () => onFlip(btn));
+      grid.appendChild(btn);
+    });
+  }
+
+  function onFlip(btn) {
+    if (locked || btn.classList.contains('open') || flipped.length >= 2) return;
+    btn.classList.add('open');
+    flipped.push(btn);
+    if (flipped.length === 2) {
+      locked = true;
+      const [a, b] = flipped;
+      if (a.dataset.id === b.dataset.id) {
+        a.classList.add('matched');
+        b.classList.add('matched');
+        shell.sound.play('correct');
+        shell.voice.speak(`animal-${a.dataset.id}`);
+        matchedCount++;
+        flipped = [];
+        locked = false;
+        if (matchedCount >= ANIMALS.length) {
+          setTimeout(() => shell.showResult({ correct: ANIMALS.length, total: ANIMALS.length }), 900);
+        }
+      } else {
+        shell.sound.play('wrong');
+        a.classList.add('wrong');
+        b.classList.add('wrong');
+        setTimeout(() => {
+          a.classList.remove('open', 'wrong');
+          b.classList.remove('open', 'wrong');
+          flipped = [];
+          locked = false;
+        }, 1100);
+      }
+    }
+  }
+
+  function startGame() {
+    flipped = [];
+    locked = false;
+    matchedCount = 0;
+    render();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '🃏', greeting: 'start-pairs', onStart: () => startGame() });
+</script>
+</body>
+</html>

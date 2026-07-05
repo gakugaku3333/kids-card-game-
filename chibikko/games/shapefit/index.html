@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かたちはめ</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#f3ecff, #e4d6ff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 520px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #silhouette { width: 160px; height: 160px; margin: 0 auto 26px; transition: transform .3s; }
+  #silhouette.filled { transform: scale(1.15); }
+  #choices { display: flex; justify-content: center; gap: 24px; }
+  .shape-btn {
+    width: 120px; height: 120px; border-radius: 24px; border: none; background: #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,.15); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shape-btn.correct { outline: 6px solid #ffd93d; transform: scale(1.08); }
+  .shape-btn.wrong { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    #silhouette { width: 110px; height: 110px; margin-bottom: 16px; }
+    .shape-btn { width: 90px; height: 90px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="silhouette"></div>
+  <div id="choices"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+
+  const shell = new ToddlerShell({ gameId: 'shape-fit' });
+  const silhouette = document.getElementById('silhouette');
+  const choicesEl = document.getElementById('choices');
+
+  const SHAPES = {
+    circle: (fill) => `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="42" fill="${fill}"/></svg>`,
+    triangle: (fill) => `<svg viewBox="0 0 100 100" width="100%" height="100%"><polygon points="50,8 92,88 8,88" fill="${fill}"/></svg>`,
+    square: (fill) => `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="10" y="10" width="80" height="80" rx="10" fill="${fill}"/></svg>`,
+    star: (fill) => `<svg viewBox="0 0 100 100" width="100%" height="100%"><polygon points="50,4 61,37 96,37 68,58 79,92 50,71 21,92 32,58 4,37 39,37" fill="${fill}"/></svg>`,
+    heart: (fill) => `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M50 88 C10 60 4 34 24 20 C38 10 50 20 50 32 C50 20 62 10 76 20 C96 34 90 60 50 88 Z" fill="${fill}"/></svg>`
+  };
+  const SHAPE_IDS = Object.keys(SHAPES);
+  const COLORS = ['#ff9a3d', '#4da3ff', '#5cd65c', '#ff8fc7', '#b06de0', '#ffd93d'];
+  const TOTAL = 5;
+
+  let round = 0;
+  let target = null;
+
+  function nextRound() {
+    if (round >= TOTAL) {
+      shell.showResult({ correct: TOTAL, total: TOTAL });
+      return;
+    }
+    round++;
+    target = SHAPE_IDS[Math.floor(Math.random() * SHAPE_IDS.length)];
+    silhouette.className = '';
+    silhouette.innerHTML = SHAPES[target]('#d8cdf0');
+
+    const distractorPool = SHAPE_IDS.filter((s) => s !== target);
+    const distractors = distractorPool.sort(() => Math.random() - 0.5).slice(0, 2);
+    const choiceShapes = [target, ...distractors].sort(() => Math.random() - 0.5);
+
+    choicesEl.innerHTML = '';
+    choiceShapes.forEach((shapeId) => {
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const btn = document.createElement('button');
+      btn.className = 'shape-btn';
+      btn.innerHTML = SHAPES[shapeId](color);
+      btn.addEventListener('click', () => onPick(shapeId === target, btn));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function onPick(isCorrect, btn) {
+    if (isCorrect) {
+      choicesEl.querySelectorAll('.shape-btn').forEach((b) => (b.disabled = true));
+      btn.classList.add('correct');
+      silhouette.classList.add('filled');
+      shell.sound.play('correct');
+      shell.voice.praise();
+      setTimeout(() => nextRound(), 1300);
+    } else {
+      btn.classList.add('wrong');
+      setTimeout(() => btn.classList.remove('wrong'), 500);
+      shell.sound.play('wrong');
+      shell.voice.encourage();
+    }
+  }
+
+  function startGame() {
+    round = 0;
+    nextRound();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '⭐', greeting: 'start-shape-fit', onStart: () => startGame() });
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "id": "nakama",
+  "mode": "category",
+  "totalQuestions": 5,
+  "choiceCount": 3,
+  "categories": [
+    { "id": "food", "askVoiceId": "cat-food-q" },
+    { "id": "animal", "askVoiceId": "cat-animal-q" },
+    { "id": "vehicle", "askVoiceId": "cat-vehicle-q" },
+    { "id": "flower", "askVoiceId": "cat-flower-q" }
+  ],
+  "pool": [
+    { "id": "banana", "file": "assets/fruits/banana.png", "category": "food" },
+    { "id": "ringo", "file": "assets/fruits/ringo.png", "category": "food" },
+    { "id": "ichigo", "file": "assets/fruits/ichigo.png", "category": "food" },
+    { "id": "mikan", "file": "assets/fruits/mikan.png", "category": "food" },
+    { "id": "budou", "file": "assets/fruits/budou.png", "category": "food" },
+    { "id": "momo", "file": "assets/fruits/momo.png", "category": "food" },
+    { "id": "inu", "file": "assets/animals/inu.png", "category": "animal" },
+    { "id": "neko", "file": "assets/animals/neko.png", "category": "animal" },
+    { "id": "ushi", "file": "assets/animals/ushi.png", "category": "animal" },
+    { "id": "buta", "file": "assets/animals/buta.png", "category": "animal" },
+    { "id": "hitsuji", "file": "assets/animals/hitsuji.png", "category": "animal" },
+    { "id": "raion", "file": "assets/animals/raion.png", "category": "animal" },
+    { "id": "kuruma", "file": "assets/stickers/kuruma.png", "category": "vehicle" },
+    { "id": "densha", "file": "assets/stickers/densha.png", "category": "vehicle" },
+    { "id": "fune", "file": "assets/stickers/fune.png", "category": "vehicle" },
+    { "id": "sakura", "file": "assets/stickers/sakura.png", "category": "flower" },
+    { "id": "himawari", "file": "assets/stickers/himawari.png", "category": "flower" },
+    { "id": "chulip", "file": "assets/stickers/chulip.png", "category": "flower" }
+  ]
+}
