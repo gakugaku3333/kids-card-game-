@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かずタッチ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; }
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: linear-gradient(#e8f7ff, #cdeeff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 520px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  .pick-count-stage { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 24px; min-height: 90px; }
+  .pick-count-item { width: 72px; height: 72px; object-fit: contain; }
+  #choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 10px; }
+  .pick-choice.pick-number {
+    width: 96px; height: 96px; border-radius: 26px; border: none;
+    font-size: 3rem; font-weight: 900; color: #fff; cursor: pointer;
+    background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 6px 0 #e07e22;
+  }
+  .pick-choice.pick-correct { outline: 6px solid #ffd93d; transform: scale(1.08); }
+  .pick-choice.pick-wrong { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    .pick-count-item { width: 56px; height: 56px; }
+    .pick-choice.pick-number { width: 76px; height: 76px; font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="stage" class="pick-count-stage"></div>
+  <div id="choices"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { loadPick, PickEngine } from '../pick/engine.js';
+
+  const shell = new ToddlerShell({ gameId: 'number-touch' });
+  const dom = { stageEl: document.getElementById('stage'), choicesEl: document.getElementById('choices') };
+
+  const set = await loadPick('number-touch');
+  const engine = new PickEngine(shell, set, dom, {
+    onFinish: (result) => shell.showResult(result)
+  });
+  shell.onRetry(() => engine.start());
+  shell.showStartScreen({ emoji: '🍎', greeting: 'かずタッチ、はじめるよ！', onStart: () => engine.start() });
+</script>
+</body>
+</html>

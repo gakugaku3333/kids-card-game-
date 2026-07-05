@@ -1,0 +1,15 @@
+{
+  "id": "number-touch",
+  "mode": "count",
+  "totalQuestions": 5,
+  "choiceCount": 3,
+  "countRange": [1, 5],
+  "fruitIcons": [
+    "assets/fruits/ichigo.png",
+    "assets/fruits/ringo.png",
+    "assets/fruits/banana.png",
+    "assets/fruits/mikan.png",
+    "assets/fruits/budou.png",
+    "assets/fruits/momo.png"
+  ]
+}

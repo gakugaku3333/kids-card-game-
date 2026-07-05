@@ -1,0 +1,15 @@
+{
+  "id": "color-touch",
+  "mode": "swatch",
+  "totalQuestions": 5,
+  "choiceCount": 3,
+  "pool": [
+    { "id": "red", "label": "あか", "color": "#ff4d4d" },
+    { "id": "blue", "label": "あお", "color": "#4da3ff" },
+    { "id": "yellow", "label": "きいろ", "color": "#ffd93d" },
+    { "id": "green", "label": "みどり", "color": "#5cd65c" },
+    { "id": "pink", "label": "ピンク", "color": "#ff8fc7" },
+    { "id": "purple", "label": "むらさき", "color": "#b06de0" },
+    { "id": "orange", "label": "オレンジ", "color": "#ff9f40" }
+  ]
+}

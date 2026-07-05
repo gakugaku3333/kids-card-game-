@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ふうせんぽん</title>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { background: linear-gradient(#cdeaff, #eaf7ff); position: relative; }
+  #stage { position: fixed; inset: 0; }
+  .balloon {
+    position: absolute; bottom: -140px; width: 92px; height: 112px; border-radius: 50% 50% 46% 46%;
+    box-shadow: inset -10px -14px 0 rgba(0,0,0,.08), 0 6px 10px rgba(0,0,0,.15);
+    cursor: pointer; animation: float-up linear forwards;
+  }
+  .balloon::after {
+    content: ''; position: absolute; left: 50%; bottom: -22px; width: 2px; height: 22px;
+    background: rgba(0,0,0,.25); transform: translateX(-50%);
+  }
+  @keyframes float-up { to { transform: translateY(-120vh); } }
+  .pop-burst { position: absolute; font-size: 2.4rem; pointer-events: none; animation: pop-fade .5s forwards; }
+  @keyframes pop-fade { to { transform: scale(1.6); opacity: 0; } }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div id="stage"></div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+
+  const shell = new ToddlerShell({ gameId: 'balloon' });
+  const stage = document.getElementById('stage');
+
+  const COLORS = [
+    { label: 'あか', color: '#ff4d4d' },
+    { label: 'あお', color: '#4da3ff' },
+    { label: 'きいろ', color: '#ffd93d' },
+    { label: 'みどり', color: '#5cd65c' },
+    { label: 'ピンク', color: '#ff8fc7' },
+    { label: 'むらさき', color: '#b06de0' },
+    { label: 'オレンジ', color: '#ff9f40' }
+  ];
+  const TARGET_POPS = 8;
+
+  function spawnBalloon() {
+    const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const el = document.createElement('div');
+    el.className = 'balloon';
+    el.style.background = c.color;
+    el.style.left = `${5 + Math.random() * 80}%`;
+    const duration = 5.5 + Math.random() * 2.5;
+    el.style.animationDuration = `${duration}s`;
+    stage.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+    el.addEventListener('pointerdown', () => popBalloon(el, c));
+  }
+
+  let popped = 0;
+  let finished = false;
+  function popBalloon(el, c) {
+    if (el.dataset.popped || finished) return;
+    el.dataset.popped = '1';
+    const rect = el.getBoundingClientRect();
+    const burst = document.createElement('div');
+    burst.className = 'pop-burst';
+    burst.textContent = '💥';
+    burst.style.left = `${rect.left + rect.width / 2 - 20}px`;
+    burst.style.top = `${rect.top + rect.height / 2 - 20}px`;
+    stage.appendChild(burst);
+    setTimeout(() => burst.remove(), 500);
+    el.remove();
+    shell.sound.play('pop');
+    shell.voice.speak(c.label);
+    popped++;
+    if (popped >= TARGET_POPS) {
+      finished = true;
+      finish();
+    }
+  }
+
+  function finish() {
+    shell.showResult({ correct: popped, total: TARGET_POPS });
+  }
+
+  function startGame() {
+    popped = 0;
+    finished = false;
+    stage.innerHTML = '';
+    shell.setInterval(spawnBalloon, 900);
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '🎈', greeting: 'ふうせんぽん、はじめるよ！', onStart: () => startGame() });
+</script>
+</body>
+</html>

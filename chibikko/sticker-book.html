@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>シールちょう</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: linear-gradient(#fff6e5, #ffe9c7);
+    min-height: 100vh; box-sizing: border-box;
+  }
+  #home-fab {
+    position: fixed; top: 10px; left: 10px; z-index: 50;
+    width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255,255,255,.9); font-size: 1.8rem; box-shadow: 0 4px 10px rgba(0,0,0,.2);
+  }
+  #wrap { max-width: 640px; margin: 0 auto; padding: 90px 18px 40px; }
+  #sheet {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    background: rgba(255,255,255,.7); border-radius: 24px; padding: 16px;
+  }
+  .slot {
+    aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.6);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .slot img { width: 100%; height: 100%; object-fit: contain; }
+  .slot.locked { font-size: 1.6rem; color: #ccc; }
+  #themes { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .theme-btn {
+    width: 70px; height: 70px; border-radius: 16px; border: 4px solid #fff; cursor: pointer;
+    background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  }
+  .theme-btn.locked { filter: grayscale(1) brightness(.6); cursor: default; }
+  .theme-btn.selected { border-color: #ffd93d; }
+  @media (max-width: 420px) { #sheet { grid-template-columns: repeat(4, 1fr); } }
+</style>
+</head>
+<body>
+<button id="home-fab" aria-label="ホーム">🏠</button>
+<div id="wrap">
+  <div id="sheet"></div>
+  <div id="themes"></div>
+</div>
+<script type="module">
+  import * as Store from './core/store.js';
+  import * as Voice from './core/voice.js';
+  import { asset } from './core/paths.js';
+
+  window.CHIBIKKO_ROOT = '../';
+
+  document.body.addEventListener('pointerdown', () => Voice.unlock(), { once: true });
+  document.getElementById('home-fab').addEventListener('click', () => { window.location.href = 'index.html'; });
+
+  const sheet = document.getElementById('sheet');
+  const owned = new Set(Store.getStickers());
+  Store.STICKERS.forEach((s) => {
+    const slot = document.createElement('div');
+    if (owned.has(s.id)) {
+      slot.className = 'slot';
+      slot.innerHTML = `<img src="${asset(s.file)}" alt="${s.id}" />`;
+    } else {
+      slot.className = 'slot locked';
+      slot.textContent = '❔';
+    }
+    sheet.appendChild(slot);
+  });
+
+  const themesEl = document.getElementById('themes');
+  const unlocked = new Set(Store.unlockedThemes().map((t) => t.id));
+  const selected = Store.getSelectedTheme().id;
+  Store.THEMES.forEach((t) => {
+    const btn = document.createElement('button');
+    const isUnlocked = unlocked.has(t.id);
+    btn.className = `theme-btn ${isUnlocked ? '' : 'locked'} ${t.id === selected ? 'selected' : ''}`;
+    btn.style.backgroundImage = `url('${asset(t.file)}')`;
+    if (isUnlocked) {
+      btn.addEventListener('click', () => {
+        Store.selectTheme(t.id);
+        Voice.speak('これにする！');
+        document.querySelectorAll('.theme-btn').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+    }
+    themesEl.appendChild(btn);
+  });
+</script>
+</body>
+</html>

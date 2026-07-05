@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>どうぶつのこえ</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#eafff0, #d3f7dd);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 560px; padding: 90px 16px 24px; box-sizing: border-box; }
+  #grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .animal-btn {
+    background: #fff; border: 6px solid #fff; border-radius: 24px; padding: 8px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.15); cursor: pointer; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .animal-btn img { width: 100%; height: 100%; object-fit: contain; }
+  .animal-btn.found { border-color: #ffd93d; box-shadow: 0 0 0 4px rgba(255,217,61,.5); }
+  .animal-btn.bounce { animation: bounce .4s; }
+  @keyframes bounce { 30% { transform: scale(1.15); } }
+  @media (max-width: 420px) { #grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-height: 700px) { .game-wrap { padding-top: 70px; } }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="grid"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'animal-voice' });
+  const grid = document.getElementById('grid');
+
+  const ANIMALS = [
+    { id: 'inu', file: 'assets/animals/inu.png', name: 'いぬ', cry: 'わんわん' },
+    { id: 'neko', file: 'assets/animals/neko.png', name: 'ねこ', cry: 'にゃーにゃー' },
+    { id: 'ushi', file: 'assets/animals/ushi.png', name: 'うし', cry: 'もーもー' },
+    { id: 'buta', file: 'assets/animals/buta.png', name: 'ぶた', cry: 'ぶーぶー' },
+    { id: 'hitsuji', file: 'assets/animals/hitsuji.png', name: 'ひつじ', cry: 'めえめえ' },
+    { id: 'hiyoko', file: 'assets/animals/hiyoko.png', name: 'ひよこ', cry: 'ぴよぴよ' },
+    { id: 'kaeru', file: 'assets/animals/kaeru.png', name: 'かえる', cry: 'けろけろ' },
+    { id: 'raion', file: 'assets/animals/raion.png', name: 'らいおん', cry: 'がおー' }
+  ];
+
+  let found = new Set();
+
+  function render() {
+    grid.innerHTML = '';
+    ANIMALS.forEach((a) => {
+      const btn = document.createElement('button');
+      btn.className = 'animal-btn';
+      btn.innerHTML = `<img src="${asset(a.file)}" alt="${a.name}" />`;
+      btn.addEventListener('click', () => onTap(a, btn));
+      grid.appendChild(btn);
+    });
+  }
+
+  function onTap(a, btn) {
+    shell.sound.play('correct');
+    shell.voice.speak(`${a.cry}！ ${a.name}`);
+    btn.classList.add('bounce');
+    setTimeout(() => btn.classList.remove('bounce'), 400);
+    if (!found.has(a.id)) {
+      found.add(a.id);
+      btn.classList.add('found');
+      if (found.size >= ANIMALS.length) {
+        setTimeout(() => shell.showResult({ correct: ANIMALS.length, total: ANIMALS.length }), 900);
+      }
+    }
+  }
+
+  function startGame() {
+    found = new Set();
+    render();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '🐶', greeting: 'どうぶつを ぜんぶ タッチしてね！', onStart: () => startGame() });
+</script>
+</body>
+</html>

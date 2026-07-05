@@ -1,0 +1,28 @@
+{
+  "games": [
+    {
+      "id": "balloon",
+      "title": "ふうせんぽん",
+      "path": "games/balloon/index.html",
+      "icon": "assets/icons/balloon.png"
+    },
+    {
+      "id": "animal-voice",
+      "title": "どうぶつのこえ",
+      "path": "games/animalvoice/index.html",
+      "icon": "assets/icons/animal-voice.png"
+    },
+    {
+      "id": "color-touch",
+      "title": "いろタッチ",
+      "path": "games/colortouch/index.html",
+      "icon": "assets/icons/color-touch.png"
+    },
+    {
+      "id": "number-touch",
+      "title": "かずタッチ",
+      "path": "games/numbertouch/index.html",
+      "icon": "assets/icons/number-touch.png"
+    }
+  ]
+}

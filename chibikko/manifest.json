@@ -1,0 +1,11 @@
+{
+  "name": "ちびっこひろば",
+  "short_name": "ちびっこひろば",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff6e5",
+  "theme_color": "#ffb347",
+  "icons": [
+    { "src": "../assets/icons/sticker-play.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

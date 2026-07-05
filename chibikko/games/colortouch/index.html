@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>いろタッチ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#fff6e5, #ffe9c7);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 520px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  .pick-count-stage { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+  #choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; margin-top: 20px; }
+  .pick-choice {
+    width: 120px; height: 120px; border-radius: 50%; border: 6px solid #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,.2); cursor: pointer;
+  }
+  .pick-choice.pick-correct { outline: 6px solid #ffd93d; transform: scale(1.08); }
+  .pick-choice.pick-wrong { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    .pick-choice { width: 90px; height: 90px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="stage" class="pick-count-stage"></div>
+  <div id="choices"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { loadPick, PickEngine } from '../pick/engine.js';
+
+  const shell = new ToddlerShell({ gameId: 'color-touch' });
+  const dom = { stageEl: document.getElementById('stage'), choicesEl: document.getElementById('choices') };
+
+  const set = await loadPick('color-touch');
+  const engine = new PickEngine(shell, set, dom, {
+    onFinish: (result) => shell.showResult(result)
+  });
+  shell.onRetry(() => engine.start());
+  shell.showStartScreen({ emoji: '🎨', greeting: 'いろタッチ、はじめるよ！', onStart: () => engine.start() });
+</script>
+</body>
+</html>
