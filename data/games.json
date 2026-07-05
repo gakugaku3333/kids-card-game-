@@ -99,6 +99,14 @@
       "category": "アクション"
     },
     {
+      "id": "maze",
+      "title": "めいろ",
+      "path": "games/maze/index.html",
+      "thumb": "assets/images/maze_thumb.svg",
+      "desc": "🐰 うさぎを ゆびで うごかして にんじんまで すすもう！レベル3は とっても むずかしいよ！",
+      "category": "パズル"
+    },
+    {
       "id": "draw",
       "title": "おえかき",
       "path": "games/draw/index.html",

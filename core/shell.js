@@ -36,6 +36,13 @@ function injectStyles() {
     @media (max-height: 700px) {
       #${HEADER_ID} { padding: 6px 10px; font-size: .9rem; }
     }
+    /* リザルトモーダルの表示制御。css/store.css の .store-modal と同等だが、
+       ゲームページは store.css を読み込まないため shell 側で自前に持つ */
+    #${RESULT_MODAL_ID} {
+      position: fixed; inset: 0; background: rgba(92,76,81,.45); display: none;
+      align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    }
+    #${RESULT_MODAL_ID}.show { display: flex; }
     .shell-modal-card {
       background: #fff; border-radius: 28px; padding: 30px 26px; max-width: 360px; width: 100%;
       text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,.3);

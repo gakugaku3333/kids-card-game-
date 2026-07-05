@@ -83,6 +83,12 @@
       "title": "おとあそび",
       "path": "games/music/index.html",
       "icon": "assets/icons/music.png"
+    },
+    {
+      "id": "maze",
+      "title": "めいろ",
+      "path": "games/maze/index.html",
+      "icon": "assets/icons/maze.svg"
     }
   ]
 }

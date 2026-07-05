@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>めいろ</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#fff0f6, #ffd6e8);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 560px; padding: 76px 12px 20px; box-sizing: border-box; text-align: center; }
+  #maze-canvas {
+    background: #fff; border-radius: 24px; box-shadow: 0 8px 18px rgba(0,0,0,.15);
+    touch-action: none; display: block; margin: 0 auto;
+  }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 66px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <canvas id="maze-canvas"></canvas>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import * as Confetti from '../../core/confetti.js';
+
+  const shell = new ToddlerShell({ gameId: 'maze' });
+  const canvas = document.getElementById('maze-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // ラウンドごとに少しずつ大きくする（3歳向けなので小さめから）
+  const ROUNDS = [
+    { cols: 4, rows: 4 },
+    { cols: 5, rows: 5 },
+    { cols: 6, rows: 6 },
+  ];
+
+  let round = 0;
+  let maze = null;        // maze[r][c] = { top, right, bottom, left }（壁の有無）
+  let cols = 0, rows = 0;
+  let cell = 0;           // セルの描画サイズ(px)
+  let pad = 0;            // 外周の余白(px)
+  let player = { r: 0, c: 0 };
+  let goal = { r: 0, c: 0 };
+  let trail = [];
+  let dragging = false;
+  let finished = false;
+
+  // 穴掘り法（再帰的バックトラック）で必ず解ける迷路を生成
+  function generateMaze(w, h) {
+    const grid = Array.from({ length: h }, () =>
+      Array.from({ length: w }, () => ({ top: true, right: true, bottom: true, left: true }))
+    );
+    const visited = Array.from({ length: h }, () => Array(w).fill(false));
+    const stack = [[0, 0]];
+    visited[0][0] = true;
+    while (stack.length) {
+      const [r, c] = stack[stack.length - 1];
+      const neighbors = [
+        [r - 1, c, 'top', 'bottom'],
+        [r, c + 1, 'right', 'left'],
+        [r + 1, c, 'bottom', 'top'],
+        [r, c - 1, 'left', 'right'],
+      ].filter(([nr, nc]) => nr >= 0 && nr < h && nc >= 0 && nc < w && !visited[nr][nc]);
+      if (!neighbors.length) { stack.pop(); continue; }
+      const [nr, nc, wall, opposite] = neighbors[Math.floor(Math.random() * neighbors.length)];
+      grid[r][c][wall] = false;
+      grid[nr][nc][opposite] = false;
+      visited[nr][nc] = true;
+      stack.push([nr, nc]);
+    }
+    return grid;
+  }
+
+  function canMove(from, to) {
+    const dr = to.r - from.r, dc = to.c - from.c;
+    if (Math.abs(dr) + Math.abs(dc) !== 1) return false;
+    if (to.r < 0 || to.r >= rows || to.c < 0 || to.c >= cols) return false;
+    const w = maze[from.r][from.c];
+    if (dr === -1) return !w.top;
+    if (dr === 1) return !w.bottom;
+    if (dc === 1) return !w.right;
+    return !w.left;
+  }
+
+  function cellCenter({ r, c }) {
+    return { x: pad + c * cell + cell / 2, y: pad + r * cell + cell / 2 };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // とおった道
+    ctx.strokeStyle = '#ffc2dd';
+    ctx.lineWidth = cell * 0.35;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (trail.length > 1) {
+      ctx.beginPath();
+      trail.forEach((p, i) => {
+        const { x, y } = cellCenter(p);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    // 壁
+    ctx.strokeStyle = '#b06de0';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = pad + c * cell, y = pad + r * cell;
+        const w = maze[r][c];
+        ctx.beginPath();
+        if (w.top) { ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }
+        if (w.left) { ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }
+        if (w.right && c === cols - 1) { ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); }
+        if (w.bottom && r === rows - 1) { ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); }
+        ctx.stroke();
+      }
+    }
+
+    // ゴールとキャラクター（絵文字）
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${Math.floor(cell * 0.62)}px sans-serif`;
+    const g = cellCenter(goal);
+    ctx.fillText('🏰', g.x, g.y);
+    const p = cellCenter(player);
+    ctx.font = `${Math.floor(cell * 0.7)}px sans-serif`;
+    ctx.fillText('👸', p.x, p.y);
+  }
+
+  function setupRound() {
+    ({ cols, rows } = ROUNDS[round]);
+    maze = generateMaze(cols, rows);
+    player = { r: 0, c: 0 };
+    goal = { r: rows - 1, c: cols - 1 };
+    trail = [{ ...player }];
+    finished = false;
+
+    const maxW = Math.min(window.innerWidth - 24, 536);
+    const maxH = window.innerHeight - 110;
+    pad = 14;
+    cell = Math.floor(Math.min((maxW - pad * 2) / cols, (maxH - pad * 2) / rows));
+    canvas.width = cell * cols + pad * 2;
+    canvas.height = cell * rows + pad * 2;
+    draw();
+  }
+
+  function pointerCell(ev) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
+    return { x, y };
+  }
+
+  // 指の位置へ向かって、壁を通らず近づける限り1マスずつ進める。
+  // 「指に厳密に追従」ではなく指へ寄っていく方式なので、速いスワイプでも壁抜けしない。
+  function followFinger(pt) {
+    let moved = false;
+    for (let step = 0; step < 3; step++) {
+      const cur = cellCenter(player);
+      const curDist = Math.hypot(pt.x - cur.x, pt.y - cur.y);
+      if (curDist < cell * 0.4) break;
+      const candidates = [
+        { r: player.r - 1, c: player.c },
+        { r: player.r + 1, c: player.c },
+        { r: player.r, c: player.c - 1 },
+        { r: player.r, c: player.c + 1 },
+      ].filter((n) => canMove(player, n));
+      let best = null, bestDist = curDist;
+      candidates.forEach((n) => {
+        const cc = cellCenter(n);
+        const d = Math.hypot(pt.x - cc.x, pt.y - cc.y);
+        if (d < bestDist) { best = n; bestDist = d; }
+      });
+      if (!best) break;
+      player = best;
+      // 戻ったら道を消す、進んだら道を伸ばす
+      const backIdx = trail.findIndex((t) => t.r === player.r && t.c === player.c);
+      if (backIdx >= 0) trail.length = backIdx + 1;
+      else trail.push({ ...player });
+      moved = true;
+    }
+    if (moved) {
+      draw();
+      if (player.r === goal.r && player.c === goal.c) onGoal();
+    }
+  }
+
+  function onGoal() {
+    if (finished) return;
+    finished = true;
+    dragging = false;
+    shell.sound.play('correct');
+    shell.voice.praise();
+    Confetti.burst();
+    setTimeout(() => {
+      round++;
+      if (round >= ROUNDS.length) {
+        shell.showResult({ correct: ROUNDS.length, total: ROUNDS.length });
+      } else {
+        setupRound();
+      }
+    }, 1400);
+  }
+
+  canvas.addEventListener('pointerdown', (ev) => {
+    if (finished) return;
+    dragging = true;
+    canvas.setPointerCapture(ev.pointerId);
+    followFinger(pointerCell(ev));
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!dragging || finished) return;
+    followFinger(pointerCell(ev));
+  });
+  ['pointerup', 'pointercancel'].forEach((evName) => {
+    canvas.addEventListener(evName, () => { dragging = false; });
+  });
+
+  function startGame() {
+    round = 0;
+    setupRound();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.autoStart({ greeting: 'start-maze', onStart: () => startGame() });
+</script>
+</body>
+</html>

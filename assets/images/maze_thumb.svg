@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250">
+  <defs>
+    <linearGradient id="mgrass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8ffe0"/>
+      <stop offset="1" stop-color="#c2eeb5"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="250" rx="20" fill="url(#mgrass)"/>
+  <!-- maze board -->
+  <rect x="70" y="30" width="260" height="190" rx="16" fill="#fffef5" stroke="#4a8a3a" stroke-width="7"/>
+  <g stroke="#4a8a3a" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M135 30 V95 H70"/>
+    <path d="M200 30 V70"/>
+    <path d="M330 100 H265 V150"/>
+    <path d="M135 155 H190"/>
+    <path d="M135 155 V220"/>
+    <path d="M200 110 H135"/>
+    <path d="M265 190 H220 V220"/>
+  </g>
+  <!-- trail -->
+  <path d="M103 62 V127 H167 V188" stroke="#cdeec0" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- rabbit (start) -->
+  <g transform="translate(103 62)">
+    <ellipse cx="-8" cy="-16" rx="6" ry="14" fill="#fff" stroke="#ddd"/>
+    <ellipse cx="8" cy="-16" rx="6" ry="14" fill="#fff" stroke="#ddd"/>
+    <ellipse cx="-8" cy="-16" rx="3" ry="9" fill="#ffb6c1"/>
+    <ellipse cx="8" cy="-16" rx="3" ry="9" fill="#ffb6c1"/>
+    <circle r="16" fill="#fff" stroke="#ddd"/>
+    <circle cx="-6" cy="-2" r="2.4" fill="#333"/>
+    <circle cx="6" cy="-2" r="2.4" fill="#333"/>
+    <ellipse cx="0" cy="5" rx="3" ry="2.2" fill="#ffb6c1"/>
+  </g>
+  <!-- carrot (goal) -->
+  <g transform="translate(297 190) rotate(35)">
+    <path d="M0 -14 L10 22 L-10 22 Z" transform="rotate(180)" fill="#ff8c2b"/>
+    <path d="M-8 -20 L0 -34 L2 -18 L10 -30 L8 -14 Z" fill="#5fc47e"/>
+  </g>
+  <!-- sparkles -->
+  <g fill="#ffd23d">
+    <circle cx="40" cy="40" r="5"/>
+    <circle cx="365" cy="60" r="4"/>
+    <circle cx="45" cy="200" r="4"/>
+    <circle cx="360" cy="215" r="5"/>
+  </g>
+</svg>

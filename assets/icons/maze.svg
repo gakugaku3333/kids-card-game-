@@ -1,0 +1,14 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="180" height="180" rx="30" fill="#fff0f6"/>
+  <g stroke="#b06de0" stroke-width="10" stroke-linecap="round" fill="none">
+    <rect x="30" y="30" width="140" height="140" rx="18"/>
+    <path d="M75 30 V75 H30"/>
+    <path d="M120 30 V60"/>
+    <path d="M170 80 H120 V110"/>
+    <path d="M75 120 H30"/>
+    <path d="M75 120 V170"/>
+    <path d="M120 145 H165"/>
+  </g>
+  <text x="52" y="60" font-size="34" text-anchor="middle" dominant-baseline="central">👸</text>
+  <text x="146" y="146" font-size="34" text-anchor="middle" dominant-baseline="central">🏰</text>
+</svg>

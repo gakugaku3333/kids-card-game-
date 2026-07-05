@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="子供向けの迷路ゲーム。うさぎを指でうごかしてゴールのにんじんまで進もう！">
+  <title>めいろ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../assets/images/favicon-16x16.png">
+
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      background: linear-gradient(160deg, #e8ffe0 0%, #d2f5c8 45%, #b8e8ad 100%);
+      min-height: 100vh; color: #4a5a3a; user-select: none; -webkit-user-select: none;
+    }
+    .game-container { max-width: 520px; margin: 0 auto; padding: 4px 12px 30px; text-align: center; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .subtitle { font-size: 1.05rem; font-weight: 700; color: #5a7a42; margin: 14px 0 20px; line-height: 1.7; }
+    .big-emoji { font-size: 3.2rem; margin-top: 10px; }
+    .level-btn {
+      font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+      display: block; width: 100%; max-width: 320px; margin: 12px auto;
+      border-radius: 22px; padding: 16px 20px; font-size: 1.25rem; color: #fff;
+      box-shadow: 0 5px 0 rgba(0,0,0,.2); transition: transform .08s;
+    }
+    .level-btn:active { transform: translateY(4px); box-shadow: none; }
+    .level-btn small { display: block; font-size: .85rem; font-weight: 700; opacity: .9; }
+    .level-1 { background: linear-gradient(#7fd97f, #5cc45c); box-shadow: 0 5px 0 #3f9e3f; }
+    .level-2 { background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 5px 0 #e07e22; }
+    .level-3 { background: linear-gradient(#b98ae8, #a06de0); box-shadow: 0 5px 0 #7a4bb8; }
+
+    .hud { display: flex; gap: 10px; margin-bottom: 10px; }
+    .hud-box { background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 4px; flex: 1; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+    .hud-label { font-size: .75rem; color: #8aa; font-weight: 700; display: block; }
+    .hud-value { font-size: 1.25rem; font-weight: 900; }
+
+    #maze-canvas {
+      background: #fffef5; border-radius: 20px; box-shadow: 0 8px 18px rgba(0,0,0,.15);
+      touch-action: none; display: block; margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="level-screen" class="screen active">
+      <div class="big-emoji">🐰🥕</div>
+      <p class="subtitle">うさぎさんを ゆびで うごかして<br>にんじんまで つれていこう！<br>めいろを 3つ クリアしてね！</p>
+      <button class="level-btn level-1" data-level="1">レベル1 やさしい<small>ちいさな めいろ（⭐1×3）</small></button>
+      <button class="level-btn level-2" data-level="2">レベル2 ふつう<small>おおきな めいろ（⭐2×3）</small></button>
+      <button class="level-btn level-3" data-level="3">レベル3 むずかしい<small>とっても おおきな めいろ（⭐3×3）</small></button>
+    </section>
+
+    <section id="play-screen" class="screen">
+      <div class="hud">
+        <div class="hud-box"><span class="hud-label">めいろ</span><span class="hud-value" id="hud-round">1/3</span></div>
+        <div class="hud-box"><span class="hud-label">タイム</span><span class="hud-value" id="hud-time">0:00</span></div>
+        <div class="hud-box"><span class="hud-label">ゲット⭐</span><span class="hud-value" id="hud-tokens">0</span></div>
+      </div>
+      <canvas id="maze-canvas"></canvas>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { GameShell } from '../../core/shell.js';
+
+    const shell = new GameShell({ gameId: 'maze', title: 'めいろ' });
+
+    const levelScreen = document.getElementById('level-screen');
+    const playScreen = document.getElementById('play-screen');
+    const canvas = document.getElementById('maze-canvas');
+    const ctx = canvas.getContext('2d');
+    const hudRound = document.getElementById('hud-round');
+    const hudTime = document.getElementById('hud-time');
+    const hudTokens = document.getElementById('hud-tokens');
+
+    // レベルごとの迷路サイズ（3ラウンドで少しずつ大きくなる）
+    const LEVELS = {
+      1: { sizes: [[6, 6], [7, 7], [8, 8]], tokensPerMaze: 1 },
+      2: { sizes: [[9, 9], [10, 10], [11, 11]], tokensPerMaze: 2 },
+      3: { sizes: [[12, 12], [13, 13], [14, 14]], tokensPerMaze: 3 },
+    };
+    const TOTAL_ROUNDS = 3;
+
+    let level = 1;
+    let round = 0;
+    let earnedTokens = 0;
+    let elapsed = 0;
+    let maze = null, cols = 0, rows = 0, cell = 0, pad = 0;
+    let player = { r: 0, c: 0 };
+    let goal = { r: 0, c: 0 };
+    let trail = [];
+    let dragging = false;
+    let finished = false;
+
+    // 穴掘り法（再帰的バックトラック）で必ず解ける迷路を生成
+    function generateMaze(w, h) {
+      const grid = Array.from({ length: h }, () =>
+        Array.from({ length: w }, () => ({ top: true, right: true, bottom: true, left: true }))
+      );
+      const visited = Array.from({ length: h }, () => Array(w).fill(false));
+      const stack = [[0, 0]];
+      visited[0][0] = true;
+      while (stack.length) {
+        const [r, c] = stack[stack.length - 1];
+        const neighbors = [
+          [r - 1, c, 'top', 'bottom'],
+          [r, c + 1, 'right', 'left'],
+          [r + 1, c, 'bottom', 'top'],
+          [r, c - 1, 'left', 'right'],
+        ].filter(([nr, nc]) => nr >= 0 && nr < h && nc >= 0 && nc < w && !visited[nr][nc]);
+        if (!neighbors.length) { stack.pop(); continue; }
+        const [nr, nc, wall, opposite] = neighbors[Math.floor(Math.random() * neighbors.length)];
+        grid[r][c][wall] = false;
+        grid[nr][nc][opposite] = false;
+        visited[nr][nc] = true;
+        stack.push([nr, nc]);
+      }
+      return grid;
+    }
+
+    function canMove(from, to) {
+      const dr = to.r - from.r, dc = to.c - from.c;
+      if (Math.abs(dr) + Math.abs(dc) !== 1) return false;
+      if (to.r < 0 || to.r >= rows || to.c < 0 || to.c >= cols) return false;
+      const w = maze[from.r][from.c];
+      if (dr === -1) return !w.top;
+      if (dr === 1) return !w.bottom;
+      if (dc === 1) return !w.right;
+      return !w.left;
+    }
+
+    function cellCenter({ r, c }) {
+      return { x: pad + c * cell + cell / 2, y: pad + r * cell + cell / 2 };
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // とおった道
+      ctx.strokeStyle = '#cdeec0';
+      ctx.lineWidth = Math.max(4, cell * 0.35);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (trail.length > 1) {
+        ctx.beginPath();
+        trail.forEach((p, i) => {
+          const { x, y } = cellCenter(p);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      // 壁
+      ctx.strokeStyle = '#4a8a3a';
+      ctx.lineWidth = Math.max(3, Math.min(5, cell * 0.12));
+      ctx.lineCap = 'round';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = pad + c * cell, y = pad + r * cell;
+          const w = maze[r][c];
+          ctx.beginPath();
+          if (w.top) { ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }
+          if (w.left) { ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }
+          if (w.right && c === cols - 1) { ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); }
+          if (w.bottom && r === rows - 1) { ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); }
+          ctx.stroke();
+        }
+      }
+
+      // ゴールとキャラクター（絵文字）
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `${Math.floor(cell * 0.62)}px sans-serif`;
+      const g = cellCenter(goal);
+      ctx.fillText('🥕', g.x, g.y);
+      const p = cellCenter(player);
+      ctx.font = `${Math.floor(cell * 0.72)}px sans-serif`;
+      ctx.fillText('🐰', p.x, p.y);
+    }
+
+    function setupRound() {
+      [cols, rows] = LEVELS[level].sizes[round];
+      maze = generateMaze(cols, rows);
+      player = { r: 0, c: 0 };
+      goal = { r: rows - 1, c: cols - 1 };
+      trail = [{ ...player }];
+      finished = false;
+
+      const maxW = Math.min(window.innerWidth - 24, 496);
+      const maxH = window.innerHeight - 170;
+      pad = 12;
+      cell = Math.floor(Math.min((maxW - pad * 2) / cols, (maxH - pad * 2) / rows));
+      canvas.width = cell * cols + pad * 2;
+      canvas.height = cell * rows + pad * 2;
+      hudRound.textContent = `${round + 1}/${TOTAL_ROUNDS}`;
+      draw();
+    }
+
+    function pointerPos(ev) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (ev.clientX - rect.left) * (canvas.width / rect.width),
+        y: (ev.clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+
+    // 指の位置へ向かって、壁を通らず近づける限り1マスずつ進める。
+    // 「指に厳密に追従」ではなく指へ寄っていく方式なので、速いスワイプでも壁抜けしない。
+    function followFinger(pt) {
+      let moved = false;
+      for (let step = 0; step < 4; step++) {
+        const cur = cellCenter(player);
+        const curDist = Math.hypot(pt.x - cur.x, pt.y - cur.y);
+        if (curDist < cell * 0.4) break;
+        const candidates = [
+          { r: player.r - 1, c: player.c },
+          { r: player.r + 1, c: player.c },
+          { r: player.r, c: player.c - 1 },
+          { r: player.r, c: player.c + 1 },
+        ].filter((n) => canMove(player, n));
+        let best = null, bestDist = curDist;
+        candidates.forEach((n) => {
+          const cc = cellCenter(n);
+          const d = Math.hypot(pt.x - cc.x, pt.y - cc.y);
+          if (d < bestDist) { best = n; bestDist = d; }
+        });
+        if (!best) break;
+        player = best;
+        // 戻ったら道を消す、進んだら道を伸ばす
+        const backIdx = trail.findIndex((t) => t.r === player.r && t.c === player.c);
+        if (backIdx >= 0) trail.length = backIdx + 1;
+        else trail.push({ ...player });
+        moved = true;
+      }
+      if (moved) {
+        draw();
+        if (player.r === goal.r && player.c === goal.c) onGoal();
+      }
+    }
+
+    function onGoal() {
+      if (finished) return;
+      finished = true;
+      dragging = false;
+      shell.sound.play('correct');
+      earnedTokens += LEVELS[level].tokensPerMaze;
+      hudTokens.textContent = String(earnedTokens);
+      setTimeout(() => {
+        round++;
+        if (round >= TOTAL_ROUNDS) {
+          // トークンは即時加算せず、showResult でまとめて加算する規約
+          shell.showResult({ correct: TOTAL_ROUNDS, total: TOTAL_ROUNDS, tokens: earnedTokens });
+        } else {
+          setupRound();
+        }
+      }, 900);
+    }
+
+    canvas.addEventListener('pointerdown', (ev) => {
+      if (finished) return;
+      dragging = true;
+      try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 合成イベントでは失敗してよい */ }
+      followFinger(pointerPos(ev));
+    });
+    canvas.addEventListener('pointermove', (ev) => {
+      if (!dragging || finished) return;
+      followFinger(pointerPos(ev));
+    });
+    ['pointerup', 'pointercancel'].forEach((evName) => {
+      canvas.addEventListener(evName, () => { dragging = false; });
+    });
+
+    function formatTime(sec) {
+      return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    }
+
+    function play() {
+      round = 0;
+      earnedTokens = 0;
+      elapsed = 0;
+      hudTokens.textContent = '0';
+      hudTime.textContent = '0:00';
+      levelScreen.classList.remove('active');
+      playScreen.classList.add('active');
+      shell.setInterval(() => {
+        elapsed++;
+        hudTime.textContent = formatTime(elapsed);
+      }, 1000);
+      setupRound();
+    }
+
+    document.querySelectorAll('.level-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        level = Number(btn.dataset.level);
+        shell.startGame(play);
+      });
+    });
+
+    // 「もういちど」はレベル選択に戻す
+    shell.onRetry(() => {
+      playScreen.classList.remove('active');
+      levelScreen.classList.add('active');
+    });
+
+    // 自動テスト用の状態フック（ゲーム本体からは使わない）
+    window.__mazeDebug = () => ({ maze, player, goal, cols, rows, cell, pad });
+  </script>
+</body>
+</html>
