@@ -61,5 +61,16 @@
   "start-compare": { "text": "くらべっこ しようね！", "style": "わくわくした様子で、明るく元気に" },
   "start-nakama": { "text": "なかまを さがしてね！", "style": "わくわくした様子で、明るく元気に" },
   "start-feelings": { "text": "どんな きもちか あててね！", "style": "わくわくした様子で、明るく元気に" },
-  "start-pairs": { "text": "おなじ えを さがしてね！", "style": "わくわくした様子で、明るく元気に" }
+  "start-pairs": { "text": "おなじ えを さがしてね！", "style": "わくわくした様子で、明るく元気に" },
+  "game-tidyup": { "text": "おかたづけ", "style": "明るく元気に" },
+  "game-kisekae": { "text": "プリンセスきせかえ", "style": "明るく元気に" },
+  "game-coloring": { "text": "ぬりえ", "style": "明るく元気に" },
+  "game-sticker-play": { "text": "シールぺったん", "style": "明るく元気に" },
+  "game-music": { "text": "おとあそび", "style": "明るく元気に" },
+  "start-tidyup": { "text": "おもちゃを おかたづけしよう！", "style": "わくわくした様子で、明るく元気に" },
+  "start-kisekae": { "text": "すきな ふくを えらんでね！", "style": "わくわくした様子で、明るく元気に" },
+  "start-coloring": { "text": "すきな いろで ぬってみよう！", "style": "わくわくした様子で、明るく元気に" },
+  "start-sticker-play": { "text": "シールを ぺたぺた はろうね！", "style": "わくわくした様子で、明るく元気に" },
+  "start-music": { "text": "おとを ならして あそぼうね！", "style": "わくわくした様子で、明るく元気に" },
+  "music-guide": { "text": "いっしょに おとを ならそうね！", "style": "たのしそうに、優しく誘うように" }
 }

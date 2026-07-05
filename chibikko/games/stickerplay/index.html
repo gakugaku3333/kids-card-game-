@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>シールぺったん</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#e0f7ff, #cdeeff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 480px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #scene-picker { display: flex; justify-content: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .scene-btn {
+    width: 70px; height: 70px; border-radius: 16px; border: 4px solid #fff; cursor: pointer;
+    background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  }
+  .scene-btn.on { border-color: #ffd93d; }
+  #board {
+    position: relative; width: 100%; max-width: 320px; aspect-ratio: 1; margin: 0 auto 14px;
+    background-size: cover; background-position: center; border-radius: 20px;
+    box-shadow: 0 6px 14px rgba(0,0,0,.15); overflow: hidden; touch-action: none;
+  }
+  .placed-sticker { position: absolute; width: 60px; height: 60px; object-fit: contain; transform: translate(-50%, -50%); pointer-events: none; }
+  #tray { display: flex; gap: 10px; overflow-x: auto; padding: 8px 4px; }
+  .tray-item {
+    flex: 0 0 auto; width: 62px; height: 62px; border-radius: 14px; border: none; background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15); cursor: pointer; padding: 6px;
+  }
+  .tray-item img { width: 100%; height: 100%; object-fit: contain; }
+  .tray-item.on { outline: 4px solid #ff6bb0; }
+  #done-btn {
+    display: block; margin: 14px auto 0; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 22px; padding: 12px 28px; font-size: 1.1rem; color: #fff;
+    background: linear-gradient(#4da3ff, #2f8ae0); box-shadow: 0 5px 0 #1f6ab5;
+  }
+  @media (max-height: 700px) { .game-wrap { padding-top: 70px; } }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="scene-picker"></div>
+  <div id="board"></div>
+  <div id="tray"></div>
+  <button id="done-btn">✅ できた！</button>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import * as Store from '../../core/store.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'sticker-play' });
+  const scenePicker = document.getElementById('scene-picker');
+  const board = document.getElementById('board');
+  const tray = document.getElementById('tray');
+
+  const SCENES = [
+    { id: 'oheya', file: 'assets/bg/scene-oheya.png' },
+    { id: 'oniwa', file: 'assets/bg/scene-oniwa.png' },
+    { id: 'umi', file: 'assets/bg/scene-umi.png' },
+    { id: 'oshiro', file: 'assets/bg/scene-oshiro.png' }
+  ];
+
+  let selectedSticker = null;
+
+  function renderScenePicker() {
+    scenePicker.innerHTML = '';
+    SCENES.forEach((scene, i) => {
+      const btn = document.createElement('button');
+      btn.className = `scene-btn${i === 0 ? ' on' : ''}`;
+      btn.style.backgroundImage = `url('${asset(scene.file)}')`;
+      btn.addEventListener('click', () => selectScene(scene, btn));
+      scenePicker.appendChild(btn);
+    });
+    selectScene(SCENES[0]);
+  }
+
+  function selectScene(scene, btn) {
+    board.style.backgroundImage = `url('${asset(scene.file)}')`;
+    board.innerHTML = '';
+    if (btn) {
+      scenePicker.querySelectorAll('.scene-btn').forEach((b) => b.classList.remove('on'));
+      btn.classList.add('on');
+    }
+  }
+
+  function renderTray() {
+    tray.innerHTML = '';
+    Store.STICKERS.forEach((s) => {
+      const btn = document.createElement('button');
+      btn.className = 'tray-item';
+      btn.innerHTML = `<img src="${asset(s.file)}" alt="${s.id}" />`;
+      btn.addEventListener('click', () => {
+        selectedSticker = s;
+        tray.querySelectorAll('.tray-item').forEach((b) => b.classList.remove('on'));
+        btn.classList.add('on');
+      });
+      tray.appendChild(btn);
+    });
+  }
+
+  board.addEventListener('pointerdown', (e) => {
+    if (!selectedSticker) return;
+    const rect = board.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const img = document.createElement('img');
+    img.className = 'placed-sticker';
+    img.src = asset(selectedSticker.file);
+    img.style.left = `${x}%`;
+    img.style.top = `${y}%`;
+    board.appendChild(img);
+    shell.sound.play('coin');
+  });
+
+  document.getElementById('done-btn').addEventListener('click', () => {
+    shell.showResult({ correct: 1, total: 1 });
+  });
+
+  function startGame() {
+    selectedSticker = null;
+    renderScenePicker();
+    renderTray();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '✨', greeting: 'start-sticker-play', onStart: () => startGame() });
+</script>
+</body>
+</html>

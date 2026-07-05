@@ -53,6 +53,36 @@
       "title": "どっちのきもち",
       "path": "games/feelings/index.html",
       "icon": "assets/icons/feelings.png"
+    },
+    {
+      "id": "tidyup",
+      "title": "おかたづけ",
+      "path": "games/tidyup/index.html",
+      "icon": "assets/icons/tidy-up.png"
+    },
+    {
+      "id": "kisekae",
+      "title": "プリンセスきせかえ",
+      "path": "games/kisekae/index.html",
+      "icon": "assets/icons/dress-up.png"
+    },
+    {
+      "id": "coloring",
+      "title": "ぬりえ",
+      "path": "games/coloring/index.html",
+      "icon": "assets/icons/coloring.png"
+    },
+    {
+      "id": "sticker-play",
+      "title": "シールぺったん",
+      "path": "games/stickerplay/index.html",
+      "icon": "assets/icons/sticker-play.png"
+    },
+    {
+      "id": "music",
+      "title": "おとあそび",
+      "path": "games/music/index.html",
+      "icon": "assets/icons/music.png"
     }
   ]
 }

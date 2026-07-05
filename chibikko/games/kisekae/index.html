@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>プリンセスきせかえ</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#fff0fa, #ffe0f3);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 480px; padding: 90px 16px 24px; box-sizing: border-box; }
+  #stage {
+    position: relative; width: 260px; height: 340px; margin: 0 auto 20px;
+    background: rgba(255,255,255,.5); border-radius: 24px;
+  }
+  #stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  #done-btn {
+    display: block; margin: 6px auto 20px; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 24px; padding: 14px 34px; font-size: 1.3rem; color: #fff;
+    background: linear-gradient(#ff8fc7, #ff6bb0); box-shadow: 0 5px 0 #d94e90;
+  }
+  .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab-btn {
+    border: none; border-radius: 16px; padding: 8px 14px; font-size: 1.4rem; cursor: pointer;
+    background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,.12);
+  }
+  .tab-btn.active { background: #ffd93d; }
+  #choices { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 14px; }
+  .kise-choice {
+    flex: 0 0 auto; width: 78px; height: 78px; border-radius: 16px; border: none; background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15); cursor: pointer; padding: 6px;
+  }
+  .kise-choice img { width: 100%; height: 100%; object-fit: contain; }
+  .kise-choice.on { outline: 4px solid #ff6bb0; }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    #stage { width: 200px; height: 260px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="stage"></div>
+  <button id="done-btn">✅ できた！</button>
+  <div class="tabs" id="tabs"></div>
+  <div id="choices"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'kisekae' });
+  const stage = document.getElementById('stage');
+  const tabsEl = document.getElementById('tabs');
+  const choicesEl = document.getElementById('choices');
+
+  const CATEGORIES = [
+    { id: 'dress', label: '👗', zIndex: 2, items: [
+      { id: 'pink', file: 'assets/dressup/dress-pink.png' },
+      { id: 'mizutama', file: 'assets/dressup/dress-mizutama.png' },
+      { id: 'yukihime', file: 'assets/dressup/dress-yukihime.png' },
+      { id: 'morihime', file: 'assets/dressup/dress-morihime.png' },
+      { id: 'hanahime', file: 'assets/dressup/dress-hanahime.png' },
+      { id: 'awahime', file: 'assets/dressup/dress-awahime.png' },
+      { id: 'honhime', file: 'assets/dressup/dress-honhime.png' }
+    ] },
+    { id: 'hair', label: '💇', zIndex: 3, items: [
+      { id: 'mitsuami-gin', file: 'assets/dressup/hair-mitsuami-gin.png' },
+      { id: 'kinpatsu-hana', file: 'assets/dressup/hair-kinpatsu-hana.png' },
+      { id: 'akage-maki', file: 'assets/dressup/hair-akage-maki.png' },
+      { id: 'chairo-updo', file: 'assets/dressup/hair-chairo-updo.png' }
+    ] },
+    { id: 'hat', label: '👑', zIndex: 4, items: [
+      { id: 'tiara', file: 'assets/dressup/hat-tiara.png' },
+      { id: 'usamimi', file: 'assets/dressup/hat-usamimi.png' },
+      { id: 'mugiwara', file: 'assets/dressup/hat-mugiwara.png' }
+    ] },
+    { id: 'shoes', label: '👠', zIndex: 2, items: [
+      { id: 'glass', file: 'assets/dressup/shoes-glass.png' },
+      { id: 'red', file: 'assets/dressup/shoes-red.png' },
+      { id: 'sneaker', file: 'assets/dressup/shoes-sneaker.png' },
+      { id: 'boots', file: 'assets/dressup/shoes-boots.png' }
+    ] }
+  ];
+
+  const base = document.createElement('img');
+  base.src = asset('assets/dressup/base-girl.png');
+  base.style.zIndex = 1;
+  stage.appendChild(base);
+
+  const layers = {};
+  const equipped = {};
+
+  function renderTabs() {
+    tabsEl.innerHTML = '';
+    CATEGORIES.forEach((cat, i) => {
+      const btn = document.createElement('button');
+      btn.className = `tab-btn${i === 0 ? ' active' : ''}`;
+      btn.textContent = cat.label;
+      btn.dataset.cat = cat.id;
+      btn.addEventListener('click', () => selectTab(cat.id));
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function selectTab(catId) {
+    tabsEl.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.cat === catId));
+    const cat = CATEGORIES.find((c) => c.id === catId);
+    choicesEl.innerHTML = '';
+    cat.items.forEach((item) => {
+      const btn = document.createElement('button');
+      btn.className = `kise-choice${equipped[catId] === item.id ? ' on' : ''}`;
+      btn.innerHTML = `<img src="${asset(item.file)}" alt="${item.id}" />`;
+      btn.addEventListener('click', () => toggleItem(cat, item, btn));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function toggleItem(cat, item, btn) {
+    const already = equipped[cat.id] === item.id;
+    shell.sound.play('coin');
+    if (already) {
+      equipped[cat.id] = null;
+      if (layers[cat.id]) { layers[cat.id].remove(); layers[cat.id] = null; }
+    } else {
+      equipped[cat.id] = item.id;
+      if (!layers[cat.id]) {
+        const img = document.createElement('img');
+        img.style.zIndex = cat.zIndex;
+        stage.appendChild(img);
+        layers[cat.id] = img;
+      }
+      layers[cat.id].src = asset(item.file);
+    }
+    document.querySelectorAll('.kise-choice').forEach((b) => b.classList.remove('on'));
+    if (equipped[cat.id]) btn.classList.add('on');
+  }
+
+  document.getElementById('done-btn').addEventListener('click', () => {
+    shell.showResult({ correct: 1, total: 1 });
+  });
+
+  function startGame() {
+    Object.values(layers).forEach((img) => img && img.remove());
+    Object.keys(layers).forEach((k) => (layers[k] = null));
+    Object.keys(equipped).forEach((k) => (equipped[k] = null));
+    renderTabs();
+    selectTab('dress');
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '👗', greeting: 'start-kisekae', onStart: () => startGame() });
+</script>
+</body>
+</html>

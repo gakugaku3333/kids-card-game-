@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>おとあそび</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#fff9e0, #ffefc2);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 520px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #keys { display: flex; justify-content: center; gap: 10px; margin-bottom: 22px; }
+  .key-btn {
+    width: 54px; height: 160px; border: none; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0,0,0,.2); transition: transform .1s;
+  }
+  .key-btn.active { transform: translateY(6px) scale(0.97); filter: brightness(1.2); }
+  .key-btn.guide { outline: 5px solid #fff; animation: pulse .5s; }
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  #guide-btn, #done-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 22px; padding: 12px 24px; font-size: 1.05rem; color: #fff; margin: 6px;
+  }
+  #guide-btn { background: linear-gradient(#b06de0, #9350c9); box-shadow: 0 5px 0 #6f3ba3; }
+  #done-btn { background: linear-gradient(#ff8fc7, #ff6bb0); box-shadow: 0 5px 0 #d94e90; }
+  #animals { display: flex; justify-content: center; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
+  .animal-btn {
+    width: 76px; height: 76px; border-radius: 20px; border: none; background: #fff; cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0,0,0,.15); padding: 8px;
+  }
+  .animal-btn img { width: 100%; height: 100%; object-fit: contain; }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    .key-btn { height: 110px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="keys"></div>
+  <div>
+    <button id="guide-btn">🎵 メロディガイド</button>
+    <button id="done-btn">✅ できた！</button>
+  </div>
+  <div id="animals"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'music' });
+  const keysEl = document.getElementById('keys');
+  const animalsEl = document.getElementById('animals');
+
+  const NOTES = [
+    { id: 'do', freq: 261.63, color: '#ff4d4d' },
+    { id: 're', freq: 293.66, color: '#ff9f40' },
+    { id: 'mi', freq: 329.63, color: '#ffd93d' },
+    { id: 'fa', freq: 349.23, color: '#5cd65c' },
+    { id: 'so', freq: 392.0, color: '#4da3ff' }
+  ];
+  const ANIMALS = [
+    { id: 'inu', file: 'assets/animals/inu.png' },
+    { id: 'neko', file: 'assets/animals/neko.png' },
+    { id: 'ushi', file: 'assets/animals/ushi.png' },
+    { id: 'buta', file: 'assets/animals/buta.png' }
+  ];
+  const GUIDE_SEQUENCE = ['do', 'do', 'so', 'so', 'so', 'fa', 'mi', 're', 're'];
+
+  let ctx = null;
+  function ensureCtx() {
+    if (!ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      ctx = new AudioCtx();
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function playNote(freq, duration) {
+    const c = ensureCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, c.currentTime);
+    gain.gain.setValueAtTime(0.2, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start();
+    osc.stop(c.currentTime + duration);
+  }
+
+  function flashKey(note) {
+    const btn = keysEl.querySelector(`[data-id="${note}"]`);
+    if (!btn) return;
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 200);
+  }
+
+  function renderKeys() {
+    keysEl.innerHTML = '';
+    NOTES.forEach((note) => {
+      const btn = document.createElement('button');
+      btn.className = 'key-btn';
+      btn.style.background = note.color;
+      btn.dataset.id = note.id;
+      btn.addEventListener('click', () => {
+        playNote(note.freq, 0.5);
+        flashKey(note.id);
+      });
+      keysEl.appendChild(btn);
+    });
+  }
+
+  function renderAnimals() {
+    animalsEl.innerHTML = '';
+    ANIMALS.forEach((a) => {
+      const btn = document.createElement('button');
+      btn.className = 'animal-btn';
+      btn.innerHTML = `<img src="${asset(a.file)}" alt="${a.id}" />`;
+      btn.addEventListener('click', () => shell.voice.speak(`animal-${a.id}`));
+      animalsEl.appendChild(btn);
+    });
+  }
+
+  let guidePlaying = false;
+  function playGuide() {
+    if (guidePlaying) return;
+    guidePlaying = true;
+    shell.voice.speak('music-guide');
+    GUIDE_SEQUENCE.forEach((noteId, i) => {
+      setTimeout(() => {
+        const note = NOTES.find((n) => n.id === noteId);
+        playNote(note.freq, 0.4);
+        flashKey(noteId);
+        const btn = keysEl.querySelector(`[data-id="${noteId}"]`);
+        if (btn) {
+          btn.classList.add('guide');
+          setTimeout(() => btn.classList.remove('guide'), 400);
+        }
+        if (i === GUIDE_SEQUENCE.length - 1) guidePlaying = false;
+      }, 700 + i * 500);
+    });
+  }
+
+  document.getElementById('guide-btn').addEventListener('click', () => playGuide());
+  document.getElementById('done-btn').addEventListener('click', () => {
+    shell.showResult({ correct: 1, total: 1 });
+  });
+
+  function startGame() {
+    guidePlaying = false;
+    renderKeys();
+    renderAnimals();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '🎹', greeting: 'start-music', onStart: () => startGame() });
+</script>
+</body>
+</html>

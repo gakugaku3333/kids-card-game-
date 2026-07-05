@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ぬりえ</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#f5f0ff, #e9deff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 480px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .pic-btn {
+    aspect-ratio: 1; border-radius: 18px; border: none; background: #fff; cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0,0,0,.15); padding: 8px;
+  }
+  .pic-btn img { width: 100%; height: 100%; object-fit: contain; }
+  #canvas-area { display: none; }
+  #canvas-area.active { display: block; }
+  canvas { width: 100%; max-width: 320px; height: auto; border-radius: 20px; background: #fff; box-shadow: 0 6px 14px rgba(0,0,0,.15); touch-action: none; }
+  #palette { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
+  .swatch { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.2); cursor: pointer; }
+  .swatch.on { outline: 4px solid #333; }
+  #actions { margin-top: 18px; display: flex; justify-content: center; gap: 14px; }
+  #actions button {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 20px; padding: 12px 24px; font-size: 1.1rem; color: #fff;
+    background: linear-gradient(#ff8fc7, #ff6bb0); box-shadow: 0 5px 0 #d94e90;
+  }
+  @media (max-height: 700px) { .game-wrap { padding-top: 70px; } }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="picker"></div>
+  <div id="canvas-area">
+    <canvas id="canvas" width="320" height="320"></canvas>
+    <div id="palette"></div>
+    <div id="actions">
+      <button id="save-btn">💾 ほぞん</button>
+      <button id="done-btn">✅ できた！</button>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+
+  const shell = new ToddlerShell({ gameId: 'coloring' });
+  const picker = document.getElementById('picker');
+  const canvasArea = document.getElementById('canvas-area');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const palette = document.getElementById('palette');
+
+  const PICTURES = [
+    { id: 'ichigo-cake', file: 'assets/coloring/ichigo-cake.png' },
+    { id: 'ohana', file: 'assets/coloring/ohana.png' },
+    { id: 'oshiro', file: 'assets/coloring/oshiro.png' },
+    { id: 'ohime', file: 'assets/coloring/ohime.png' },
+    { id: 'usagi', file: 'assets/coloring/usagi.png' },
+    { id: 'yuki-kessho', file: 'assets/coloring/yuki-kessho.png' }
+  ];
+  const COLORS = ['#ff4d4d', '#4da3ff', '#ffd93d', '#5cd65c', '#ff8fc7', '#b06de0', '#ff9f40'];
+
+  let currentColor = COLORS[0];
+
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255, 255];
+  }
+
+  function floodFill(startX, startY, fillRgb) {
+    const { width, height } = canvas;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    const idx = (x, y) => (y * width + x) * 4;
+    const startIdx = idx(startX, startY);
+    const startColor = [data[startIdx], data[startIdx + 1], data[startIdx + 2], data[startIdx + 3]];
+    const tolerance = 60;
+
+    function matches(i) {
+      return Math.abs(data[i] - startColor[0]) < tolerance &&
+        Math.abs(data[i + 1] - startColor[1]) < tolerance &&
+        Math.abs(data[i + 2] - startColor[2]) < tolerance;
+    }
+    if (fillRgb[0] === startColor[0] && fillRgb[1] === startColor[1] && fillRgb[2] === startColor[2]) return;
+    // 濃い線(アウトライン)はそもそも塗らない
+    if (startColor[0] < 80 && startColor[1] < 80 && startColor[2] < 80) return;
+
+    const stack = [[startX, startY]];
+    const visited = new Uint8Array(width * height);
+    while (stack.length) {
+      const [x, y] = stack.pop();
+      if (x < 0 || x >= width || y < 0 || y >= height) continue;
+      const p = y * width + x;
+      if (visited[p]) continue;
+      const i = p * 4;
+      if (!matches(i)) continue;
+      visited[p] = 1;
+      data[i] = fillRgb[0]; data[i + 1] = fillRgb[1]; data[i + 2] = fillRgb[2]; data[i + 3] = 255;
+      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  function loadPicture(pic) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvasArea.classList.add('active');
+      picker.style.display = 'none';
+    };
+    img.src = asset(pic.file);
+  }
+
+  function renderPicker() {
+    picker.innerHTML = '';
+    picker.style.display = 'grid';
+    canvasArea.classList.remove('active');
+    PICTURES.forEach((pic) => {
+      const btn = document.createElement('button');
+      btn.className = 'pic-btn';
+      btn.innerHTML = `<img src="${asset(pic.file)}" alt="${pic.id}" />`;
+      btn.addEventListener('click', () => loadPicture(pic));
+      picker.appendChild(btn);
+    });
+  }
+
+  function renderPalette() {
+    palette.innerHTML = '';
+    COLORS.forEach((c) => {
+      const btn = document.createElement('button');
+      btn.className = `swatch${c === currentColor ? ' on' : ''}`;
+      btn.style.background = c;
+      btn.addEventListener('click', () => {
+        currentColor = c;
+        palette.querySelectorAll('.swatch').forEach((s) => s.classList.remove('on'));
+        btn.classList.add('on');
+      });
+      palette.appendChild(btn);
+    });
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+    floodFill(x, y, hexToRgb(currentColor));
+    shell.sound.play('coin');
+  });
+
+  document.getElementById('save-btn').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'nurie.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  document.getElementById('done-btn').addEventListener('click', () => {
+    shell.showResult({ correct: 1, total: 1 });
+  });
+
+  function startGame() {
+    renderPicker();
+    renderPalette();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.showStartScreen({ emoji: '🖍️', greeting: 'start-coloring', onStart: () => startGame() });
+</script>
+</body>
+</html>
