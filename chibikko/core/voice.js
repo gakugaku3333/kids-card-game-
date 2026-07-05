@@ -13,6 +13,8 @@ let unlocked = false;
 let jaVoice = null;
 let linesPromise = null;
 const audioCache = new Map();
+const queue = [];
+let playing = false;
 
 function pickJaVoice() {
   if (typeof speechSynthesis === 'undefined') return null;
@@ -41,14 +43,21 @@ export function unlock() {
   }
 }
 
-function fallbackSpeak(text) {
-  if (typeof speechSynthesis === 'undefined' || !text) return;
+function fallbackSpeak(text, onEnd) {
+  if (typeof speechSynthesis === 'undefined' || !text) {
+    if (onEnd) onEnd();
+    return;
+  }
   speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
   utter.rate = 0.9;
   utter.pitch = 1.1;
   if (jaVoice) utter.voice = jaVoice;
+  if (onEnd) {
+    utter.addEventListener('end', onEnd, { once: true });
+    utter.addEventListener('error', onEnd, { once: true });
+  }
   speechSynthesis.speak(utter);
 }
 
@@ -62,20 +71,38 @@ function getAudio(id) {
 }
 
 /**
- * data/voice-lines.json のIDで音声を再生する。
+ * data/voice-lines.json のIDで音声を再生する。複数回呼ばれても重ならないよう
+ * 内部キューに積んで順番に再生する。
  * @param {string} id
  */
-export async function speak(id) {
+export function speak(id) {
+  queue.push(id);
+  _playNext();
+}
+
+async function _playNext() {
+  if (playing || queue.length === 0) return;
+  playing = true;
+  const id = queue.shift();
   const lines = await loadLines();
   const line = lines[id];
-  if (!line) return;
-  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  if (!line) {
+    playing = false;
+    _playNext();
+    return;
+  }
   const audio = getAudio(id);
   audio.currentTime = 0;
+  const done = () => {
+    playing = false;
+    _playNext();
+  };
+  audio.addEventListener('ended', done, { once: true });
   try {
     await audio.play();
   } catch (e) {
-    fallbackSpeak(line.text);
+    audio.removeEventListener('ended', done);
+    fallbackSpeak(line.text, done);
   }
 }
 
