@@ -107,7 +107,7 @@ export class ToddlerShell {
       <div class="toddler-card">
         <div class="toddler-emoji">🏠</div>
         <div class="toddler-btn-row">
-          <button class="toddler-btn" id="toddler-home-yes">✅</button>
+          <button class="toddler-btn" id="toddler-home-yes">⭕️</button>
           <button class="toddler-btn secondary" id="toddler-home-no">✖️</button>
         </div>
       </div>`;
