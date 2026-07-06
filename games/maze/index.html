@@ -312,9 +312,6 @@
       playScreen.classList.remove('active');
       levelScreen.classList.add('active');
     });
-
-    // 自動テスト用の状態フック（ゲーム本体からは使わない）
-    window.__mazeDebug = () => ({ maze, player, goal, cols, rows, cell, pad });
   </script>
 </body>
 </html>
