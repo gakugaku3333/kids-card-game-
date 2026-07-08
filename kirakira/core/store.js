@@ -19,7 +19,8 @@ function load() {
     tokens: typeof raw.tokens === 'number' ? raw.tokens : 0,
     ownedItems: Array.isArray(raw.ownedItems) ? raw.ownedItems : [],
     bestScores: (raw.bestScores && typeof raw.bestScores === 'object') ? raw.bestScores : {},
-    badges: Array.isArray(raw.badges) ? raw.badges : []
+    badges: Array.isArray(raw.badges) ? raw.badges : [],
+    questProgress: (raw.questProgress && typeof raw.questProgress === 'object') ? raw.questProgress : {}
   };
 }
 
@@ -71,5 +72,20 @@ export function grantBadge(id) {
   return isNew;
 }
 export function getBadges() { return data.badges.slice(); }
+
+// 学習系「クエスト」の進行状態（お店のメニュー・カード図鑑・訪問マップ等）。ゲームごとに自由な形で持たせる。
+export function getQuestProgress(gameId) {
+  return data.questProgress[gameId] || { unlockedItems: [] };
+}
+
+export function unlockQuestItem(gameId, itemId) {
+  const progress = data.questProgress[gameId] || (data.questProgress[gameId] = { unlockedItems: [] });
+  const isNew = progress.unlockedItems.indexOf(itemId) === -1;
+  if (isNew) {
+    progress.unlockedItems.push(itemId);
+    save();
+  }
+  return isNew;
+}
 
 export function reload() { data = load(); return data; }

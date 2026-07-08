@@ -39,6 +39,15 @@
       grid-column: 1 / -1;
     }
     .empty-state .emoji { font-size: 3rem; margin-bottom: 10px; }
+
+    .kira-modal { position: fixed; inset: 0; background: rgba(91,75,138,.45); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .kira-modal.show { display: flex; }
+    .kira-modal-box { background: #fff; border-radius: 26px; padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 12px 30px rgba(91,75,138,.3); border: 3px solid #d9c8ff; }
+    .kira-modal-box h3 { color: #7c5cff; margin: 4px 0 14px; }
+    #nickname-input { font-family: inherit; font-size: 1.1rem; border: 2px solid #d9c8ff; border-radius: 14px; padding: 10px 14px; width: 100%; box-sizing: border-box; margin-bottom: 12px; text-align: center; }
+    #nickname-input:focus { outline: none; border-color: #7c5cff; }
+
+    .review-banner { display: none; background: linear-gradient(#fff0f8, #ffe6f4); border: 2px solid #ffc2e0; border-radius: 20px; padding: 14px; margin-bottom: 16px; text-decoration: none; color: #ff2f92; font-weight: 900; }
   </style>
 </head>
 <body>
@@ -47,10 +56,27 @@
     <h1><span class="star">🌟</span> キラキラひろば</h1>
     <span class="token-badge">🌟 <span id="kiraTokens">0</span></span>
   </header>
+  <a href="games/quiz/index.html?mode=fb-review" id="review-banner" class="review-banner">
+    🔥 リベンジクエスト：おしかったもんだいが <span id="review-count">0</span>問！2ばいごほうびで ちょうせんしよう
+  </a>
   <main id="cards"></main>
 </div>
+
+<div id="login-modal" class="kira-modal">
+  <div class="kira-modal-box">
+    <div style="font-size:2.6rem;">👋</div>
+    <h3>はじめまして！</h3>
+    <p style="color:#8a7ab0;">なまえを おしえてね</p>
+    <input type="text" id="nickname-input" placeholder="なまえ（10もじまで）" maxlength="10" autocomplete="off">
+    <button id="btn-login" class="kira-btn" style="font-family:inherit;font-weight:900;border:none;cursor:pointer;border-radius:22px;padding:12px 30px;font-size:1.1rem;color:#fff;background:linear-gradient(#a78bfa,#7c5cff);box-shadow:0 5px 0 #5b3fd6;">はじめる！ ✨</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script type="module">
   import * as Store from './core/store.js';
+  import * as FireLog from './core/firelog.js';
 
   document.getElementById('kiraTokens').textContent = Store.getTokens();
   document.addEventListener('kirakira-tokens-changed', () => {
@@ -73,6 +99,35 @@
       cardsEl.appendChild(a);
     });
   }
+
+  function checkReviewDue() {
+    FireLog.getReviewDue((items) => {
+      const kiraItems = items.filter((i) => i.game && i.game.startsWith('kirakira-'));
+      if (kiraItems.length > 0) {
+        document.getElementById('review-count').textContent = String(kiraItems.length);
+        document.getElementById('review-banner').style.display = 'block';
+      }
+    });
+  }
+
+  const loginModal = document.getElementById('login-modal');
+  if (FireLog.getSavedUser()) {
+    checkReviewDue();
+  } else {
+    loginModal.classList.add('show');
+    setTimeout(() => document.getElementById('nickname-input').focus(), 150);
+  }
+
+  document.getElementById('btn-login').addEventListener('click', () => {
+    const name = document.getElementById('nickname-input').value.trim();
+    if (!name) { document.getElementById('nickname-input').focus(); return; }
+    FireLog.setUser(name);
+    loginModal.classList.remove('show');
+    checkReviewDue();
+  });
+  document.getElementById('nickname-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-login').click();
+  });
 </script>
 </body>
 </html>

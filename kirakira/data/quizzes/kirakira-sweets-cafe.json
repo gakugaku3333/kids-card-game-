@@ -1,0 +1,51 @@
+{
+  "id": "kirakira-sweets-cafe",
+  "title": "スイーツカフェ",
+  "emoji": "🍰",
+  "type": "math",
+  "totalQuestions": 8,
+  "choiceCount": 4,
+  "reward": { "perCorrect": 3, "reviewMultiplier": 2 },
+  "levels": [
+    {
+      "name": "小4：わりざん（きっちりわけよう）",
+      "desc": "48÷6",
+      "kind": "quotientExact",
+      "divisorRange": [2, 9],
+      "quotientRange": [2, 9],
+      "choiceRange": 8,
+      "template": "🍪 クッキーが {num1}まい。おきゃくさま {num2}にんに おなじ かずずつ わけると、ひとり なんまい？"
+    },
+    {
+      "name": "小4：わりざん（あまりに注目）",
+      "desc": "50÷6のあまり",
+      "kind": "quotientRemainder",
+      "divisorRange": [2, 9],
+      "quotientRange": [2, 9],
+      "choiceRange": 8,
+      "template": "🍬 あめが {num1}こ。おきゃくさま {num2}にんに わけると、あまりは なんこ？"
+    },
+    {
+      "name": "小5：小数のたしざん",
+      "desc": "1.2kg+3.4kg",
+      "kind": "decimal",
+      "num1Range": [1, 50],
+      "num2Range": [1, 50],
+      "op": "add",
+      "decimalStep": 0.1,
+      "choiceRange": 6,
+      "template": "🧈 ざいりょうが {num1}kgと {num2}kg とどいたよ。あわせて なんkg？"
+    },
+    {
+      "name": "小5：小数のひきざん",
+      "desc": "3kg-1.4kg",
+      "kind": "decimal",
+      "num1Range": [1, 50],
+      "num2Range": [1, 50],
+      "op": "sub",
+      "decimalStep": 0.1,
+      "choiceRange": 6,
+      "template": "🥛 ぎゅうにゅうが {num1}L あったよ。ケーキに {num2}L つかうと、のこりは なんL？"
+    }
+  ]
+}

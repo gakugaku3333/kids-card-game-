@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="キラキラひろば「スイーツカフェ」。おきゃくさんの注文をこなしてメニューをふやそう。">
+  <title>スイーツカフェ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #fff0f5 0%, #efe6ff 100%); min-height: 100vh; margin: 0; font-family: 'Zen Maru Gothic', sans-serif; }
+    .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; }
+    h1 { color: #ff6bb0; margin-bottom: 4px; }
+    .sub { color: #9a8ac2; margin-top: 0; }
+    #start-screen, #play-screen { display: none; }
+    #start-screen.active, #play-screen.active { display: block; }
+
+    .menu-board {
+      background: rgba(255,255,255,.85); border-radius: 20px; padding: 14px;
+      margin: 16px 0; border: 2px solid #ffd6ea;
+    }
+    .menu-board h2 { font-size: 1rem; color: #ff6bb0; margin: 0 0 10px; }
+    .quest-item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .quest-item { background: #fdf2f8; border-radius: 14px; padding: 8px 4px; font-size: .68rem; color: #4a3f6b; }
+    .quest-item.unlocked { background: linear-gradient(#fff6ff, #ffe6f4); }
+    .quest-item-emoji { display: block; font-size: 1.6rem; }
+    .quest-item-name { display: block; margin-top: 2px; }
+
+    .level-btn { display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px; padding: 16px; font-size: 1.05rem; color: #fff; background: linear-gradient(#ff9ec7, #ff6bb0); box-shadow: 0 4px 0 #d4568e; margin: 10px 0; text-align: left; }
+    .level-btn small { display: block; font-size: 0.8rem; opacity: 0.85; margin-top: 4px; }
+
+    .quiz-meta { display: flex; justify-content: space-around; font-weight: 900; color: #5b4b8a; margin: 10px 0 20px; }
+    .question { font-size: 1.35rem; font-weight: 900; margin: 20px 0 8px; color: #4a3f6b; line-height: 1.5; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn { font-family: inherit; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer; }
+    .choice-btn.correct { background: #c8f7d6; }
+    .choice-btn.wrong { background: #ffd6d6; opacity: .6; }
+    .choice-btn:disabled { cursor: default; }
+    .feedback { min-height: 1.6rem; font-size: 1.2rem; font-weight: 900; margin-top: 14px; }
+    .feedback.correct { color: #38c172; }
+    .feedback.wrong { color: #e3342f; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen">
+      <h1>🍰 スイーツカフェ</h1>
+      <p class="sub">おきゃくさんの ちゅうもんに こたえて、メニューを ふやそう！</p>
+      <div class="menu-board">
+        <h2>🍮 きょうの メニューだな</h2>
+        <div id="menu-grid" class="quest-item-grid"></div>
+      </div>
+      <div id="level-select"></div>
+    </section>
+
+    <section id="play-screen">
+      <div class="quiz-meta">
+        <span>せいかい: <span id="stat-correct">0</span></span>
+        <span>もんだい: <span id="stat-num">1</span>/<span id="stat-total">8</span></span>
+      </div>
+      <div class="question" id="question-display">?</div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { KiraShell } from '../../core/shell.js';
+    import * as Store from '../../core/store.js';
+    import { loadQuiz, KiraQuizEngine } from '../quiz/engine.js';
+    import { renderItemGallery, pickNextUnlock, showUnlockToast } from '../../core/questSkin.js';
+
+    const GAME_ID = 'kirakira-sweets-cafe';
+    const MENU_ITEMS = [
+      { id: 'cookie', emoji: '🍪', name: 'クッキー' },
+      { id: 'candy', emoji: '🍬', name: 'あめ' },
+      { id: 'donut', emoji: '🍩', name: 'ドーナツ' },
+      { id: 'pudding', emoji: '🍮', name: 'プリン' },
+      { id: 'cupcake', emoji: '🧁', name: 'カップケーキ' },
+      { id: 'parfait', emoji: '🍨', name: 'パフェ' },
+      { id: 'shortcake', emoji: '🍰', name: 'ショートケーキ' },
+      { id: 'crepe', emoji: '🥞', name: 'クレープ' }
+    ];
+
+    const startScreen = document.getElementById('start-screen');
+    const playScreen = document.getElementById('play-screen');
+    function showScreen(el) {
+      [startScreen, playScreen].forEach((s) => s.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function renderMenu() {
+      renderItemGallery(document.getElementById('menu-grid'), MENU_ITEMS, GAME_ID);
+    }
+    renderMenu();
+
+    const dom = {
+      questionEl: document.getElementById('question-display'),
+      promptEl: { set textContent(v) {} },
+      choicesEl: document.getElementById('choices'),
+      feedbackEl: document.getElementById('feedback'),
+      statCorrectEl: document.getElementById('stat-correct'),
+      statNumEl: document.getElementById('stat-num'),
+      statTotalEl: document.getElementById('stat-total')
+    };
+
+    const quiz = await loadQuiz(GAME_ID);
+    const shell = new KiraShell({ gameId: quiz.id, title: '🍰 スイーツカフェ' });
+
+    const engine = new KiraQuizEngine(shell, quiz, dom, {
+      onCorrect() {
+        const next = pickNextUnlock(MENU_ITEMS, GAME_ID);
+        if (next) {
+          Store.unlockQuestItem(GAME_ID, next.id);
+          showUnlockToast(next);
+          renderMenu();
+        }
+      },
+      onReviewOffer(count, wrongItems) {
+        // カフェ内では簡略化し、そのまま同レベルでもう一巡させず結果画面へ
+        engine.callbacks.onFinish({ correct: engine.correct, total: engine.total, tokens: engine.tokens });
+      },
+      onFinish(result) {
+        shell.showResult(result);
+      }
+    });
+    shell.onRetry(() => { showScreen(startScreen); });
+
+    const container = document.getElementById('level-select');
+    quiz.levels.forEach((level, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'level-btn';
+      btn.innerHTML = `${level.name}<small>れい: ${level.desc}</small>`;
+      btn.addEventListener('click', () => {
+        showScreen(playScreen);
+        shell.startGame(() => engine.startLevel(index));
+      });
+      container.appendChild(btn);
+    });
+
+    showScreen(startScreen);
+  </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="キラキラひろばのクエスト共通エンジン。リベンジクエストもここから遊べる。">
+  <title>クエスト</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; font-family: 'Zen Maru Gothic', sans-serif; }
+    .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; }
+    h1 { color: #7c5cff; }
+    #start-screen, #play-screen, #review-offer-screen { display: none; }
+    #start-screen.active, #play-screen.active, #review-offer-screen.active { display: block; }
+    .hidden { display: none; }
+    #btn-start { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 16px 34px; font-size: 1.3rem; color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 5px 0 #5b3fd6; margin-top: 24px; }
+    .level-btn { display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px; padding: 16px; font-size: 1.1rem; color: #fff; background: linear-gradient(#7fe8d4, #4fd6bd); box-shadow: 0 4px 0 #2fae98; margin: 10px 0; }
+    .level-btn small { display: block; font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+    .quiz-meta { display: flex; justify-content: space-around; font-weight: 900; color: #5b4b8a; margin: 10px 0 20px; }
+    .question { font-size: 2rem; font-weight: 900; margin: 20px 0 8px; color: #4a3f6b; }
+    .prompt { font-size: 1.05rem; color: #9a8ac2; margin-bottom: 18px; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn { font-family: inherit; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer; }
+    .choice-btn.correct { background: #c8f7d6; }
+    .choice-btn.wrong { background: #ffd6d6; opacity: .6; }
+    .choice-btn:disabled { cursor: default; }
+    .feedback { min-height: 1.6rem; font-size: 1.2rem; font-weight: 900; margin-top: 14px; }
+    .feedback.correct { color: #38c172; }
+    .feedback.wrong { color: #e3342f; }
+    #review-offer-screen .emoji { font-size: 3rem; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen">
+      <h1 id="quiz-title">クエスト</h1>
+      <div id="start-simple" class="hidden"><button id="btn-start">スタート！</button></div>
+      <div id="level-select" class="hidden"></div>
+    </section>
+
+    <section id="play-screen">
+      <div class="quiz-meta">
+        <span>せいかい: <span id="stat-correct">0</span></span>
+        <span>もんだい: <span id="stat-num">1</span>/<span id="stat-total">10</span></span>
+      </div>
+      <div class="prompt" id="question-prompt">こたえは？</div>
+      <div class="question" id="question-display">?</div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+
+    <section id="review-offer-screen">
+      <h1>🔥 リベンジクエスト！</h1>
+      <div class="emoji">💪✨🌟</div>
+      <p>おしかった <strong id="review-count">0</strong> もんだいに<br>もういちど ちょうせん！せいかいすると 🌟 2ばい もらえるよ！</p>
+      <button id="btn-review-start" style="font-family:inherit;font-weight:900;border:none;cursor:pointer;border-radius:22px;padding:16px 34px;font-size:1.3rem;color:#fff;background:linear-gradient(#7fe8d4,#4fd6bd);box-shadow:0 5px 0 #2fae98;">リベンジスタート！</button>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { KiraShell } from '../../core/shell.js';
+    import * as FireLog from '../../core/firelog.js';
+    import { loadQuiz, KiraQuizEngine } from './engine.js';
+
+    const startScreen = document.getElementById('start-screen');
+    const playScreen = document.getElementById('play-screen');
+    const reviewOfferScreen = document.getElementById('review-offer-screen');
+    const screens = [startScreen, playScreen, reviewOfferScreen];
+    function showScreen(el) {
+      screens.forEach((s) => s.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    const dom = {
+      questionEl: document.getElementById('question-display'),
+      promptEl: document.getElementById('question-prompt'),
+      choicesEl: document.getElementById('choices'),
+      feedbackEl: document.getElementById('feedback'),
+      statCorrectEl: document.getElementById('stat-correct'),
+      statNumEl: document.getElementById('stat-num'),
+      statTotalEl: document.getElementById('stat-total')
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const setId = params.get('set');
+    const isFbReview = params.get('mode') === 'fb-review';
+
+    async function boot() {
+      if (isFbReview) {
+        await bootFbReview();
+        return;
+      }
+      if (!setId) {
+        document.getElementById('quiz-title').textContent = 'クエストが みつかりません';
+        showScreen(startScreen);
+        return;
+      }
+      const quiz = await loadQuiz(setId);
+      const shell = new KiraShell({ gameId: quiz.id, title: (quiz.emoji ? quiz.emoji + ' ' : '') + quiz.title });
+      const engine = new KiraQuizEngine(shell, quiz, dom, {
+        onReviewOffer(count, wrongItems) {
+          document.getElementById('review-count').textContent = String(count);
+          showScreen(reviewOfferScreen);
+          document.getElementById('btn-review-start').onclick = () => {
+            showScreen(playScreen);
+            shell.startGame(() => engine.startReview(wrongItems));
+          };
+        },
+        onFinish(result) {
+          shell.showResult(result);
+        }
+      });
+      shell.onRetry(() => engine.startLevel(engine.levelIndex));
+
+      document.getElementById('quiz-title').textContent = (quiz.emoji ? quiz.emoji + ' ' : '') + quiz.title;
+
+      if (quiz.type === 'math') {
+        document.getElementById('level-select').classList.remove('hidden');
+        const container = document.getElementById('level-select');
+        quiz.levels.forEach((level, index) => {
+          const btn = document.createElement('button');
+          btn.className = 'level-btn';
+          btn.innerHTML = `${level.name}<small>れい: ${level.desc}</small>`;
+          btn.addEventListener('click', () => {
+            showScreen(playScreen);
+            shell.startGame(() => engine.startLevel(index));
+          });
+          container.appendChild(btn);
+        });
+      } else {
+        document.getElementById('start-simple').classList.remove('hidden');
+        document.getElementById('btn-start').addEventListener('click', () => {
+          showScreen(playScreen);
+          shell.startGame(() => engine.startLevel(0));
+        });
+      }
+
+      showScreen(startScreen);
+    }
+
+    async function bootFbReview() {
+      const shell = new KiraShell({ gameId: 'fb-review', title: '🔥 リベンジクエスト' });
+      document.getElementById('quiz-title').textContent = '🔥 リベンジクエストを よみこみ中...';
+      showScreen(startScreen);
+
+      if (!FireLog.getSavedUser()) {
+        document.getElementById('quiz-title').textContent = 'まず なまえを とうろくしてね（ひろばのトップで できるよ）';
+        return;
+      }
+
+      FireLog.getReviewDue(async (items) => {
+        const kiraItems = items.filter((i) => i.game && i.game.startsWith('kirakira-'));
+
+        if (kiraItems.length === 0) {
+          document.getElementById('quiz-title').textContent = '🎉 きょうの リベンジクエストは ぜんぶ クリアしたよ！';
+          return;
+        }
+
+        const targetSetId = kiraItems[0].game;
+        const quiz = await loadQuiz(targetSetId);
+        const wrongItems = kiraItems
+          .filter((i) => i.game === targetSetId)
+          .map((i) => ({
+            text: i.question,
+            answer: quiz.type === 'math' ? Number(i.answer) : i.answer
+          }));
+
+        const engine = new KiraQuizEngine(shell, quiz, dom, {
+          onFinish(result) { shell.showResult(result); }
+        });
+        shell.onRetry(() => engine.startReview(wrongItems));
+        showScreen(playScreen);
+        shell.startGame(() => engine.startReview(wrongItems));
+      });
+    }
+
+    boot();
+  </script>
+</body>
+</html>

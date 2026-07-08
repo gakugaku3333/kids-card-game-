@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="キラキラひろば「マジカルバトル」。60秒でおばけを計算魔法でたおすタイムアタック。">
+  <title>マジカルバトル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #2c2350 0%, #513a8c 60%, #7c5cff 100%); min-height: 100vh; margin: 0; font-family: 'Zen Maru Gothic', sans-serif; }
+    .game-container { max-width: 520px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; color: #fff; }
+    h1 { color: #ffe27a; }
+    #start-screen, #play-screen { display: none; }
+    #start-screen.active, #play-screen.active { display: block; }
+    .diff-btn { display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px; padding: 16px; font-size: 1.1rem; color: #4a3f6b; background: linear-gradient(#ffe27a, #ffc94a); box-shadow: 0 4px 0 #d99e1f; margin: 10px 0; }
+    .best-line { color: #d9c8ff; margin-top: 18px; }
+
+    .battle-meta { display: flex; justify-content: space-around; font-weight: 900; margin: 10px 0 6px; }
+    .timer-bar-outer { height: 12px; border-radius: 8px; background: rgba(255,255,255,.2); overflow: hidden; margin-bottom: 18px; }
+    .timer-bar-inner { height: 100%; background: linear-gradient(90deg, #ffe27a, #ff6bb0); width: 100%; transition: width 1s linear; }
+    .ghost { font-size: 4.5rem; margin: 10px 0; }
+    .question { font-size: 2.2rem; font-weight: 900; margin: 6px 0 16px; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn { font-family: inherit; font-size: 1.4rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; color: #4a3f6b; box-shadow: 0 4px 0 rgba(0,0,0,.25); cursor: pointer; }
+    .choice-btn.correct { background: #c8f7d6; }
+    .choice-btn.wrong { background: #ffd6d6; opacity: .7; }
+    .choice-btn:disabled { cursor: default; }
+    .feedback { min-height: 1.6rem; font-size: 1.2rem; font-weight: 900; margin-top: 10px; color: #ffe27a; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen">
+      <h1>⚔️ マジカルバトル</h1>
+      <p>60びょうかん、せまりくる おばけを けいさん魔法で たおそう！</p>
+      <div id="diff-select"></div>
+      <p class="best-line" id="best-line"></p>
+    </section>
+
+    <section id="play-screen">
+      <div class="battle-meta">
+        <span>たおした数: <span id="stat-defeated">0</span></span>
+        <span>のこり: <span id="stat-time">60</span>びょう</span>
+      </div>
+      <div class="timer-bar-outer"><div class="timer-bar-inner" id="timer-bar"></div></div>
+      <div class="ghost">👻</div>
+      <div class="question" id="question-display">?</div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { KiraShell } from '../../core/shell.js';
+    import * as Store from '../../core/store.js';
+    import { GENERATORS } from '../../../games/quiz/engine.js';
+
+    const GAME_ID = 'kirakira-magical-battle';
+    const DURATION = 60;
+
+    const DIFFS = [
+      { id: 'easy', label: '★ かんたん', kinds: ['sum', 'diff'], num1Range: [1, 20], num2Range: [1, 20], choiceRange: 6 },
+      { id: 'normal', label: '★★ ふつう', kinds: ['sum', 'diff', 'product'], num1Range: [2, 30], num2Range: [2, 12], choiceRange: 10 },
+      { id: 'hard', label: '★★★ むずかしい', kinds: ['product', 'quotientExact'], num1Range: [3, 12], num2Range: [3, 12], divisorRange: [2, 9], quotientRange: [2, 12], choiceRange: 14 }
+    ];
+
+    const startScreen = document.getElementById('start-screen');
+    const playScreen = document.getElementById('play-screen');
+    function showScreen(el) {
+      [startScreen, playScreen].forEach((s) => s.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    const shell = new KiraShell({ gameId: GAME_ID, title: '⚔️ マジカルバトル' });
+
+    const best = Store.getBestScore(GAME_ID);
+    document.getElementById('best-line').textContent = best ? `じこベスト: ${best.correct}たい たおした！` : 'まだ きろくが ないよ。さいしょの1たいを たおそう！';
+
+    const diffContainer = document.getElementById('diff-select');
+    DIFFS.forEach((diff) => {
+      const btn = document.createElement('button');
+      btn.className = 'diff-btn';
+      btn.textContent = diff.label;
+      btn.addEventListener('click', () => {
+        showScreen(playScreen);
+        shell.startGame(() => startBattle(diff));
+      });
+      diffContainer.appendChild(btn);
+    });
+
+    let defeated = 0;
+    let remaining = DURATION;
+    let current = null;
+
+    function nextGhost(diff) {
+      const kind = diff.kinds[Math.floor(Math.random() * diff.kinds.length)];
+      current = GENERATORS[kind](diff);
+      document.getElementById('question-display').textContent = current.text;
+      document.getElementById('feedback').textContent = '';
+
+      const choices = [current.answer];
+      while (choices.length < 4) {
+        const offset = Math.floor(Math.random() * diff.choiceRange) - Math.floor(diff.choiceRange / 2);
+        const wrong = current.answer + offset;
+        if (wrong !== current.answer && wrong >= 0 && !choices.includes(wrong)) choices.push(wrong);
+      }
+      choices.sort(() => Math.random() - 0.5);
+
+      const choicesEl = document.getElementById('choices');
+      choicesEl.innerHTML = '';
+      choices.forEach((c) => {
+        const b = document.createElement('button');
+        b.className = 'choice-btn';
+        b.textContent = String(c);
+        b.addEventListener('click', () => onAnswer(c === current.answer, b, diff));
+        choicesEl.appendChild(b);
+      });
+    }
+
+    function onAnswer(isCorrect, btn, diff) {
+      document.querySelectorAll('.choice-btn').forEach((b) => (b.disabled = true));
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+      shell.sound.play(isCorrect ? 'correct' : 'wrong');
+      if (isCorrect) {
+        defeated++;
+        document.getElementById('stat-defeated').textContent = String(defeated);
+        document.getElementById('feedback').textContent = '✨ たおした！';
+      } else {
+        document.getElementById('feedback').textContent = '💦 にげられた…！';
+      }
+      setTimeout(() => {
+        if (remaining > 0) nextGhost(diff);
+      }, 500);
+    }
+
+    function startBattle(diff) {
+      defeated = 0;
+      remaining = DURATION;
+      document.getElementById('stat-defeated').textContent = '0';
+      document.getElementById('stat-time').textContent = String(remaining);
+      document.getElementById('timer-bar').style.width = '100%';
+      nextGhost(diff);
+      shell.setInterval(() => {
+        remaining--;
+        document.getElementById('stat-time').textContent = String(Math.max(0, remaining));
+        document.getElementById('timer-bar').style.width = `${Math.max(0, (remaining / DURATION) * 100)}%`;
+        if (remaining <= 0) {
+          shell.showResult({ correct: defeated, total: defeated, tokens: defeated });
+        }
+      }, 1000);
+    }
+
+    shell.onRetry(() => showScreen(startScreen));
+    showScreen(startScreen);
+  </script>
+</body>
+</html>

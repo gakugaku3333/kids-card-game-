@@ -16,35 +16,123 @@ function shuffle(arr) {
   return arr.slice().sort(() => Math.random() - 0.5);
 }
 
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
 // 算数の問題生成カーネル。JSON の levels[].kind で選択される。
-const GENERATORS = {
+// vars: text以外の生の数値/文字列を保持し、依頼文テンプレート（{num1}等のプレースホルダ差し込み）に使う。
+export const GENERATORS = {
   sum(level) {
     const num1 = randInt(level.num1Range[0], level.num1Range[1]);
     const num2 = randInt(level.num2Range[0], level.num2Range[1]);
-    return { text: `${num1} + ${num2}`, answer: num1 + num2 };
+    return { text: `${num1} + ${num2}`, answer: num1 + num2, vars: { num1, num2 } };
   },
   diff(level) {
     const num1 = randInt(level.num1Range[0], level.num1Range[1]);
     const num2 = level.num2LtNum1 ? randInt(0, num1 - 1) : randInt(level.num2Range[0], level.num2Range[1]);
-    return { text: `${num1} - ${num2}`, answer: num1 - num2 };
+    return { text: `${num1} - ${num2}`, answer: num1 - num2, vars: { num1, num2 } };
   },
   product(level) {
     const num1 = randInt(level.num1Range[0], level.num1Range[1]);
     const num2 = randInt(level.num2Range[0], level.num2Range[1]);
-    return { text: `${num1} × ${num2}`, answer: num1 * num2 };
+    return { text: `${num1} × ${num2}`, answer: num1 * num2, vars: { num1, num2 } };
   },
   quotientExact(level) {
     const num2 = randInt(level.divisorRange[0], level.divisorRange[1]);
     const answer = randInt(level.quotientRange[0], level.quotientRange[1]);
     const num1 = num2 * answer;
-    return { text: `${num1} ÷ ${num2}`, answer };
+    return { text: `${num1} ÷ ${num2}`, answer, vars: { num1, num2 } };
   },
   quotientRemainder(level) {
     const num2 = randInt(level.divisorRange[0], level.divisorRange[1]);
     const quotient = randInt(level.quotientRange[0], level.quotientRange[1]);
     const remainder = randInt(1, num2 - 1);
     const num1 = num2 * quotient + remainder;
-    return { text: `${num1} ÷ ${num2} (あまりはいくつ？)`, answer: remainder };
+    return { text: `${num1} ÷ ${num2} (あまりはいくつ？)`, answer: remainder, vars: { num1, num2, quotient, remainder } };
+  },
+  // 小数の加減（小4/小5）。誤差を避けるため整数(10倍値)で計算してから戻す。
+  decimal(level) {
+    const step = level.decimalStep || 0.1;
+    const scale = Math.round(1 / step);
+    const n1 = randInt(level.num1Range[0], level.num1Range[1]);
+    const n2 = randInt(level.num2Range[0], level.num2Range[1]);
+    const op = level.op === 'sub' ? 'sub' : 'add';
+    const raw1 = op === 'sub' && n2 > n1 ? n2 : n1;
+    const raw2 = op === 'sub' && n2 > n1 ? n1 : n2;
+    const num1 = Math.round(raw1 * step * scale) / scale;
+    const num2 = Math.round(raw2 * step * scale) / scale;
+    const answer = op === 'add'
+      ? Math.round((raw1 + raw2) * step * 100) / 100
+      : Math.round((raw1 - raw2) * step * 100) / 100;
+    const symbol = op === 'add' ? '+' : '-';
+    return { text: `${num1} ${symbol} ${num2}`, answer, vars: { num1, num2 } };
+  },
+  // 分数の加減（小4: 同分母 / 小5: 異分母→通分）。答えは "3/4" 形式の文字列。
+  // 帯分数(答えが1以上)を避け、真分数の和になる組み合わせが見つかるまで作り直す。
+  fraction(level) {
+    const denomPool = (level.denomPool || [3, 4, 5, 6, 8, 10]).filter((d) => d >= 3);
+    let d1, d2, a, b, commonDenom, numerA, numerB, sumNumer;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      d1 = denomPool[randInt(0, denomPool.length - 1)];
+      d2 = level.sameDenominator ? d1 : denomPool[randInt(0, denomPool.length - 1)];
+      commonDenom = level.sameDenominator ? d1 : (d1 * d2) / gcd(d1, d2);
+      a = randInt(1, d1 - 1);
+      b = randInt(1, d2 - 1);
+      numerA = (commonDenom / d1) * a;
+      numerB = (commonDenom / d2) * b;
+      sumNumer = numerA + numerB;
+      if (sumNumer < commonDenom) break;
+    }
+    if (sumNumer >= commonDenom) {
+      d1 = d2 = commonDenom = 4;
+      a = 1; b = 1; numerA = 1; numerB = 1; sumNumer = 2;
+    }
+    const g = gcd(sumNumer, commonDenom) || 1;
+    const answerNumer = sumNumer / g;
+    const answerDenom = commonDenom / g;
+    const answerText = `${answerNumer}/${answerDenom}`;
+    const wrongChoices = new Set([answerText]);
+    const wrongCandidates = [
+      `${sumNumer}/${commonDenom}`,
+      `${answerNumer + 1}/${answerDenom}`,
+      `${Math.max(1, sumNumer - 1)}/${commonDenom}`,
+      `${answerNumer}/${answerDenom + 1}`
+    ];
+    for (const c of wrongCandidates) {
+      if (wrongChoices.size >= 4) break;
+      wrongChoices.add(c);
+    }
+    return {
+      text: `${a}/${d1} + ${b}/${d2}`,
+      answer: answerText,
+      choices: shuffle(Array.from(wrongChoices)),
+      vars: { num1: `${a}/${d1}`, num2: `${b}/${d2}` }
+    };
+  },
+  // 割合（%引き後の金額 / 小5）
+  ratio(level) {
+    const price = randInt(level.priceRange[0] / 10, level.priceRange[1] / 10) * 10;
+    const ratePool = level.ratePool || [10, 20, 30, 50];
+    const rate = ratePool[randInt(0, ratePool.length - 1)];
+    const discounted = Math.round(price * (100 - rate) / 100);
+    return { text: `${price}円の${rate}%引き`, answer: discounted, vars: { num1: price, num2: rate } };
+  },
+  // 平均（小5）。割り切れる組み合わせだけ出題する。
+  average(level) {
+    const count = randInt(level.countRange[0], level.countRange[1]);
+    const avg = randInt(level.avgRange[0], level.avgRange[1]);
+    const total = avg * count;
+    const nums = [];
+    let remaining = total;
+    for (let i = 0; i < count - 1; i++) {
+      const maxSpread = Math.min(remaining, avg + 5);
+      const v = randInt(Math.max(0, avg - 5), maxSpread);
+      nums.push(v);
+      remaining -= v;
+    }
+    nums.push(remaining);
+    return { text: `${nums.join('、')} の へいきん`, answer: avg, vars: { num1: nums.join('、'), num2: count } };
   }
 };
 
@@ -135,6 +223,7 @@ export class QuizEngine {
   }
 
   _buildChoices(problem) {
+    if (problem.choices) return shuffle(problem.choices);
     const choices = [problem.answer];
     if (this.quiz.type === 'choice') {
       const pool = this.quiz.questions.map((q) => q.a);
@@ -153,6 +242,13 @@ export class QuizEngine {
     return shuffle(choices);
   }
 
+  // level.template があれば依頼文（例:「クッキーが{num1}まい…」）にvarsを差し込んで表示する。
+  _formatText(problem) {
+    const level = this.mode !== 'review' && this.quiz.type === 'math' ? this.quiz.levels[this.levelIndex] : null;
+    if (!level || !level.template || !problem.vars) return problem.text;
+    return level.template.replace(/\{(\w+)\}/g, (m, key) => (key in problem.vars ? problem.vars[key] : m));
+  }
+
   _advance() {
     if (this.index >= this.total) {
       this._finish();
@@ -164,7 +260,7 @@ export class QuizEngine {
     this.dom.statTotalEl.textContent = String(this.total);
     this.dom.statCorrectEl.textContent = String(this.correct);
     this.dom.promptEl.textContent = this.mode === 'review' ? 'リベンジ：こたえは？' : (this.quiz.type === 'choice' ? 'これはなんてよむ？' : 'こたえは？');
-    this.dom.questionEl.textContent = this.current.text;
+    this.dom.questionEl.textContent = this._formatText(this.current);
     this.dom.feedbackEl.textContent = '';
     this.dom.feedbackEl.className = 'feedback';
 
