@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="10歳の女の子むけ キラキラひろば。挑戦・自己ベスト・収集をたのしむゲームひろば。">
+  <title>キラキラひろば</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+      background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 60%, #ffffff 100%);
+      min-height: 100vh; box-sizing: border-box;
+    }
+    #hub-wrap { max-width: 720px; margin: 0 auto; padding: 24px 18px 40px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 18px;
+    }
+    h1 { font-size: 1.5rem; color: #5b4b8a; margin: 0; }
+    h1 .star { color: #ff9ec7; }
+    .token-badge {
+      font-weight: 900; color: #5b4b8a; background: rgba(255,255,255,.85);
+      border-radius: 50px; padding: 8px 16px; box-shadow: 0 3px 8px rgba(124,92,255,.18);
+      white-space: nowrap;
+    }
+    #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
+    .game-card {
+      background: rgba(255,255,255,.92); border-radius: 24px; padding: 16px; text-align: center;
+      text-decoration: none; color: #4a3f6b; box-shadow: 0 8px 18px rgba(124,92,255,.15);
+      border: 2px solid #ecdcff;
+    }
+    .game-card:active { transform: scale(.97); }
+    .game-card .thumb { font-size: 2.4rem; }
+    .game-card .name { font-weight: 900; margin-top: 6px; display: block; }
+    .empty-state {
+      text-align: center; color: #9a8ac2; padding: 60px 20px; font-size: 1.05rem;
+      grid-column: 1 / -1;
+    }
+    .empty-state .emoji { font-size: 3rem; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<div id="hub-wrap">
+  <header>
+    <h1><span class="star">🌟</span> キラキラひろば</h1>
+    <span class="token-badge">🌟 <span id="kiraTokens">0</span></span>
+  </header>
+  <main id="cards"></main>
+</div>
+<script type="module">
+  import * as Store from './core/store.js';
+
+  document.getElementById('kiraTokens').textContent = Store.getTokens();
+  document.addEventListener('kirakira-tokens-changed', () => {
+    document.getElementById('kiraTokens').textContent = Store.getTokens();
+  });
+
+  const cardsEl = document.getElementById('cards');
+  const res = await fetch('data/games.json');
+  const { games } = await res.json();
+
+  if (games.length === 0) {
+    cardsEl.innerHTML =
+      `<div class="empty-state"><div class="emoji">🌟</div>じゅんびちゅう！<br>あたらしいクエストが もうすぐ とうじょうするよ。</div>`;
+  } else {
+    games.forEach((g) => {
+      const a = document.createElement('a');
+      a.className = 'game-card';
+      a.href = g.path;
+      a.innerHTML = `<div class="thumb">${g.emoji || '🎮'}</div><span class="name">${g.title}</span>`;
+      cardsEl.appendChild(a);
+    });
+  }
+</script>
+</body>
+</html>
