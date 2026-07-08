@@ -53,11 +53,14 @@ function load() {
   }
   if (!raw || typeof raw !== 'object') raw = {};
   const av = (raw.avatar && typeof raw.avatar === 'object') ? raw.avatar : {};
+  const bs = (raw.bestScores && typeof raw.bestScores === 'object') ? raw.bestScores : {};
   return {
     tokens: typeof raw.tokens === 'number' ? raw.tokens : 0,
     totalCorrect: typeof raw.totalCorrect === 'number' ? raw.totalCorrect : 0,
     totalAnswered: typeof raw.totalAnswered === 'number' ? raw.totalAnswered : 0,
     ownedItems: Array.isArray(raw.ownedItems) ? raw.ownedItems : [],
+    bestScores: bs,
+    kanaCards: Array.isArray(raw.kanaCards) ? raw.kanaCards : [],
     avatar: {
       base: typeof av.base === 'string' ? av.base : null,
       accessory: typeof av.accessory === 'string' ? av.accessory : null,
@@ -103,6 +106,51 @@ export function recordAnswer(correct) {
   data.totalAnswered++;
   if (correct) data.totalCorrect++;
   save();
+}
+
+// お供キャラの成長段階。正解を重ねるほど育つ（本家Phase B: [[project-architecture]] 参照）。
+const BUDDY_STAGES = [
+  { min: 0, emoji: '🥚', name: 'たまご' },
+  { min: 10, emoji: '🐣', name: 'ひよこ' },
+  { min: 30, emoji: '🐥', name: 'ひな' },
+  { min: 60, emoji: '🐔', name: 'にわとり' }
+];
+
+export function getBuddyStage() {
+  let stage = BUDDY_STAGES[0];
+  for (const s of BUDDY_STAGES) {
+    if (data.totalCorrect >= s.min) stage = s;
+  }
+  return stage;
+}
+
+// ゲームIDごとの自己ベスト（せいかい数）を記録する。「遊んで成長する」哲学の
+// 成長可視化の中核部品。既存スキーマに無いゲームIDは初回プレイがそのままベストになる。
+export function getBestScore(gameId) {
+  return data.bestScores[gameId] || null;
+}
+
+export function recordScore(gameId, { correct = 0, total = 0, tokens = 0 } = {}) {
+  const prev = data.bestScores[gameId];
+  const isNewBest = !prev || correct > prev.correct;
+  if (isNewBest) {
+    data.bestScores[gameId] = { correct, total, tokens };
+    save();
+  }
+  return { isNewBest, best: data.bestScores[gameId] };
+}
+
+// かたかなカード図鑑。正解した文字のカードを1枚ずつ集める（46音コンプが目標）。
+export function getKanaCards() { return data.kanaCards.slice(); }
+export function ownsKana(kana) { return data.kanaCards.indexOf(kana) !== -1; }
+
+export function grantKanaCard(kana) {
+  const isNew = data.kanaCards.indexOf(kana) === -1;
+  if (isNew) {
+    data.kanaCards.push(kana);
+    save();
+  }
+  return isNew;
 }
 
 export function slotOf(id) {

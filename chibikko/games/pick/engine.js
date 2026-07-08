@@ -6,6 +6,8 @@
  * 失敗が存在しない設計のため、不正解はやり直しを促すだけでボタンは無効化しない。
  */
 import { asset } from '../../core/paths.js';
+import * as Store from '../../core/store.js';
+import * as Confetti from '../../core/confetti.js';
 
 export async function loadPick(setId) {
   const res = await fetch(`../../data/picks/${setId}.json`);
@@ -36,6 +38,20 @@ export class PickEngine {
     this.choiceCount = set.choiceCount || 3;
     this.total = set.totalQuestions || 5;
     this.index = 0;
+
+    // 裏側の自動レベル調整（本人には一切見せない）。tiersが無いセットは常にlevel 0固定で
+    // 今までどおり動く。「もういちど あそぶ」で再生成されるたび、前回の到達レベルから続きになる。
+    this.tiers = Array.isArray(set.tiers) ? set.tiers : null;
+    this.maxLevel = this.tiers ? this.tiers.length - 1 : 0;
+    this.level = this.tiers ? Store.getPickLevel(set.id) : 0;
+    this.consecutiveCorrect = 0;
+    this.consecutiveWrong = 0;
+  }
+
+  // tiers[level]のフィールドでベース設定を上書きした実行時設定を返す
+  _config() {
+    if (!this.tiers) return this.set;
+    return Object.assign({}, this.set, this.tiers[this.level]);
   }
 
   start() {
@@ -49,6 +65,7 @@ export class PickEngine {
       return;
     }
     this.index++;
+    this.choiceCount = this._config().choiceCount || this.set.choiceCount || 3;
     this.dom.stageEl.innerHTML = '';
     this.dom.choicesEl.innerHTML = '';
 
@@ -71,7 +88,7 @@ export class PickEngine {
       btn.className = 'pick-choice pick-swatch';
       btn.style.background = choice.color;
       btn.setAttribute('aria-label', choice.label);
-      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn));
+      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn, target.id));
       this.dom.choicesEl.appendChild(btn);
     });
 
@@ -79,7 +96,7 @@ export class PickEngine {
   }
 
   _nextCount() {
-    const [min, max] = this.set.countRange || [1, 5];
+    const [min, max] = this._config().countRange || [1, 5];
     const count = randInt(min, max);
     const icons = this.set.fruitIcons;
     const icon = icons[Math.floor(Math.random() * icons.length)];
@@ -104,7 +121,7 @@ export class PickEngine {
       const btn = document.createElement('button');
       btn.className = 'pick-choice pick-number';
       btn.textContent = String(n);
-      btn.addEventListener('click', () => this._onAnswer(n === count, btn));
+      btn.addEventListener('click', () => this._onAnswer(n === count, btn, String(count)));
       this.dom.choicesEl.appendChild(btn);
     });
 
@@ -124,7 +141,7 @@ export class PickEngine {
       const btn = document.createElement('button');
       btn.className = 'pick-choice pick-image';
       btn.innerHTML = `<img src="${asset(choice.file)}" alt="${choice.id}" />`;
-      btn.addEventListener('click', () => this._onAnswer(choice.category === category.id, btn));
+      btn.addEventListener('click', () => this._onAnswer(choice.category === category.id, btn, target.id));
       this.dom.choicesEl.appendChild(btn);
     });
 
@@ -147,7 +164,7 @@ export class PickEngine {
       const btn = document.createElement('button');
       btn.className = 'pick-choice pick-image';
       btn.innerHTML = `<img src="${asset(choice.face)}" alt="${choice.id}" />`;
-      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn));
+      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn, target.id));
       this.dom.choicesEl.appendChild(btn);
     });
 
@@ -163,7 +180,7 @@ export class PickEngine {
       const btn = document.createElement('button');
       btn.className = 'pick-choice pick-compare';
       btn.innerHTML = item.svg;
-      btn.addEventListener('click', () => this._onAnswer((idx === 0) === biggerIsA, btn));
+      btn.addEventListener('click', () => this._onAnswer((idx === 0) === biggerIsA, btn, type.id));
       this.dom.choicesEl.appendChild(btn);
     });
 
@@ -204,11 +221,26 @@ export class PickEngine {
     return [target, ...shuffle(others).slice(0, this.choiceCount - 1)];
   }
 
-  _onAnswer(isCorrect, btn) {
+  _onAnswer(isCorrect, btn, targetKey) {
     if (isCorrect) {
       this.dom.choicesEl.querySelectorAll('.pick-choice').forEach((b) => (b.disabled = true));
       btn.classList.add('pick-correct');
-      this.shell.sound.play('correct');
+
+      this.consecutiveCorrect++;
+      this.consecutiveWrong = 0;
+      if (this.tiers && this.consecutiveCorrect >= 2 && this.level < this.maxLevel) {
+        this.level = Store.adjustPickLevel(this.set.id, 1, this.maxLevel);
+        this.consecutiveCorrect = 0;
+      }
+
+      const isFirstTime = targetKey != null && Store.isFirstTimeCorrect(this.set.id, targetKey);
+      if (isFirstTime) {
+        // 「はじめてできた！」— 通常よりちょっと豪華な演出（新規アセット不要でキラキラ量とサウンドだけ強める）
+        Confetti.burst(14);
+        this.shell.sound.play('clear');
+      } else {
+        this.shell.sound.play('correct');
+      }
       this.shell.voice.praise();
       setTimeout(() => this._next(), 1300);
     } else {
@@ -216,6 +248,13 @@ export class PickEngine {
       setTimeout(() => btn.classList.remove('pick-wrong'), 500);
       this.shell.sound.play('wrong');
       this.shell.voice.encourage();
+
+      this.consecutiveWrong++;
+      this.consecutiveCorrect = 0;
+      if (this.tiers && this.consecutiveWrong >= 2 && this.level > 0) {
+        this.level = Store.adjustPickLevel(this.set.id, -1, this.maxLevel);
+        this.consecutiveWrong = 0;
+      }
     }
   }
 }

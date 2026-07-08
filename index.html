@@ -55,6 +55,19 @@
       white-space: nowrap; font-family: var(--g-font);
     }
     .user-chip:hover { opacity: .8; }
+    /* かたかなカードずかん */
+    .zukan-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px;
+      margin: 14px 0;
+    }
+    .zukan-card {
+      aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 900; background: #eee2d8; color: #c9b8ab;
+    }
+    .zukan-card.owned {
+      background: linear-gradient(#fff6ec, #ffe6c4); color: #ff8c2b;
+      box-shadow: 0 3px 8px rgba(0,0,0,.15);
+    }
   </style>
 </head>
 <body>
@@ -91,13 +104,14 @@
         <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
         <button id="btn-dressup" class="dressup-open-btn">👗 きせかえ</button>
         <button id="btn-history" class="dressup-open-btn">📖 きろく</button>
+        <button id="btn-zukan" class="dressup-open-btn">🎴 ずかん</button>
       </div>
     </header>
 
-    <!-- 復習バナー（復習問題があるときのみ表示） -->
+    <!-- リベンジクエストバナー（誤答復習。おいしい報酬2倍を強調して「勉強」に見せない） -->
     <div id="review-banner" class="review-banner" style="display:none;">
       <a id="review-link" href="games/quiz/index.html?mode=fb-review" class="review-link">
-        📚 ふくしゅうしよう！ <span id="review-count">0</span>もん あるよ！
+        🔥 リベンジクエスト！ <span id="review-count">0</span>もん で ⭐2ばい ゲットできるよ！
       </a>
     </div>
 
@@ -208,6 +222,19 @@
     </div>
   </div>
 
+  <!-- かたかなカードずかんモーダル -->
+  <div id="zukan-modal" class="store-modal">
+    <div class="store-modal-box">
+      <h3 class="store-modal-title">🎴 かたかなカードずかん</h3>
+      <p style="color:#8f7d83; font-size:15px; margin-bottom:6px;">
+        かたかなクイズで せいかいすると カードが もらえるよ！
+      </p>
+      <div class="store-modal-tokens">あつめた: <span id="zukanCount">0</span>/46</div>
+      <div id="zukanGrid" class="zukan-grid"></div>
+      <button id="btn-close-zukan" class="store-modal-close">とじる</button>
+    </div>
+  </div>
+
   <!-- JavaScript -->
   <script src="js/store.js"></script>
   <script src="js/shop.js"></script>
@@ -249,8 +276,33 @@
   <script src="js/firebase-log.js"></script>
   <script type="module">
   import { openModal, closeModal, closeOnOverlayClick } from './core/modal.js';
+  import * as Store from './core/store.js';
   (function () {
     'use strict';
+
+    // ===== かたかなカードずかん =====
+    var KANA_LIST = ['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ',
+      'タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ',
+      'マ','ミ','ム','メ','モ','ヤ','ユ','ヨ','ラ','リ','ル','レ','ロ','ワ','ヲ','ン'];
+
+    function renderZukan() {
+      Store.reload();
+      var owned = Store.getKanaCards();
+      document.getElementById('zukanCount').textContent = owned.length;
+      document.getElementById('zukanGrid').innerHTML = KANA_LIST.map(function (k) {
+        var has = owned.indexOf(k) !== -1;
+        return '<div class="zukan-card' + (has ? ' owned' : '') + '">' + (has ? k : '？') + '</div>';
+      }).join('');
+    }
+
+    document.getElementById('btn-zukan').addEventListener('click', function () {
+      renderZukan();
+      openModal(document.getElementById('zukan-modal'));
+    });
+    document.getElementById('btn-close-zukan').addEventListener('click', function () {
+      closeModal(document.getElementById('zukan-modal'));
+    });
+    closeOnOverlayClick(document.getElementById('zukan-modal'));
 
     function showLoginModal() {
       openModal(document.getElementById('login-modal'));

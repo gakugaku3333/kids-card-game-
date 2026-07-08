@@ -33,6 +33,12 @@ function injectStyles() {
       font-weight: 900; background: rgba(255,255,255,.85); border-radius: 50px; padding: 8px 14px;
       white-space: nowrap;
     }
+    #${HEADER_ID} .shell-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.85);
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,.18); flex-shrink: 0; overflow: hidden;
+    }
+    #${HEADER_ID} .shell-avatar img { width: 100%; height: 100%; object-fit: contain; }
     @media (max-height: 700px) {
       #${HEADER_ID} { padding: 6px 10px; font-size: .9rem; }
     }
@@ -52,6 +58,16 @@ function injectStyles() {
     .shell-result-item { background: #fff6ec; border-radius: 16px; padding: 12px 10px; flex: 1; margin: 0 5px; }
     .shell-result-item .r-label { font-size: .78rem; color: #a98; display: block; }
     .shell-result-item .r-value { font-size: 1.5rem; font-weight: 900; color: #4a3f3a; }
+    .shell-result-best { font-size: .95rem; color: #8a7a6a; margin: 2px 0 10px; }
+    #shell-newbest-banner, #shell-evolve-banner {
+      display: none; font-weight: 900; color: #ff6b35; font-size: 1.1rem; margin-bottom: 4px;
+      animation: shell-newbest-pop .5s ease;
+    }
+    @keyframes shell-newbest-pop {
+      0% { transform: scale(.6); opacity: 0; }
+      60% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); }
+    }
     .shell-btn {
       font-family: inherit; font-weight: 900; border: none; cursor: pointer;
       border-radius: 22px; padding: 14px 30px; font-size: 1.15rem; color: #fff;
@@ -72,6 +88,7 @@ export class GameShell {
     this.homePath = homePath || '../../index.html';
     this._timers = [];
     this._rafs = [];
+    this._buddyStageAtStart = Store.getBuddyStage();
 
     document.body.classList.add('shell-body');
     injectStyles();
@@ -84,8 +101,22 @@ export class GameShell {
     if (document.getElementById(HEADER_ID)) return;
     const header = document.createElement('header');
     header.id = HEADER_ID;
+    const avatar = Store.getAvatar();
+    // 買ったアバターを一緒に連れて遊べるようにする（ショップ経済を「貯める→買う→終わり」で終わらせない）。
+    // SHOP_ITEMSのicon画像パスはサイトルート基準なので、ネストしたゲームページ用にhomePathから逆算して補正する。
+    const avatarItem = avatar.base && Store.SHOP_ITEMS.find((i) => i.id === avatar.base);
+    const rootPrefix = this.homePath.replace(/index\.html$/, '');
+    const resolvedIcon = avatarItem && avatarItem.icon.indexOf('/') !== -1 && !/^https?:/.test(avatarItem.icon)
+      ? rootPrefix + avatarItem.icon
+      : (avatarItem ? avatarItem.icon : null);
+    const avatarHtml = avatarItem ? `<span class="shell-avatar">${Store.getIconHtml(resolvedIcon, avatarItem.name)}</span>` : '';
+    // クイズで正解を重ねるほど育つお供キャラ（トークンを貯める以外の「成長の見える化」）
+    const buddy = Store.getBuddyStage();
+    const buddyHtml = `<span id="shell-buddy-value" class="shell-avatar" title="${buddy.name}">${buddy.emoji}</span>`;
     header.innerHTML =
       `<a href="${this.homePath}" class="shell-back">🏠 もどる</a>` +
+      avatarHtml +
+      buddyHtml +
       `<h1 class="shell-title">${this.title}</h1>` +
       `<span class="shell-tokens">⭐ <span id="shell-tokens-value">${Store.getTokens()}</span></span>`;
     document.body.prepend(header);
@@ -103,12 +134,15 @@ export class GameShell {
     modal.className = 'store-modal';
     modal.innerHTML =
       `<div class="shell-modal-card">` +
+        `<div id="shell-newbest-banner">🎉 じこベストこうしん！</div>` +
+        `<div id="shell-evolve-banner"></div>` +
         `<div style="font-size:3.4rem;">🎉</div>` +
         `<h2>おわり！</h2>` +
         `<div class="shell-result-row">` +
           `<div class="shell-result-item"><span class="r-label">せいかい</span><span id="shell-r-correct" class="r-value">0</span></div>` +
           `<div class="shell-result-item"><span class="r-label">ゲット⭐</span><span id="shell-r-tokens" class="r-value">0</span></div>` +
         `</div>` +
+        `<div class="shell-result-best">じこベスト: <span id="shell-r-best">-</span></div>` +
         `<button id="shell-btn-again" class="shell-btn">もういちど あそぶ</button>` +
         `<a href="${this.homePath}" class="shell-btn secondary">🏠 メニューにもどる</a>` +
       `</div>`;
@@ -155,9 +189,26 @@ export class GameShell {
     this._cleanup();
     if (tokens > 0) Store.addTokens(tokens);
     FireLog.logSession(this.gameId, correct, total, tokens);
+    const { isNewBest, best } = Store.recordScore(this.gameId, { correct, total, tokens });
     document.getElementById('shell-r-correct').textContent = total ? `${correct}/${total}` : String(correct);
     document.getElementById('shell-r-tokens').textContent = String(tokens);
-    sound.play('clear');
+    const bestEl = document.getElementById('shell-r-best');
+    if (bestEl) bestEl.textContent = best ? (best.total ? `${best.correct}/${best.total}` : String(best.correct)) : '-';
+    const banner = document.getElementById('shell-newbest-banner');
+    const showBanner = isNewBest && correct > 0;
+    if (banner) banner.style.display = showBanner ? 'block' : 'none';
+
+    const buddy = Store.getBuddyStage();
+    const evolveBanner = document.getElementById('shell-evolve-banner');
+    const evolved = buddy.emoji !== this._buddyStageAtStart.emoji;
+    if (evolveBanner) {
+      evolveBanner.textContent = `${buddy.emoji} おともが「${buddy.name}」に そだったよ！`;
+      evolveBanner.style.display = evolved ? 'block' : 'none';
+    }
+    const buddyEl = document.getElementById('shell-buddy-value');
+    if (buddyEl) { buddyEl.textContent = buddy.emoji; buddyEl.title = buddy.name; }
+
+    sound.play(showBanner || evolved ? 'coin' : 'clear');
     openModal(this.resultModal);
   }
 

@@ -75,7 +75,8 @@ function load() {
     stickers: Array.isArray(raw.stickers) ? raw.stickers : [],
     playCount: typeof raw.playCount === 'number' ? raw.playCount : 0,
     gamePlayCounts: (raw.gamePlayCounts && typeof raw.gamePlayCounts === 'object') ? raw.gamePlayCounts : {},
-    selectedTheme: typeof raw.selectedTheme === 'string' ? raw.selectedTheme : 'sora'
+    selectedTheme: typeof raw.selectedTheme === 'string' ? raw.selectedTheme : 'sora',
+    pickProgress: (raw.pickProgress && typeof raw.pickProgress === 'object') ? raw.pickProgress : {}
   };
 }
 
@@ -137,6 +138,37 @@ export function grantSticker() {
 export function recordGamePlay(gameId) {
   data.gamePlayCounts[gameId] = (data.gamePlayCounts[gameId] || 0) + 1;
   save();
+}
+
+// 本人には難易度の概念を一切見せない「裏側の自動レベル調整」用の進捗記録。
+// tasks/遊んで成長する改善計画書.md ちびっこ Phase A 参照。
+function ensurePickProgress(setId) {
+  if (!data.pickProgress[setId]) data.pickProgress[setId] = { level: 0, seenIds: [] };
+  return data.pickProgress[setId];
+}
+
+export function getPickLevel(setId) {
+  return ensurePickProgress(setId).level;
+}
+
+// delta: +1/-1。maxLevelでクランプする。上げ幅は保守的・下げ判定は敏感にという
+// 教訓どおり、呼び出し側（PickEngine）が「連続正解2回で+1、連続不正解2回で即-1」を制御する。
+export function adjustPickLevel(setId, delta, maxLevel) {
+  const p = ensurePickProgress(setId);
+  p.level = Math.max(0, Math.min(maxLevel, p.level + delta));
+  save();
+  return p.level;
+}
+
+// 「はじめてできた！」演出のための初回正解判定。setId内でtargetKeyごとに一度だけtrueを返す。
+export function isFirstTimeCorrect(setId, targetKey) {
+  const p = ensurePickProgress(setId);
+  const isFirst = p.seenIds.indexOf(targetKey) === -1;
+  if (isFirst) {
+    p.seenIds.push(targetKey);
+    save();
+  }
+  return isFirst;
 }
 
 export function getPlayCount() { return data.playCount; }

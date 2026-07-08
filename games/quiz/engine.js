@@ -6,6 +6,7 @@
  * 新しい学習コンテンツを増やすときは JSON を1個書くだけでよい。
  */
 import * as FireLog from '../../core/firelog.js';
+import * as Store from '../../core/store.js';
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -76,8 +77,12 @@ export class QuizEngine {
     this.callbacks = callbacks || {};
     this.choiceCount = quiz.choiceCount || 4;
     this.perCorrect = (quiz.reward && quiz.reward.perCorrect) || 2;
+    this.reviewRewardMultiplier = (quiz.reward && quiz.reward.reviewMultiplier) || 2;
+    this.comboBonusEvery = 5;
+    this.comboBonusTokens = 3;
     this.correct = 0;
     this.tokens = 0;
+    this.combo = 0;
     this.sessionWrong = [];
   }
 
@@ -93,6 +98,10 @@ export class QuizEngine {
     this.presetQueue = level && level.preset === 'sumLe10' ? buildSumLe10Preset() : null;
     this.total = this.presetQueue ? this.presetQueue.length : this.quiz.totalQuestions || 10;
     this.index = 0;
+    this.correct = 0;
+    this.tokens = 0;
+    this.combo = 0;
+    this.sessionWrong = [];
     this._advance();
   }
 
@@ -101,6 +110,9 @@ export class QuizEngine {
     this.queue = items.slice();
     this.total = this.queue.length;
     this.index = 0;
+    this.correct = 0;
+    this.tokens = 0;
+    this.combo = 0;
     this._advance();
   }
 
@@ -151,7 +163,7 @@ export class QuizEngine {
     this.dom.statNumEl.textContent = String(this.index);
     this.dom.statTotalEl.textContent = String(this.total);
     this.dom.statCorrectEl.textContent = String(this.correct);
-    this.dom.promptEl.textContent = this.mode === 'review' ? 'ふくしゅう：こたえは？' : (this.quiz.type === 'choice' ? 'これはなんてよむ？' : 'こたえは？');
+    this.dom.promptEl.textContent = this.mode === 'review' ? 'リベンジ：こたえは？' : (this.quiz.type === 'choice' ? 'これはなんてよむ？' : 'こたえは？');
     this.dom.questionEl.textContent = this.current.text;
     this.dom.feedbackEl.textContent = '';
     this.dom.feedbackEl.className = 'feedback';
@@ -169,15 +181,36 @@ export class QuizEngine {
 
   _onAnswer(selected, btn) {
     const isCorrect = selected === this.current.answer;
+    Store.recordAnswer(isCorrect);
     if (isCorrect) {
       this.dom.choicesEl.querySelectorAll('.choice-btn').forEach((b) => (b.disabled = true));
       btn.classList.add('correct');
-      this.dom.feedbackEl.textContent = '🎉 せいかい！すごい！';
-      this.dom.feedbackEl.className = 'feedback correct';
       this.correct++;
-      this.tokens += this.perCorrect;
+      this.combo++;
+
+      const baseReward = this.mode === 'review' ? this.perCorrect * this.reviewRewardMultiplier : this.perCorrect;
+      let reward = baseReward;
+      const isComboBonus = this.combo >= 2 && this.combo % this.comboBonusEvery === 0;
+      if (isComboBonus) reward += this.comboBonusTokens;
+      this.tokens += reward;
+
+      const isNewCard = this.quiz.collectCards ? Store.grantKanaCard(this.current.text) : false;
+
+      if (isComboBonus) {
+        this.dom.feedbackEl.textContent = `🌟 ${this.combo}れんぞくせいかい！ボーナス +${this.comboBonusTokens}⭐`;
+        this.shell.sound.play('coin');
+      } else if (isNewCard) {
+        this.dom.feedbackEl.textContent = `🎴 あたらしい カードを ゲット！「${this.current.text}」`;
+        this.shell.sound.play('coin');
+      } else if (this.combo >= 2) {
+        this.dom.feedbackEl.textContent = `🎉 せいかい！${this.combo}れんぞく！`;
+        this.shell.sound.play('correct');
+      } else {
+        this.dom.feedbackEl.textContent = '🎉 せいかい！すごい！';
+        this.shell.sound.play('correct');
+      }
+      this.dom.feedbackEl.className = 'feedback correct';
       this.dom.statCorrectEl.textContent = String(this.correct);
-      this.shell.sound.play('correct');
 
       if (this.mode === 'review') {
         FireLog.markReviewed(this.gameKey, this.current.text);
@@ -187,6 +220,7 @@ export class QuizEngine {
     } else {
       btn.classList.add('wrong');
       btn.disabled = true;
+      this.combo = 0;
       this.dom.feedbackEl.textContent = '😢 ちがうよ！もういちど！';
       this.dom.feedbackEl.className = 'feedback wrong';
       this.shell.sound.play('wrong');

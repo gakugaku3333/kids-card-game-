@@ -4,6 +4,12 @@
   "totalQuestions": 5,
   "choiceCount": 3,
   "countRange": [1, 5],
+  "tiers": [
+    { "choiceCount": 2, "countRange": [1, 3] },
+    { "choiceCount": 3, "countRange": [1, 5] },
+    { "choiceCount": 3, "countRange": [3, 8] },
+    { "choiceCount": 4, "countRange": [1, 10] }
+  ],
   "fruitIcons": [
     "assets/fruits/ichigo.png",
     "assets/fruits/ringo.png",

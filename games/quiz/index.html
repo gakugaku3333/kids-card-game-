@@ -55,10 +55,10 @@
     </section>
 
     <section id="review-offer-screen">
-      <h1>📚 ふくしゅうタイム！</h1>
-      <div class="emoji">💪✨📝</div>
-      <p>まちがえた <strong id="review-count">0</strong> もんだいを<br>ふくしゅうしよう！</p>
-      <button id="btn-review-start" class="btn-start" style="font-family:inherit;font-weight:900;border:none;cursor:pointer;border-radius:22px;padding:16px 34px;font-size:1.3rem;color:#fff;background:linear-gradient(#43e97b,#38f9d7);box-shadow:0 5px 0 #2bb673;">ふくしゅうスタート！</button>
+      <h1>🔥 リベンジクエスト！</h1>
+      <div class="emoji">💪✨🌟</div>
+      <p>おしかった <strong id="review-count">0</strong> もんだいに<br>もういちど ちょうせん！せいかいすると ⭐ 2ばい もらえるよ！</p>
+      <button id="btn-review-start" class="btn-start" style="font-family:inherit;font-weight:900;border:none;cursor:pointer;border-radius:22px;padding:16px 34px;font-size:1.3rem;color:#fff;background:linear-gradient(#43e97b,#38f9d7);box-shadow:0 5px 0 #2bb673;">リベンジスタート！</button>
     </section>
   </div>
 
@@ -146,8 +146,8 @@
     }
 
     async function bootFbReview() {
-      const shell = new GameShell({ gameId: 'fb-review', title: '📚 ふくしゅうタイム' });
-      document.getElementById('quiz-title').textContent = '📚 ふくしゅうタイムを よみこみ中...';
+      const shell = new GameShell({ gameId: 'fb-review', title: '🔥 リベンジクエスト' });
+      document.getElementById('quiz-title').textContent = '🔥 リベンジクエストを よみこみ中...';
       showScreen(startScreen);
 
       FireLog.getReviewDue(async (items) => {
@@ -155,7 +155,7 @@
         const mathItems = items.filter((i) => i.game && i.game.startsWith('math-'));
 
         if (katakanaItems.length === 0 && mathItems.length === 0) {
-          document.getElementById('quiz-title').textContent = '🎉 きょうの ふくしゅうは ぜんぶ おわったよ！';
+          document.getElementById('quiz-title').textContent = '🎉 きょうの リベンジクエストは ぜんぶ クリアしたよ！';
           return;
         }
 

@@ -5,6 +5,7 @@
   "totalQuestions": 10,
   "choiceCount": 3,
   "reward": { "perCorrect": 2 },
+  "collectCards": true,
   "questions": [
     { "q": "ア", "a": "あ" },
     { "q": "イ", "a": "い" },

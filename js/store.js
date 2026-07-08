@@ -61,11 +61,17 @@
         }
         if (!data || typeof data !== 'object') data = {};
         var av = (data.avatar && typeof data.avatar === 'object') ? data.avatar : {};
+        // bestScores/kanaCards は core/store.js (ESM版) が読み書きする自己ベスト・図鑑記録。
+        // このファイルは解釈しないが、save() で消さないよう素通りで保持する。
+        var bs = (data.bestScores && typeof data.bestScores === 'object') ? data.bestScores : {};
+        var kc = Array.isArray(data.kanaCards) ? data.kanaCards : [];
         return {
             tokens: typeof data.tokens === 'number' ? data.tokens : 0,
             totalCorrect: typeof data.totalCorrect === 'number' ? data.totalCorrect : 0,
             totalAnswered: typeof data.totalAnswered === 'number' ? data.totalAnswered : 0,
             ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : [],
+            bestScores: bs,
+            kanaCards: kc,
             avatar: {
                 base: typeof av.base === 'string' ? av.base : null,
                 accessory: typeof av.accessory === 'string' ? av.accessory : null,
