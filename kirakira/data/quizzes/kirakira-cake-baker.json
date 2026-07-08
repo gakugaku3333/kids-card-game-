@@ -1,0 +1,27 @@
+{
+  "id": "kirakira-cake-baker",
+  "title": "ケーキ職人のレシピ帳",
+  "emoji": "🎂",
+  "type": "math",
+  "totalQuestions": 8,
+  "choiceCount": 4,
+  "reward": { "perCorrect": 3, "reviewMultiplier": 2 },
+  "levels": [
+    {
+      "name": "小4：おなじ分母の分数",
+      "desc": "1/4 + 2/4",
+      "kind": "fraction",
+      "sameDenominator": true,
+      "denomPool": [3, 4, 5, 6, 8],
+      "template": "🥣 いちごクリームが {num1}カップ、生クリームが {num2}カップ とどいたよ。あわせて なんカップ？"
+    },
+    {
+      "name": "小5：ちがう分母の分数（通分）",
+      "desc": "1/2 + 1/3",
+      "kind": "fraction",
+      "sameDenominator": false,
+      "denomPool": [2, 3, 4, 5, 6],
+      "template": "🍫 チョコが {num1}まい、ホワイトチョコが {num2}まい とけたよ。あわせて どれだけ？"
+    }
+  ]
+}

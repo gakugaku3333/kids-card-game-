@@ -1,6 +1,11 @@
 {
   "games": [
     { "id": "sweets-cafe", "title": "スイーツカフェ", "emoji": "🍰", "path": "games/sweets-cafe/index.html" },
+    { "id": "cake-baker", "title": "ケーキ職人のレシピ帳", "emoji": "🎂", "path": "games/cake-baker/index.html" },
+    { "id": "shopping-mall", "title": "ショッピングモール", "emoji": "🛍️", "path": "games/shopping-mall/index.html" },
+    { "id": "kanji-hunter", "title": "漢字ハンター", "emoji": "🈶", "path": "games/kanji-hunter/index.html" },
+    { "id": "magic-lab", "title": "まほうの実験ラボ", "emoji": "🔬", "path": "games/magic-lab/index.html" },
+    { "id": "travel", "title": "日本一周トラベル", "emoji": "🗾", "path": "games/travel/index.html" },
     { "id": "magical-battle", "title": "マジカルバトル", "emoji": "⚔️", "path": "games/magical-battle/index.html" },
     { "id": "fb-review", "title": "リベンジクエスト", "emoji": "🔥", "path": "games/quiz/index.html?mode=fb-review" }
   ]

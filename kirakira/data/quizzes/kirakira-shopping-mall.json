@@ -1,0 +1,29 @@
+{
+  "id": "kirakira-shopping-mall",
+  "title": "ショッピングモール",
+  "emoji": "🛍️",
+  "type": "math",
+  "totalQuestions": 8,
+  "choiceCount": 4,
+  "reward": { "perCorrect": 3, "reviewMultiplier": 2 },
+  "levels": [
+    {
+      "name": "小5：わりびき（％）",
+      "desc": "1000円の20%引き",
+      "kind": "ratio",
+      "priceRange": [100, 3000],
+      "ratePool": [10, 20, 30, 50],
+      "choiceRange": 400,
+      "template": "🛍️ {num1}円の ふくが、{num2}%びき セールちゅう！いくらで かえる？"
+    },
+    {
+      "name": "小5：へいきん",
+      "desc": "20,18,25この へいきん",
+      "kind": "average",
+      "countRange": [3, 5],
+      "avgRange": [10, 50],
+      "choiceRange": 10,
+      "template": "🎁 ふくろに おかしが {num1}こずつ はいっていたよ。1ふくろあたり へいきん なんこ？"
+    }
+  ]
+}

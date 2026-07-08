@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="キラキラひろば「漢字ハンター」。読みクエストでレア漢字カードを解放して集めよう。">
+  <title>漢字ハンター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(160deg, #2c2350 0%, #4a3f80 60%, #7c5cff 100%); min-height: 100vh; margin: 0; font-family: 'Zen Maru Gothic', sans-serif; }
+    .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; color: #fff; }
+    h1 { color: #ffe27a; margin-bottom: 4px; }
+    .sub { color: #d9c8ff; margin-top: 0; }
+    #start-screen, #play-screen { display: none; }
+    #start-screen.active, #play-screen.active { display: block; }
+
+    .menu-board { background: rgba(255,255,255,.08); border-radius: 20px; padding: 14px; margin: 16px 0; border: 2px solid rgba(255,255,255,.2); }
+    .menu-board h2 { font-size: 1rem; color: #ffe27a; margin: 0 0 10px; }
+    .card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 260px; overflow-y: auto; }
+    .kanji-card { background: rgba(255,255,255,.1); border-radius: 12px; padding: 8px 2px; font-size: 1.3rem; font-weight: 900; color: rgba(255,255,255,.35); }
+    .kanji-card.unlocked { background: linear-gradient(#fff6d9, #ffe27a); color: #4a3f6b; box-shadow: 0 0 10px rgba(255,226,122,.6); }
+    .kanji-card.unlocked.rare { background: linear-gradient(135deg, #ffe27a, #ff9ec7, #7fe8d4, #ffe27a); background-size: 300% 300%; animation: holo 3s ease infinite; }
+    @keyframes holo { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .card-count { color: #d9c8ff; font-size: .85rem; margin-bottom: 8px; }
+
+    .level-btn { display: block; width: 100%; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px; padding: 16px; font-size: 1.1rem; color: #4a3f6b; background: linear-gradient(#ffe27a, #ffc94a); box-shadow: 0 4px 0 #d99e1f; margin: 10px 0; }
+
+    .quiz-meta { display: flex; justify-content: space-around; font-weight: 900; margin: 10px 0 20px; }
+    .question { font-size: 3rem; font-weight: 900; margin: 20px 0 8px; color: #ffe27a; }
+    .prompt { font-size: 1rem; color: #d9c8ff; }
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .choice-btn { font-family: inherit; font-size: 1.2rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; color: #4a3f6b; box-shadow: 0 4px 0 rgba(0,0,0,.25); cursor: pointer; }
+    .choice-btn.correct { background: #c8f7d6; }
+    .choice-btn.wrong { background: #ffd6d6; opacity: .6; }
+    .choice-btn:disabled { cursor: default; }
+    .feedback { min-height: 1.6rem; font-size: 1.2rem; font-weight: 900; margin-top: 14px; color: #ffe27a; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <section id="start-screen">
+      <h1>🈶 漢字ハンター</h1>
+      <p class="sub">よみクエストに こたえて、ふういんされた レア漢字カードを 解放しよう！</p>
+      <div class="menu-board">
+        <h2>🎴 漢字カードずかん</h2>
+        <div class="card-count"><span id="card-count">0</span>/<span id="card-total">0</span> まい</div>
+        <div id="card-grid" class="card-grid"></div>
+      </div>
+      <div id="level-select"></div>
+    </section>
+
+    <section id="play-screen">
+      <div class="quiz-meta">
+        <span>せいかい: <span id="stat-correct">0</span></span>
+        <span>もんだい: <span id="stat-num">1</span>/<span id="stat-total">10</span></span>
+      </div>
+      <div class="prompt">これは なんてよむ？</div>
+      <div class="question" id="question-display">?</div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { KiraShell } from '../../core/shell.js';
+    import * as Store from '../../core/store.js';
+    import { loadQuiz, KiraQuizEngine } from '../quiz/engine.js';
+    import { showUnlockToast } from '../../core/questSkin.js';
+
+    const GAME_ID = 'kirakira-kanji-hunter';
+    const GRADES = [
+      { quizId: 'kirakira-kanji-g4', label: '小4の漢字', rare: false },
+      { quizId: 'kirakira-kanji-g5', label: '小5の漢字（レア）', rare: true }
+    ];
+
+    const startScreen = document.getElementById('start-screen');
+    const playScreen = document.getElementById('play-screen');
+    function showScreen(el) {
+      [startScreen, playScreen].forEach((s) => s.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    // 図鑑グリッドは全学年ぶんの問題を先読みして合成する（漢字ハンター固有: カードの正体=問題文そのもの）
+    const quizzes = await Promise.all(GRADES.map((g) => loadQuiz(g.quizId)));
+    const ALL_CARDS = [];
+    quizzes.forEach((q, i) => {
+      q.questions.forEach((item) => ALL_CARDS.push({ kanji: item.q, reading: item.a, rare: GRADES[i].rare }));
+    });
+
+    function renderCards() {
+      const unlocked = Store.getQuestProgress(GAME_ID).unlockedItems || [];
+      document.getElementById('card-total').textContent = String(ALL_CARDS.length);
+      document.getElementById('card-count').textContent = String(unlocked.length);
+      document.getElementById('card-grid').innerHTML = ALL_CARDS.map((c) => {
+        const has = unlocked.indexOf(c.kanji) !== -1;
+        const cls = 'kanji-card' + (has ? ' unlocked' : '') + (has && c.rare ? ' rare' : '');
+        return `<div class="${cls}" title="${has ? c.reading : '？？？'}">${has ? c.kanji : '封'}</div>`;
+      }).join('');
+    }
+    renderCards();
+
+    const dom = {
+      questionEl: document.getElementById('question-display'),
+      promptEl: { set textContent(v) {} },
+      choicesEl: document.getElementById('choices'),
+      feedbackEl: document.getElementById('feedback'),
+      statCorrectEl: document.getElementById('stat-correct'),
+      statNumEl: document.getElementById('stat-num'),
+      statTotalEl: document.getElementById('stat-total')
+    };
+
+    const shell = new KiraShell({ gameId: GAME_ID, title: '🈶 漢字ハンター' });
+    let currentEngine = null;
+
+    function startGrade(grade, quiz) {
+      currentEngine = new KiraQuizEngine(shell, quiz, dom, {
+        onCorrect(problem) {
+          const isNew = Store.unlockQuestItem(GAME_ID, problem.text);
+          if (isNew) {
+            showUnlockToast({ emoji: problem.text, name: `${problem.text}（${problem.answer}）` });
+            renderCards();
+          }
+        },
+        onFinish(result) {
+          shell.showResult(result);
+        }
+      });
+      shell.onRetry(() => { showScreen(startScreen); });
+      showScreen(playScreen);
+      shell.startGame(() => currentEngine.startLevel(0));
+    }
+
+    const container = document.getElementById('level-select');
+    GRADES.forEach((grade, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'level-btn';
+      btn.textContent = grade.label;
+      btn.addEventListener('click', () => startGrade(grade, quizzes[i]));
+      container.appendChild(btn);
+    });
+
+    showScreen(startScreen);
+  </script>
+</body>
+</html>

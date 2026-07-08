@@ -215,7 +215,7 @@ export class QuizEngine {
       if (this.remainingPool.length === 0) this.remainingPool = this.quiz.questions.slice();
       const idx = Math.floor(Math.random() * this.remainingPool.length);
       const q = this.remainingPool.splice(idx, 1)[0];
-      return { text: q.q, answer: q.a };
+      return { text: q.q, answer: q.a, meta: q.meta };
     }
     if (this.presetQueue && this.presetQueue.length > 0) return this.presetQueue.shift();
     const level = this.quiz.levels[this.levelIndex];
