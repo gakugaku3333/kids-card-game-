@@ -171,5 +171,35 @@ export function isFirstTimeCorrect(setId, targetKey) {
   return isFirst;
 }
 
+// おうちのひとメニューの「せいちょうレポート」用データ。
+// できるようになったこと（seenIdsの種類数）をゲームごとに返す。プレイしたことのないゲームは含めない。
+export function getGrowthSummary() {
+  const sets = Object.keys(data.pickProgress)
+    .map((setId) => ({
+      setId,
+      seenCount: (data.pickProgress[setId].seenIds || []).length,
+      level: data.pickProgress[setId].level || 0
+    }))
+    .filter((s) => s.seenCount > 0);
+  return {
+    playCount: data.playCount,
+    stickerCount: getUniqueCount(),
+    stickerTotal: STICKERS.length,
+    sets
+  };
+}
+
+// 「成長したら次のあそびが解放される」の判定条件。しきい値は保守的に設定し、
+// 本人がある程度あそびこんでから初めて成立するようにする。
+const GROWTH_UNLOCK_PLAY_COUNT = 20;
+const GROWTH_UNLOCK_TOTAL_SEEN = 30;
+
+export function isGrowthUnlocked() {
+  if (data.playCount >= GROWTH_UNLOCK_PLAY_COUNT) return true;
+  const totalSeen = Object.keys(data.pickProgress)
+    .reduce((sum, setId) => sum + (data.pickProgress[setId].seenIds || []).length, 0);
+  return totalSeen >= GROWTH_UNLOCK_TOTAL_SEEN;
+}
+
 export function getPlayCount() { return data.playCount; }
 export function reload() { data = load(); return data; }

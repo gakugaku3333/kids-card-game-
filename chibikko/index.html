@@ -29,6 +29,7 @@
   }
   .game-card img { width: 100%; height: 100%; object-fit: contain; }
   .game-card:active { transform: scale(.95); }
+  .game-card.teaser { font-size: 2.6rem; background: linear-gradient(#fff6ec, #ffe6c4); }
   @media (max-width: 380px) { #cards { gap: 14px; } }
 </style>
 </head>
@@ -69,6 +70,17 @@
     });
     cardsEl.appendChild(btn);
   });
+
+  // 「成長したら解放」の準備: 本人が十分あそびこんだら、次のあそびが来る予感だけを見せる。
+  // まだ本体のゲームは無いので遷移先は持たせず、タップしても音声だけ流す（誤タップで壊れない設計を維持）。
+  if (Store.isGrowthUnlocked()) {
+    const teaser = document.createElement('button');
+    teaser.className = 'game-card teaser';
+    teaser.setAttribute('aria-label', 'つぎのあそび');
+    teaser.textContent = '🎁';
+    teaser.addEventListener('click', () => Voice.speak('growth-teaser'));
+    cardsEl.appendChild(teaser);
+  }
 </script>
 </body>
 </html>

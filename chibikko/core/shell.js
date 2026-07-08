@@ -56,6 +56,16 @@ function injectStyles() {
       background: linear-gradient(#9bd4ff, #6bb8f5); box-shadow: 0 6px 0 #4a90d9;
     }
     .toddler-btn-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .toddler-growth-report {
+      text-align: left; max-height: 220px; overflow-y: auto; margin: 8px 0 4px;
+      background: #fff6ec; border-radius: 16px; padding: 10px 14px;
+    }
+    .toddler-growth-row {
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: .92rem; color: #5a4632; padding: 4px 0; border-bottom: 1px solid #ffe6c4;
+    }
+    .toddler-growth-row:last-child { border-bottom: none; }
+    .toddler-growth-empty { font-size: .9rem; color: #a98; margin: 6px 0; }
     @media (max-height: 700px) {
       .toddler-card { padding: 20px 16px; }
       .toddler-emoji { font-size: 2.6rem; }
@@ -133,6 +143,7 @@ export class ToddlerShell {
       <div class="toddler-card">
         <div class="toddler-emoji">👨‍👩‍👧</div>
         <p style="font-weight:900;color:#5a4632;">おうちのひとメニュー</p>
+        <div id="toddler-growth-report" class="toddler-growth-report"></div>
         <div class="toddler-btn-row">
           <button class="toddler-btn" id="toddler-gate-mute">🔈</button>
           <button class="toddler-btn secondary" id="toddler-gate-close">✖️</button>
@@ -149,8 +160,35 @@ export class ToddlerShell {
     this._gateModal = modal;
   }
 
+  async _renderGrowthReport() {
+    const el = document.getElementById('toddler-growth-report');
+    if (!el) return;
+    const summary = Store.getGrowthSummary();
+    if (summary.playCount === 0) {
+      el.innerHTML = '<p class="toddler-growth-empty">まだ きろくが ないよ。あそぶと ここに たまるよ！</p>';
+      return;
+    }
+    let labels = {};
+    try {
+      const res = await fetch(asset('chibikko/data/games.json'));
+      const { games } = await res.json();
+      games.forEach((g) => { labels[g.id] = g.title; });
+    } catch (e) { /* ラベル取得失敗時はsetIdをそのまま表示 */ }
+
+    const rows = summary.sets.map((s) => {
+      const name = labels[s.setId] || s.setId;
+      return `<div class="toddler-growth-row"><span>${name}</span><span>${s.seenCount}しゅるい できたよ</span></div>`;
+    }).join('');
+
+    el.innerHTML =
+      `<div class="toddler-growth-row"><span>あそんだかいすう</span><span>${summary.playCount}かい</span></div>` +
+      `<div class="toddler-growth-row"><span>あつめたシール</span><span>${summary.stickerCount}/${summary.stickerTotal}</span></div>` +
+      rows;
+  }
+
   _openGate() {
     this._gateModal.classList.remove('hidden');
+    this._renderGrowthReport();
   }
 
   /**
