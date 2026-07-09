@@ -50,16 +50,20 @@ export function buy(id, price) {
   return true;
 }
 
-// 自己ベスト。correctが多いほど良い、という単純な比較（本家Phase Aと同じ設計）。
+// 自己ベスト。correctが多いほど良い、という単純な比較(本家Phase Aと同じ設計)。
+// timeが渡された場合はlowerIsBetter:trueで「タイムが短いほど良い」比較に切り替える(めいろEX等)。
 export function getBestScore(gameId) {
   return data.bestScores[gameId] || null;
 }
 
-export function recordScore(gameId, { correct = 0, total = 0, tokens = 0 } = {}) {
+export function recordScore(gameId, { correct = 0, total = 0, tokens = 0, time } = {}, { lowerIsBetter = false } = {}) {
   const prev = data.bestScores[gameId];
-  const isNewBest = !prev || correct > prev.correct;
+  const hasTime = typeof time === 'number';
+  const isNewBest = lowerIsBetter
+    ? (hasTime && (!prev || typeof prev.time !== 'number' || time < prev.time))
+    : (!prev || correct > prev.correct);
   if (isNewBest) {
-    data.bestScores[gameId] = { correct, total, tokens };
+    data.bestScores[gameId] = hasTime ? { correct, total, tokens, time } : { correct, total, tokens };
     save();
   }
   return { isNewBest, best: data.bestScores[gameId] };

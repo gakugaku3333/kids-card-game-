@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>めいろEX（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .game-container { max-width: 520px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; box-sizing: border-box; }
+  #level-screen, #play-screen { display: none; }
+  #level-screen.active, #play-screen.active { display: block; }
+
+  .lead { font-size: 1.05rem; font-weight: 700; color: #5b4b8a; line-height: 1.7; margin: 10px 0 22px; }
+  .level-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    display: block; width: 100%; max-width: 320px; margin: 12px auto;
+    border-radius: 22px; padding: 16px 20px; font-size: 1.2rem; color: #fff;
+    box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s;
+  }
+  .level-btn:active { transform: translateY(4px); box-shadow: none; }
+  .level-btn small { display: block; font-size: .82rem; font-weight: 700; opacity: .9; }
+  .lv-easy { background: linear-gradient(#7fe8d4, #4fd6bd); box-shadow: 0 5px 0 #2fae98; }
+  .lv-normal { background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 5px 0 #5b3fd6; }
+  .lv-hard { background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
+
+  .hud { display: flex; gap: 10px; margin-bottom: 10px; }
+  .hud-box { background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 4px; flex: 1; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+  .hud-label { font-size: .74rem; color: #9a8ac2; font-weight: 700; display: block; }
+  .hud-value { font-size: 1.2rem; font-weight: 900; color: #4a3f6b; }
+
+  #maze-canvas { background: #fff; border-radius: 20px; box-shadow: 0 8px 18px rgba(91,75,138,.2); touch-action: none; display: block; margin: 0 auto; }
+
+  #reveal-label {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    flex-direction: column; pointer-events: none; z-index: 500;
+  }
+  #reveal-label.show { display: flex; }
+  #reveal-label .rl-emoji { font-size: 4.2rem; animation: rl-pop .5s ease; filter: drop-shadow(0 6px 10px rgba(0,0,0,.2)); }
+  #reveal-label .rl-name { font-size: 1.5rem; font-weight: 900; color: #7c5cff; background: #fff; border-radius: 50px; padding: 8px 22px; margin-top: 8px; box-shadow: 0 6px 14px rgba(91,75,138,.25); }
+  @keyframes rl-pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <section id="level-screen" class="active">
+    <div style="font-size:2.6rem; margin-top:6px;">🧵✨</div>
+    <p class="lead">ゆびで なぞって すすむと……<br>ゴールの あとに「え」が うかびあがるよ！<br>むずかしさを えらんでね。</p>
+    <button class="level-btn lv-easy" data-level="easy">やさしい<small>ちいさい え・2つ</small></button>
+    <button class="level-btn lv-normal" data-level="normal">ふつう<small>ちょっと おおきい え・2つ</small></button>
+    <button class="level-btn lv-hard" data-level="hard">むずかしい<small>くわしい え・2つ</small></button>
+  </section>
+
+  <section id="play-screen">
+    <div class="hud">
+      <div class="hud-box"><span class="hud-label">え</span><span class="hud-value" id="hud-round">1/2</span></div>
+      <div class="hud-box"><span class="hud-label">タイム</span><span class="hud-value" id="hud-time">0:00</span></div>
+    </div>
+    <canvas id="maze-canvas"></canvas>
+  </section>
+</div>
+
+<div id="reveal-label"><div class="rl-emoji" id="rl-emoji"></div><div class="rl-name" id="rl-name"></div></div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import { buildMaze, SHAPES } from './shapes.js';
+
+  const shell = new KiraShell({ gameId: 'maze-ex', title: 'めいろEX' });
+
+  const levelScreen = document.getElementById('level-screen');
+  const playScreen = document.getElementById('play-screen');
+  const canvas = document.getElementById('maze-canvas');
+  const ctx = canvas.getContext('2d');
+  const hudRound = document.getElementById('hud-round');
+  const hudTime = document.getElementById('hud-time');
+  const revealLabel = document.getElementById('reveal-label');
+  const rlEmoji = document.getElementById('rl-emoji');
+  const rlName = document.getElementById('rl-name');
+
+  const TOKENS_PER_LEVEL = { easy: 3, normal: 4, hard: 5 };
+  const ROUNDS_PER_LEVEL = 2;
+
+  let level = 'easy';
+  let order = [];
+  let round = 0;
+  let elapsed = 0;
+  let maze = null, cols = 0, rows = 0, cell = 0, pad = 0;
+  let player = { r: 0, c: 0 };
+  let goal = { r: 0, c: 0 };
+  let trail = [];
+  let dragging = false;
+  let finished = false;
+  let revealT = 0; // 0=壁あり 1=壁なし(絵だけ)
+
+  function canMove(from, to) {
+    const dr = to.r - from.r, dc = to.c - from.c;
+    if (Math.abs(dr) + Math.abs(dc) !== 1) return false;
+    if (to.r < 0 || to.r >= rows || to.c < 0 || to.c >= cols) return false;
+    const w = maze[from.r][from.c];
+    if (dr === -1) return !w.top;
+    if (dr === 1) return !w.bottom;
+    if (dc === 1) return !w.right;
+    return !w.left;
+  }
+
+  function cellCenter({ r, c }) {
+    return { x: pad + c * cell + cell / 2, y: pad + r * cell + cell / 2 };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#ffb3d9';
+    ctx.lineWidth = cell * 0.4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (trail.length > 1) {
+      ctx.beginPath();
+      trail.forEach((p, i) => {
+        const { x, y } = cellCenter(p);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    if (revealT < 1) {
+      ctx.globalAlpha = 1 - revealT;
+      ctx.strokeStyle = '#b06de0';
+      ctx.lineWidth = Math.max(3, Math.min(5, cell * 0.12));
+      ctx.lineCap = 'round';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = pad + c * cell, y = pad + r * cell;
+          const w = maze[r][c];
+          ctx.beginPath();
+          if (w.top) { ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }
+          if (w.left) { ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }
+          if (w.right && c === cols - 1) { ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); }
+          if (w.bottom && r === rows - 1) { ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); }
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (revealT < 1) {
+      ctx.font = `${Math.floor(cell * 0.6)}px sans-serif`;
+      const g = cellCenter(goal);
+      ctx.fillText('✨', g.x, g.y);
+    }
+    if (!finished || revealT < 1) {
+      ctx.font = `${Math.floor(cell * 0.68)}px sans-serif`;
+      const p = cellCenter(player);
+      ctx.fillText('🧚', p.x, p.y);
+    }
+  }
+
+  function setupRound() {
+    const shape = order[round];
+    const built = buildMaze(shape);
+    maze = built.grid; cols = built.cols; rows = built.rows;
+    player = { ...built.start };
+    goal = { ...built.goal };
+    trail = [{ ...player }];
+    finished = false;
+    revealT = 0;
+
+    const maxW = Math.min(window.innerWidth - 24, 496);
+    const maxH = window.innerHeight - 200;
+    pad = 12;
+    cell = Math.floor(Math.min((maxW - pad * 2) / cols, (maxH - pad * 2) / rows));
+    canvas.width = cell * cols + pad * 2;
+    canvas.height = cell * rows + pad * 2;
+    hudRound.textContent = `${round + 1}/${ROUNDS_PER_LEVEL}`;
+    draw();
+  }
+
+  function pointerPos(ev) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (ev.clientX - rect.left) * (canvas.width / rect.width),
+      y: (ev.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  // 指の位置へ向かって、壁を通らず近づける限り1マスずつ進める(壁抜け防止の既定パターン)
+  function followFinger(pt) {
+    let moved = false;
+    for (let step = 0; step < 4; step++) {
+      const cur = cellCenter(player);
+      const curDist = Math.hypot(pt.x - cur.x, pt.y - cur.y);
+      if (curDist < cell * 0.4) break;
+      const candidates = [
+        { r: player.r - 1, c: player.c },
+        { r: player.r + 1, c: player.c },
+        { r: player.r, c: player.c - 1 },
+        { r: player.r, c: player.c + 1 },
+      ].filter((n) => canMove(player, n));
+      let best = null, bestDist = curDist;
+      candidates.forEach((n) => {
+        const cc = cellCenter(n);
+        const d = Math.hypot(pt.x - cc.x, pt.y - cc.y);
+        if (d < bestDist) { best = n; bestDist = d; }
+      });
+      if (!best) break;
+      player = best;
+      const backIdx = trail.findIndex((t) => t.r === player.r && t.c === player.c);
+      if (backIdx >= 0) trail.length = backIdx + 1;
+      else trail.push({ ...player });
+      moved = true;
+    }
+    if (moved) {
+      draw();
+      if (player.r === goal.r && player.c === goal.c) onGoal();
+    }
+  }
+
+  function animateReveal(onDone) {
+    const start = performance.now();
+    const DURATION = 650;
+    function tick(now) {
+      revealT = Math.min(1, (now - start) / DURATION);
+      draw();
+      if (revealT < 1) shell.requestAnimationFrame(tick);
+      else onDone();
+    }
+    shell.requestAnimationFrame(tick);
+  }
+
+  function onGoal() {
+    if (finished) return;
+    finished = true;
+    dragging = false;
+    shell.sound.play('correct');
+
+    const shape = order[round];
+    animateReveal(() => {
+      rlEmoji.textContent = shape.emoji;
+      rlName.textContent = shape.name + 'だった！';
+      revealLabel.classList.add('show');
+      setTimeout(() => {
+        revealLabel.classList.remove('show');
+        round++;
+        if (round >= ROUNDS_PER_LEVEL) {
+          shell.showResult({ correct: ROUNDS_PER_LEVEL, total: ROUNDS_PER_LEVEL, tokens: TOKENS_PER_LEVEL[level], time: elapsed });
+        } else {
+          setupRound();
+        }
+      }, 1400);
+    });
+  }
+
+  canvas.addEventListener('pointerdown', (ev) => {
+    if (finished) return;
+    dragging = true;
+    try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 合成イベントでは失敗してよい */ }
+    followFinger(pointerPos(ev));
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!dragging || finished) return;
+    followFinger(pointerPos(ev));
+  });
+  ['pointerup', 'pointercancel'].forEach((evName) => {
+    canvas.addEventListener(evName, () => { dragging = false; });
+  });
+
+  function formatTime(sec) {
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  }
+
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function play() {
+    order = shuffled(SHAPES[level]);
+    round = 0;
+    elapsed = 0;
+    hudTime.textContent = '0:00';
+    levelScreen.classList.remove('active');
+    playScreen.classList.add('active');
+    shell.setInterval(() => {
+      elapsed++;
+      hudTime.textContent = formatTime(elapsed);
+    }, 1000);
+    setupRound();
+  }
+
+  document.querySelectorAll('.level-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      level = btn.dataset.level;
+      shell.startGame(play);
+    });
+  });
+
+  // 「もういちど」はレベル選択に戻す
+  shell.onRetry(() => {
+    playScreen.classList.remove('active');
+    levelScreen.classList.add('active');
+  });
+</script>
+</body>
+</html>
