@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ショップ（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab-btn {
+    flex: 1; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 18px; padding: 12px; font-size: 1.05rem; color: #7c5cff; background: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,.08);
+  }
+  .tab-btn.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 4px 0 #5b3fd6; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .cat-group { margin-bottom: 20px; }
+  .cat-title { font-weight: 900; color: #5b4b8a; font-size: 1.05rem; margin: 0 0 10px 4px; }
+  .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+  .item-card {
+    background: #fff; border-radius: 18px; padding: 12px 8px; text-align: center;
+    box-shadow: 0 4px 10px rgba(91,75,138,.12); border: 2px solid transparent;
+  }
+  .item-card.owned { border-color: #4fd6bd; }
+  .item-card .emoji { font-size: 1.9rem; }
+  .item-card .name { font-size: .78rem; font-weight: 700; color: #4a3f6b; margin: 4px 0; min-height: 2.1em; }
+  .item-card .rarity { font-size: .68rem; font-weight: 900; }
+  .rarity-common { color: #8aa0b8; }
+  .rarity-rare { color: #7c5cff; }
+  .rarity-superRare { color: #ff6bb0; }
+  .buy-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 14px; padding: 6px 10px; font-size: .82rem; color: #fff;
+    background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; margin-top: 4px;
+  }
+  .buy-btn:disabled { background: #d9c8ff; box-shadow: none; cursor: default; }
+  .owned-label { font-size: .78rem; font-weight: 900; color: #4fd6bd; margin-top: 6px; }
+
+  .gacha-box { background: #fff; border-radius: 26px; padding: 30px 20px; text-align: center; box-shadow: 0 8px 18px rgba(91,75,138,.18); }
+  .gacha-machine { font-size: 4rem; margin-bottom: 10px; transition: transform .1s; }
+  .gacha-machine.spin { animation: gs 0.08s linear infinite; }
+  @keyframes gs { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  .gacha-cost { color: #9a8ac2; font-weight: 700; margin-bottom: 16px; }
+  #gacha-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 24px; padding: 16px 36px; font-size: 1.2rem; color: #fff;
+    background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886;
+  }
+  #gacha-btn:disabled { background: #eee; box-shadow: none; color: #aaa; cursor: default; }
+  #gacha-result { margin-top: 18px; min-height: 70px; }
+  #gacha-result .g-emoji { font-size: 3rem; }
+  #gacha-result .g-name { font-weight: 900; color: #4a3f6b; margin-top: 4px; }
+  #gacha-result .g-dupe { font-size: .85rem; color: #ff8fbf; font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="shop">🛍️ ショップ</button>
+    <button class="tab-btn" data-tab="gacha">🎰 ガチャ</button>
+  </div>
+
+  <section id="panel-shop" class="panel active"></section>
+
+  <section id="panel-gacha" class="panel">
+    <div class="gacha-box">
+      <div class="gacha-machine" id="gacha-machine">🎁</div>
+      <div class="gacha-cost">1かい <span id="gacha-cost-value">25</span>🌟</div>
+      <button id="gacha-btn">ひく！</button>
+      <div id="gacha-result"></div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+  import { KiraShell } from './core/shell.js';
+  import * as Store from './core/store.js';
+  import { evaluateAndToast } from './core/badges.js';
+
+  const shell = new KiraShell({ gameId: 'shop', title: 'ショップ', homePath: 'index.html' });
+
+  const GACHA_COST = 25;
+  const RARITY_WEIGHT = { common: 60, rare: 30, superRare: 10 };
+  const RARITY_LABEL = { common: 'コモン', rare: 'レア', superRare: 'スーパーレア' };
+
+  const shopRes = await fetch('data/shop-items.json');
+  const shopData = await shopRes.json();
+  const ALL_ITEMS = [...shopData.outfit, ...shopData.furniture];
+  const CATEGORY_LABEL = {
+    hair: '💇 かみがた', top: '👕 トップス', bottom: '👖 ボトムス', accessory: '💍 アクセサリー',
+    wallpaper: '🖼️ かべがみ', floor: '🟫 ゆか', furniture: '🛋️ かぐ',
+  };
+
+  function renderShop() {
+    const panel = document.getElementById('panel-shop');
+    const byCategory = {};
+    ALL_ITEMS.forEach((it) => { (byCategory[it.category] = byCategory[it.category] || []).push(it); });
+    panel.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
+      <div class="cat-group">
+        <p class="cat-title">${CATEGORY_LABEL[cat] || cat}</p>
+        <div class="item-grid">
+          ${items.map((it) => {
+            const owned = Store.owns(it.id);
+            return `
+            <div class="item-card ${owned ? 'owned' : ''}" data-id="${it.id}">
+              <div class="emoji">${it.emoji}</div>
+              <div class="name">${it.name}</div>
+              <div class="rarity rarity-${it.rarity}">${RARITY_LABEL[it.rarity]}</div>
+              ${owned
+                ? `<div class="owned-label">✓ もってる</div>`
+                : `<button class="buy-btn" data-buy="${it.id}" data-price="${it.price}">${it.price}🌟 かう</button>`}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    panel.querySelectorAll('[data-buy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.buy;
+        const price = Number(btn.dataset.price);
+        if (Store.buy(id, price)) {
+          shell.sound.play('coin');
+          renderShop();
+          await evaluateAndToast();
+        }
+      });
+    });
+  }
+
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  function weightedPick() {
+    const roll = Math.random() * 100;
+    let acc = 0, rarity = 'common';
+    for (const [r, w] of Object.entries(RARITY_WEIGHT)) {
+      acc += w;
+      if (roll < acc) { rarity = r; break; }
+    }
+    const pool = ALL_ITEMS.filter((it) => it.rarity === rarity);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  const gachaBtn = document.getElementById('gacha-btn');
+  const gachaMachine = document.getElementById('gacha-machine');
+  const gachaResult = document.getElementById('gacha-result');
+  document.getElementById('gacha-cost-value').textContent = String(GACHA_COST);
+
+  gachaBtn.addEventListener('click', async () => {
+    if (Store.getTokens() < GACHA_COST) {
+      gachaResult.innerHTML = `<div class="g-dupe">🌟が たりないよ！</div>`;
+      return;
+    }
+    gachaBtn.disabled = true;
+    gachaResult.innerHTML = '';
+    gachaMachine.classList.add('spin');
+    Store.spendTokens(GACHA_COST);
+
+    await new Promise((r) => setTimeout(r, 900));
+    gachaMachine.classList.remove('spin');
+
+    const item = weightedPick();
+    const isNew = Store.grantItem(item.id);
+    Store.incrementGachaPulls();
+    if (!isNew) Store.addTokens(10);
+    shell.sound.play(item.rarity === 'superRare' ? 'coin' : 'correct');
+
+    gachaMachine.textContent = item.emoji;
+    gachaResult.innerHTML = `
+      <div class="g-emoji">${item.emoji}</div>
+      <div class="g-name">${item.name}（${RARITY_LABEL[item.rarity]}）</div>
+      ${!isNew ? `<div class="g-dupe">もうもってたので +10🌟 ボーナス！</div>` : ''}
+    `;
+    gachaBtn.disabled = false;
+    if (document.getElementById('panel-shop').classList.contains('active')) renderShop();
+    await evaluateAndToast();
+  });
+
+  renderShop();
+</script>
+</body>
+</html>

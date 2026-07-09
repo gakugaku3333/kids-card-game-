@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイルーム（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
+  .lead { text-align: center; font-weight: 700; color: #5b4b8a; margin: 4px 0 14px; font-size: .95rem; }
+
+  .wf-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; }
+  .wf-chip {
+    flex: none; background: #fff; border-radius: 14px; padding: 6px 10px; text-align: center; cursor: pointer;
+    border: 2px solid transparent; box-shadow: 0 3px 6px rgba(91,75,138,.1); font-size: .78rem; font-weight: 700; color: #4a3f6b;
+  }
+  .wf-chip.selected { border-color: #7c5cff; }
+  .wf-chip .emoji { font-size: 1.3rem; display: block; }
+
+  #room {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; border-radius: 20px; padding: 12px;
+    box-shadow: 0 8px 18px rgba(91,75,138,.18); margin-bottom: 18px; transition: background .3s;
+  }
+  .room-cell {
+    aspect-ratio: 1; border-radius: 10px; background: rgba(255,255,255,.55); display: flex;
+    align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; border: 2px dashed rgba(124,92,255,.25);
+  }
+  .room-cell.filled { border-style: solid; background: rgba(255,255,255,.85); }
+
+  .inv-title { font-weight: 900; color: #5b4b8a; margin: 4px 0 10px; }
+  .inv-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .inv-chip {
+    background: #fff; border-radius: 14px; padding: 8px 4px; text-align: center; cursor: pointer;
+    border: 2px solid transparent; box-shadow: 0 3px 6px rgba(91,75,138,.1);
+  }
+  .inv-chip.holding { border-color: #ff6bb0; }
+  .inv-chip .emoji { font-size: 1.4rem; }
+  .inv-chip .name { font-size: .64rem; font-weight: 700; color: #4a3f6b; margin-top: 2px; }
+  .hold-hint { text-align: center; font-size: .85rem; font-weight: 900; color: #ff6bb0; min-height: 1.4em; margin-bottom: 8px; }
+  .shop-hint { text-align: center; font-size: .82rem; color: #9a8ac2; margin: -6px 0 18px; }
+  .shop-hint a { color: #7c5cff; font-weight: 900; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="lead">かべがみ・ゆかを えらんで、かぐを タップで おいてみよう！</p>
+
+  <div class="wf-row" id="wallpaper-row"></div>
+  <div class="wf-row" id="floor-row"></div>
+
+  <div id="room"></div>
+
+  <p class="hold-hint" id="hold-hint">&nbsp;</p>
+  <p class="inv-title">🛋️ もちもの（タップして おく）</p>
+  <div class="inv-row" id="inv-row"></div>
+  <p class="shop-hint">かぐが たりないときは <a href="../../shop.html">🛍️ ショップ</a> や <a href="../dot-art-studio/index.html">🖼️ ドット絵スタジオ</a> のポスターをチェック！</p>
+</div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import * as Store from '../../core/store.js';
+  import { evaluateAndToast } from '../../core/badges.js';
+
+  const shell = new KiraShell({ gameId: 'my-room', title: 'マイルーム' });
+
+  const COLS = 6, ROWS = 4;
+
+  const shopRes = await fetch('../../data/shop-items.json');
+  const shopData = await shopRes.json();
+  const FURNITURE_ITEMS = shopData.furniture;
+  function findItem(id) { return FURNITURE_ITEMS.find((it) => it.id === id); }
+
+  let layout = Store.getRoomLayout();
+  let holding = null; // 手に持っている家具id(furn:xxx か dotart:xxx)
+
+  function persist() {
+    Store.setRoomLayout(layout);
+  }
+
+  function wallpaperStyle() {
+    const wp = layout.wallpaper && findItem(layout.wallpaper);
+    return wp ? 'linear-gradient(160deg, #fff 0%, #f3ecff 100%)' : '#f3ecff';
+  }
+
+  function renderWfRows() {
+    const wallpapers = FURNITURE_ITEMS.filter((it) => it.category === 'wallpaper').filter((it) => Store.owns(it.id));
+    const floors = FURNITURE_ITEMS.filter((it) => it.category === 'floor').filter((it) => Store.owns(it.id));
+    const row = (items, key) => items.map((it) => `
+      <div class="wf-chip ${layout[key] === it.id ? 'selected' : ''}" data-key="${key}" data-id="${it.id}">
+        <span class="emoji">${it.emoji}</span>${it.name}
+      </div>`).join('') || `<div class="wf-chip" style="opacity:.5;">ショップで かべがみ/ゆかを かおう</div>`;
+    document.getElementById('wallpaper-row').innerHTML = row(wallpapers, 'wallpaper');
+    document.getElementById('floor-row').innerHTML = row(floors, 'floor');
+    document.querySelectorAll('.wf-chip[data-id]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.key;
+        layout[key] = layout[key] === chip.dataset.id ? null : chip.dataset.id;
+        persist();
+        renderWfRows();
+        renderRoom();
+      });
+    });
+  }
+
+  function emojiForPlaced(id) {
+    if (id.startsWith('dotart:')) {
+      const art = Store.getDotArtGallery().find((a) => a.id === id.slice(7));
+      return art ? '🖼️' : '❔';
+    }
+    const it = findItem(id);
+    return it ? it.emoji : '❔';
+  }
+
+  function renderRoom() {
+    const room = document.getElementById('room');
+    const floorItem = layout.floor && findItem(layout.floor);
+    room.style.background = floorItem ? '#fdf5ff' : '#f3ecff';
+    room.innerHTML = '';
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const placed = layout.furniture.find((f) => f.r === r && f.c === c);
+        const cell = document.createElement('div');
+        cell.className = `room-cell ${placed ? 'filled' : ''}`;
+        cell.textContent = placed ? emojiForPlaced(placed.id) : '';
+        cell.addEventListener('click', () => onCellClick(r, c, placed));
+        room.appendChild(cell);
+      }
+    }
+  }
+
+  async function onCellClick(r, c, placed) {
+    if (placed) {
+      layout.furniture = layout.furniture.filter((f) => !(f.r === r && f.c === c));
+      persist();
+      renderRoom();
+      renderInventory();
+      return;
+    }
+    if (!holding) return;
+    layout.furniture.push({ id: holding, r, c });
+    holding = null;
+    persist();
+    document.getElementById('hold-hint').textContent = '';
+    renderRoom();
+    renderInventory();
+    await evaluateAndToast();
+  }
+
+  function renderInventory() {
+    const ownedFurniture = FURNITURE_ITEMS.filter((it) => it.category === 'furniture' && Store.owns(it.id))
+      .map((it) => ({ id: it.id, emoji: it.emoji, name: it.name }));
+    const posters = Store.getDotArtGallery().map((a) => ({ id: `dotart:${a.id}`, emoji: '🖼️', name: a.name || 'ポスター' }));
+    const items = [...ownedFurniture, ...posters];
+    const row = document.getElementById('inv-row');
+    row.innerHTML = items.length
+      ? items.map((it) => `
+        <div class="inv-chip ${holding === it.id ? 'holding' : ''}" data-id="${it.id}">
+          <div class="emoji">${it.emoji}</div>
+          <div class="name">${it.name}</div>
+        </div>`).join('')
+      : `<div style="grid-column:1/-1;text-align:center;color:#bbb;">まだ かぐが ないよ</div>`;
+    row.querySelectorAll('.inv-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        holding = holding === chip.dataset.id ? null : chip.dataset.id;
+        document.getElementById('hold-hint').textContent = holding ? '👆 おきたい ばしょを タップしてね' : '';
+        renderInventory();
+      });
+    });
+  }
+
+  renderWfRows();
+  renderRoom();
+  renderInventory();
+</script>
+</body>
+</html>

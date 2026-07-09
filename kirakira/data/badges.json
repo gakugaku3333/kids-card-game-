@@ -1,0 +1,14 @@
+{
+  "badges": [
+    { "id": "first_bestscore", "name": "はじめてのじこベスト", "emoji": "🌟", "desc": "どれかのクエストで じこベストを つくった", "metric": "bestScoreCount", "threshold": 1, "reward": 5 },
+    { "id": "bestscore_5", "name": "ちょうせんカラー", "emoji": "🔥", "desc": "5つの クエストで じこベストを つくった", "metric": "bestScoreCount", "threshold": 5, "reward": 10 },
+    { "id": "bestscore_10", "name": "キラキラマスター", "emoji": "👑", "desc": "10このクエストで じこベストを つくった", "metric": "bestScoreCount", "threshold": 10, "reward": 20 },
+    { "id": "collector_10", "name": "コレクターのたまご", "emoji": "🎀", "desc": "アイテムを 10こ あつめた", "metric": "ownedItemCount", "threshold": 10, "reward": 10 },
+    { "id": "collector_20", "name": "おしゃれコレクター", "emoji": "💎", "desc": "アイテムを 20こ あつめた", "metric": "ownedItemCount", "threshold": 20, "reward": 20 },
+    { "id": "outfit_5", "name": "コーデデザイナー", "emoji": "👗", "desc": "コーデしゃしんを 5まい ほぞんした", "metric": "outfitCount", "threshold": 5, "reward": 10 },
+    { "id": "dotart_3", "name": "ドットえかき", "emoji": "🖼️", "desc": "ドットえを 3まい かいた", "metric": "dotArtCount", "threshold": 3, "reward": 10 },
+    { "id": "song_1", "name": "さっきょくかデビュー", "emoji": "🎵", "desc": "きょくを 1つ つくった", "metric": "songCount", "threshold": 1, "reward": 10 },
+    { "id": "furniture_5", "name": "マイルームコーディネーター", "emoji": "🛋️", "desc": "マイルームに かぐを 5つ おいた", "metric": "furnitureCount", "threshold": 5, "reward": 10 },
+    { "id": "gacha_5", "name": "ガチャずき", "emoji": "🎰", "desc": "ガチャを 5かい ひいた", "metric": "gachaPulls", "threshold": 5, "reward": 10 }
+  ]
+}

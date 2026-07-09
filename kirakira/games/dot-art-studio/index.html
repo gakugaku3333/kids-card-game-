@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドット絵スタジオ（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; text-align: center; }
+
+  .size-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+  .size-tab {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 14px; padding: 8px 16px; font-size: .92rem; color: #7c5cff; background: #fff;
+    box-shadow: 0 3px 0 rgba(0,0,0,.08);
+  }
+  .size-tab.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
+
+  #canvas-wrap { display: inline-block; background: #fff; border-radius: 16px; padding: 10px; box-shadow: 0 8px 18px rgba(91,75,138,.18); margin-bottom: 12px; }
+  #pixel-canvas { touch-action: none; display: block; image-rendering: pixelated; border-radius: 6px; }
+
+  .tool-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+  .tool-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 14px; padding: 8px 16px; font-size: .92rem; color: #7c5cff; background: #fff;
+    box-shadow: 0 3px 0 rgba(0,0,0,.08);
+  }
+  .tool-btn.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
+
+  .palette { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .swatch { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .swatch.selected { border-color: #4a3f6b; transform: scale(1.1); }
+  .swatch.eraser { background: #fff; border: 2px dashed #ccc; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+
+  .save-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; }
+  #name-input { font-family: inherit; border: 2px solid #d9c8ff; border-radius: 14px; padding: 8px 12px; font-size: .95rem; width: 140px; }
+  .save-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 18px; padding: 10px 22px; font-size: 1rem; color: #fff;
+    background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 4px 0 #d94886;
+  }
+
+  .gallery-title { font-weight: 900; color: #5b4b8a; margin: 4px 0 10px; text-align: left; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; }
+  .gallery-item { background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 3px 6px rgba(91,75,138,.1); }
+  .gallery-item img { width: 100%; image-rendering: pixelated; border-radius: 6px; display: block; }
+  .gallery-item .g-name { font-size: .68rem; font-weight: 700; color: #4a3f6b; margin-top: 4px; }
+  .poster-hint { font-size: .8rem; color: #9a8ac2; text-align: left; margin: -4px 0 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="size-tabs" id="size-tabs"></div>
+
+  <div id="canvas-wrap"><canvas id="pixel-canvas"></canvas></div>
+
+  <div class="tool-row" id="tool-row">
+    <button class="tool-btn active" data-tool="pen">✏️ ペン</button>
+    <button class="tool-btn" data-tool="fill">🪣 ぬりつぶし</button>
+  </div>
+
+  <div class="palette" id="palette"></div>
+
+  <div class="save-row">
+    <input id="name-input" type="text" placeholder="さくひんの なまえ" maxlength="12">
+    <button class="save-btn" id="save-btn">💾 ほぞん</button>
+  </div>
+
+  <p class="gallery-title">🖼️ ギャラリー</p>
+  <p class="poster-hint">ほぞんした えは <a href="../my-room/index.html">マイルーム</a> に「ポスター」として かざれるよ</p>
+  <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import * as Store from '../../core/store.js';
+  import { evaluateAndToast } from '../../core/badges.js';
+
+  const shell = new KiraShell({ gameId: 'dot-art-studio', title: 'ドット絵スタジオ' });
+
+  const SIZES = [16, 24, 32];
+  const COLORS = ['#ff8fbf', '#ff5c5c', '#ffa94d', '#ffd43b', '#69db7c', '#63e6be', '#66d9ef', '#4dabf7', '#9775fa', '#f783ac', '#b08968', '#495057'];
+  const DISPLAY_PX = 320;
+
+  let gridSize = 16;
+  let pixels = [];
+  let tool = 'pen';
+  let color = COLORS[0];
+  let drawing = false;
+
+  const canvas = document.getElementById('pixel-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resetPixels() {
+    pixels = Array.from({ length: gridSize * gridSize }, () => null);
+  }
+
+  function cellSize() { return DISPLAY_PX / gridSize; }
+
+  function draw() {
+    const cs = cellSize();
+    canvas.width = DISPLAY_PX;
+    canvas.height = DISPLAY_PX;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, DISPLAY_PX, DISPLAY_PX);
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const v = pixels[r * gridSize + c];
+        if (v) {
+          ctx.fillStyle = v;
+          ctx.fillRect(c * cs, r * cs, cs, cs);
+        }
+      }
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= gridSize; i++) {
+      ctx.beginPath(); ctx.moveTo(i * cs, 0); ctx.lineTo(i * cs, DISPLAY_PX); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * cs); ctx.lineTo(DISPLAY_PX, i * cs); ctx.stroke();
+    }
+  }
+
+  function cellAt(ev) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (ev.clientX - rect.left) * (DISPLAY_PX / rect.width);
+    const y = (ev.clientY - rect.top) * (DISPLAY_PX / rect.height);
+    const cs = cellSize();
+    const c = Math.min(gridSize - 1, Math.max(0, Math.floor(x / cs)));
+    const r = Math.min(gridSize - 1, Math.max(0, Math.floor(y / cs)));
+    return { r, c };
+  }
+
+  function floodFill(startR, startC, target, replacement) {
+    if (target === replacement) return;
+    const stack = [[startR, startC]];
+    while (stack.length) {
+      const [r, c] = stack.pop();
+      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+      if (pixels[r * gridSize + c] !== target) continue;
+      pixels[r * gridSize + c] = replacement;
+      stack.push([r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]);
+    }
+  }
+
+  function paintAt(ev) {
+    const { r, c } = cellAt(ev);
+    const idx = r * gridSize + c;
+    if (tool === 'fill') {
+      floodFill(r, c, pixels[idx], color);
+    } else {
+      pixels[idx] = color;
+    }
+    draw();
+  }
+
+  canvas.addEventListener('pointerdown', (ev) => {
+    drawing = true;
+    try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* noop */ }
+    paintAt(ev);
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!drawing || tool === 'fill') return;
+    paintAt(ev);
+  });
+  ['pointerup', 'pointercancel'].forEach((evName) => canvas.addEventListener(evName, () => { drawing = false; }));
+
+  function renderSizeTabs() {
+    document.getElementById('size-tabs').innerHTML = SIZES.map((s) =>
+      `<button class="size-tab ${s === gridSize ? 'active' : ''}" data-size="${s}">${s}×${s}</button>`
+    ).join('');
+    document.querySelectorAll('.size-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (!confirm('サイズを かえると いまの えは きえちゃうよ。いい？')) return;
+        gridSize = Number(btn.dataset.size);
+        resetPixels();
+        renderSizeTabs();
+        draw();
+      });
+    });
+  }
+
+  function renderTools() {
+    document.querySelectorAll('.tool-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tool = btn.dataset.tool;
+        document.querySelectorAll('.tool-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      });
+    });
+  }
+
+  function renderPalette() {
+    const pal = document.getElementById('palette');
+    pal.innerHTML = COLORS.map((c) => `<div class="swatch ${c === color ? 'selected' : ''}" data-color="${c}" style="background:${c};"></div>`).join('')
+      + `<div class="swatch eraser ${color === null ? 'selected' : ''}" data-color="">🧹</div>`;
+    pal.querySelectorAll('.swatch').forEach((sw) => {
+      sw.addEventListener('click', () => {
+        color = sw.dataset.color || null;
+        renderPalette();
+      });
+    });
+  }
+
+  function renderGallery() {
+    const grid = document.getElementById('gallery-grid');
+    const arts = Store.getDotArtGallery().slice().reverse();
+    grid.innerHTML = arts.length
+      ? arts.map((a) => `<div class="gallery-item"><img src="${a.dataUrl}" alt="${a.name}"><div class="g-name">${a.name}</div></div>`).join('')
+      : `<div style="grid-column:1/-1;color:#bbb;">まだ ないよ</div>`;
+  }
+
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = gridSize;
+    exportCanvas.height = gridSize;
+    const ectx = exportCanvas.getContext('2d');
+    ectx.imageSmoothingEnabled = false;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const v = pixels[r * gridSize + c];
+        if (v) { ectx.fillStyle = v; ectx.fillRect(c, r, 1, 1); }
+      }
+    }
+    const name = document.getElementById('name-input').value.trim() || 'さくひん';
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    Store.saveDotArt({ id, name, size: gridSize, dataUrl: exportCanvas.toDataURL('image/png'), createdAt: Date.now() });
+    shell.sound.play('coin');
+    document.getElementById('name-input').value = '';
+    renderGallery();
+    await evaluateAndToast();
+  });
+
+  resetPixels();
+  renderSizeTabs();
+  renderTools();
+  renderPalette();
+  renderGallery();
+  draw();
+</script>
+</body>
+</html>

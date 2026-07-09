@@ -11,6 +11,12 @@
     { "id": "typing-race", "title": "タイピングねこレース", "emoji": "⌨️", "path": "games/typing-race/index.html" },
     { "id": "memory-ex", "title": "しんけいすいじゃくEX", "emoji": "🃏", "path": "games/memory-ex/index.html" },
     { "id": "picross-mini", "title": "ピクロスmini", "emoji": "🧩", "path": "games/picross-mini/index.html" },
+    { "id": "coord-studio", "title": "コーデスタジオ", "emoji": "👗", "path": "games/coord-studio/index.html" },
+    { "id": "my-room", "title": "マイルーム", "emoji": "🛋️", "path": "games/my-room/index.html" },
+    { "id": "dot-art-studio", "title": "ドット絵スタジオ", "emoji": "🖼️", "path": "games/dot-art-studio/index.html" },
+    { "id": "rhythm-melody", "title": "リズム＆メロディ", "emoji": "🎵", "path": "games/rhythm-melody/index.html" },
+    { "id": "shop", "title": "ショップ／ガチャ", "emoji": "🛍️", "path": "shop.html" },
+    { "id": "badges", "title": "バッジずかん", "emoji": "🎖️", "path": "badges.html" },
     { "id": "fb-review", "title": "リベンジクエスト", "emoji": "🔥", "path": "games/quiz/index.html?mode=fb-review" }
   ]
 }

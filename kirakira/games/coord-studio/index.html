@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コーデスタジオ（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
+
+  .theme-banner {
+    background: linear-gradient(#fff0f8, #ffe6f4); border: 2px solid #ffc2e0; border-radius: 20px;
+    padding: 12px 16px; text-align: center; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .theme-banner .t-label { font-size: .78rem; color: #ff2f92; font-weight: 900; }
+  .theme-banner .t-text { font-weight: 900; color: #4a3f6b; font-size: 1rem; }
+  .theme-reroll { font-family: inherit; border: none; background: #fff; border-radius: 50%; width: 34px; height: 34px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,.1); }
+
+  .preview-card {
+    background: #fff; border-radius: 24px; padding: 20px; text-align: center;
+    box-shadow: 0 8px 18px rgba(91,75,138,.18); margin-bottom: 18px;
+  }
+  .preview-stack { display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+  .p-hair { font-size: 2.2rem; }
+  .p-face { font-size: 4rem; }
+  .p-top { font-size: 2.2rem; margin-top: -12px; }
+  .p-bottom { font-size: 2.2rem; margin-top: -8px; }
+  .p-acc { position: absolute; top: 4px; right: 30%; font-size: 1.6rem; }
+  .save-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 22px; padding: 12px 26px; font-size: 1.05rem; color: #fff; margin-top: 12px;
+    background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886;
+  }
+
+  .cat-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
+  .cat-tab {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer; white-space: nowrap;
+    border-radius: 14px; padding: 8px 14px; font-size: .88rem; color: #7c5cff; background: #fff;
+    box-shadow: 0 3px 0 rgba(0,0,0,.08);
+  }
+  .cat-tab.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
+  .item-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin-bottom: 20px; }
+  .item-chip {
+    background: #fff; border-radius: 14px; padding: 8px 4px; text-align: center; cursor: pointer;
+    border: 2px solid transparent; box-shadow: 0 3px 6px rgba(91,75,138,.1);
+  }
+  .item-chip.selected { border-color: #ff6bb0; }
+  .item-chip.locked { opacity: .4; cursor: default; }
+  .item-chip .emoji { font-size: 1.5rem; }
+  .item-chip .name { font-size: .66rem; font-weight: 700; color: #4a3f6b; margin-top: 2px; }
+  .shop-hint { text-align: center; font-size: .82rem; color: #9a8ac2; margin: -8px 0 20px; }
+  .shop-hint a { color: #7c5cff; font-weight: 900; }
+
+  .gallery-title { font-weight: 900; color: #5b4b8a; margin: 4px 0 10px; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+  .gallery-item { background: #fff; border-radius: 14px; padding: 8px 2px; text-align: center; font-size: 1.5rem; box-shadow: 0 3px 6px rgba(91,75,138,.1); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="theme-banner">
+    <div>
+      <div class="t-label">きょうのおだい</div>
+      <div class="t-text" id="theme-text">-</div>
+    </div>
+    <button class="theme-reroll" id="theme-reroll">🔄</button>
+  </div>
+
+  <div class="preview-card">
+    <div class="preview-stack">
+      <span class="p-acc" id="p-acc"></span>
+      <span class="p-hair" id="p-hair"></span>
+      <span class="p-face">😊</span>
+      <span class="p-top" id="p-top"></span>
+      <span class="p-bottom" id="p-bottom"></span>
+    </div>
+    <button class="save-btn" id="save-btn">📸 しゃしんを ほぞんする</button>
+  </div>
+
+  <div class="cat-tabs" id="cat-tabs"></div>
+  <div class="item-row" id="item-row"></div>
+  <p class="shop-hint">もっていない アイテムは <a href="../../shop.html">🛍️ ショップ</a> で てにいれよう</p>
+
+  <p class="gallery-title">📸 コーデギャラリー</p>
+  <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import * as Store from '../../core/store.js';
+  import { evaluateAndToast } from '../../core/badges.js';
+
+  const shell = new KiraShell({ gameId: 'coord-studio', title: 'コーデスタジオ' });
+
+  const THEMES = ['あまい系でコーデして', 'ゆきの女王ふうに', 'ようせいっぽく', 'がっこうスタイルで', 'パーティドレスアップ', 'アイドルステージふう', 'おさんぽスタイル'];
+
+  const shopRes = await fetch('../../data/shop-items.json');
+  const shopData = await shopRes.json();
+  const OUTFIT_ITEMS = shopData.outfit;
+  const CATEGORIES = [
+    { key: 'hair', label: '💇 かみがた' },
+    { key: 'top', label: '👕 トップス' },
+    { key: 'bottom', label: '👖 ボトムス' },
+    { key: 'accessory', label: '💍 アクセサリー' },
+  ];
+
+  const selected = { hair: null, top: null, bottom: null, accessory: null };
+  let activeCat = 'hair';
+
+  function itemsOf(cat) { return OUTFIT_ITEMS.filter((it) => it.category === cat); }
+  function findItem(id) { return OUTFIT_ITEMS.find((it) => it.id === id); }
+
+  function renderPreview() {
+    document.getElementById('p-hair').textContent = selected.hair ? findItem(selected.hair).emoji : '';
+    document.getElementById('p-top').textContent = selected.top ? findItem(selected.top).emoji : '👚';
+    document.getElementById('p-bottom').textContent = selected.bottom ? findItem(selected.bottom).emoji : '👖';
+    document.getElementById('p-acc').textContent = selected.accessory ? findItem(selected.accessory).emoji : '';
+  }
+
+  function renderTabs() {
+    document.getElementById('cat-tabs').innerHTML = CATEGORIES.map((c) =>
+      `<button class="cat-tab ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
+    ).join('');
+    document.querySelectorAll('.cat-tab').forEach((btn) => {
+      btn.addEventListener('click', () => { activeCat = btn.dataset.cat; renderTabs(); renderItems(); });
+    });
+  }
+
+  function renderItems() {
+    const row = document.getElementById('item-row');
+    row.innerHTML = itemsOf(activeCat).map((it) => {
+      const owned = Store.owns(it.id);
+      const isSel = selected[activeCat] === it.id;
+      return `
+      <div class="item-chip ${isSel ? 'selected' : ''} ${owned ? '' : 'locked'}" data-id="${it.id}" data-owned="${owned}">
+        <div class="emoji">${it.emoji}</div>
+        <div class="name">${owned ? it.name : '🔒 ' + it.price + '🌟'}</div>
+      </div>`;
+    }).join('');
+    row.querySelectorAll('.item-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        if (chip.dataset.owned !== 'true') return;
+        selected[activeCat] = selected[activeCat] === chip.dataset.id ? null : chip.dataset.id;
+        renderItems();
+        renderPreview();
+      });
+    });
+  }
+
+  function renderGallery() {
+    const grid = document.getElementById('gallery-grid');
+    const outfits = Store.getOutfits().slice().reverse();
+    grid.innerHTML = outfits.length
+      ? outfits.map((o) => `<div class="gallery-item">${o.hairEmoji || ''}${o.topEmoji || '👚'}</div>`).join('')
+      : `<div style="grid-column:1/-1;text-align:center;color:#bbb;">まだ ないよ</div>`;
+  }
+
+  function setTheme() {
+    document.getElementById('theme-text').textContent = THEMES[Math.floor(Math.random() * THEMES.length)];
+  }
+  document.getElementById('theme-reroll').addEventListener('click', setTheme);
+
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    Store.saveOutfit({
+      hair: selected.hair, top: selected.top, bottom: selected.bottom, accessory: selected.accessory,
+      hairEmoji: selected.hair ? findItem(selected.hair).emoji : '',
+      topEmoji: selected.top ? findItem(selected.top).emoji : '👚',
+      theme: document.getElementById('theme-text').textContent,
+    });
+    shell.sound.play('coin');
+    renderGallery();
+    await evaluateAndToast();
+  });
+
+  setTheme();
+  renderTabs();
+  renderItems();
+  renderPreview();
+  renderGallery();
+</script>
+</body>
+</html>

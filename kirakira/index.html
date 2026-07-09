@@ -78,6 +78,18 @@
   import * as Store from './core/store.js';
   import * as FireLog from './core/firelog.js';
 
+  // マイルームで選んだかべがみを、ハブの背景にも反映する(「模様替えがハブに反映される」の軽量版)
+  const WALLPAPER_BG = {
+    wall_pink: 'linear-gradient(160deg, #ffe3f0 0%, #ffd6e8 60%, #ffffff 100%)',
+    wall_star: 'linear-gradient(160deg, #2b2350 0%, #4a3f8a 60%, #efe6ff 100%)',
+    wall_stripe: 'linear-gradient(160deg, #fff0f8 0%, #ffe6f4 40%, #efe6ff 60%, #ffe6f4 80%, #fff0f8 100%)',
+    wall_castle: 'linear-gradient(160deg, #e6ddff 0%, #cbb8ff 60%, #efe6ff 100%)',
+  };
+  const wallpaper = Store.getRoomLayout().wallpaper;
+  if (wallpaper && WALLPAPER_BG[wallpaper]) {
+    document.body.style.background = WALLPAPER_BG[wallpaper];
+  }
+
   document.getElementById('kiraTokens').textContent = Store.getTokens();
   document.addEventListener('kirakira-tokens-changed', () => {
     document.getElementById('kiraTokens').textContent = Store.getTokens();

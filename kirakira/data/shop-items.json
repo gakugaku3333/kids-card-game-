@@ -1,0 +1,38 @@
+{
+  "outfit": [
+    { "id": "hair_twin", "category": "hair", "name": "ツインテール", "emoji": "🎀", "price": 15, "rarity": "common" },
+    { "id": "hair_wave", "category": "hair", "name": "ウェーブヘア", "emoji": "💇‍♀️", "price": 15, "rarity": "common" },
+    { "id": "hair_ribbon", "category": "hair", "name": "リボンヘア", "emoji": "🩰", "price": 35, "rarity": "rare" },
+    { "id": "hair_starclip", "category": "hair", "name": "スターピン", "emoji": "✨", "price": 60, "rarity": "superRare" },
+    { "id": "top_tshirt", "category": "top", "name": "Tシャツ", "emoji": "👕", "price": 15, "rarity": "common" },
+    { "id": "top_hoodie", "category": "top", "name": "パーカー", "emoji": "🧥", "price": 15, "rarity": "common" },
+    { "id": "top_sailor", "category": "top", "name": "セーラーふく", "emoji": "⛵", "price": 35, "rarity": "rare" },
+    { "id": "top_princess", "category": "top", "name": "プリンセストップス", "emoji": "👗", "price": 60, "rarity": "superRare" },
+    { "id": "bottom_skirt", "category": "bottom", "name": "スカート", "emoji": "👗", "price": 15, "rarity": "common" },
+    { "id": "bottom_jeans", "category": "bottom", "name": "ジーンズ", "emoji": "👖", "price": 15, "rarity": "common" },
+    { "id": "bottom_tutu", "category": "bottom", "name": "チュチュスカート", "emoji": "🩰", "price": 35, "rarity": "rare" },
+    { "id": "bottom_gown", "category": "bottom", "name": "ロングドレス", "emoji": "✨", "price": 60, "rarity": "superRare" },
+    { "id": "acc_ribbon", "category": "accessory", "name": "リボン", "emoji": "🎀", "price": 15, "rarity": "common" },
+    { "id": "acc_glasses", "category": "accessory", "name": "めがね", "emoji": "👓", "price": 15, "rarity": "common" },
+    { "id": "acc_crown", "category": "accessory", "name": "ティアラ", "emoji": "👑", "price": 40, "rarity": "rare" },
+    { "id": "acc_wings", "category": "accessory", "name": "ようせいのはね", "emoji": "🧚", "price": 70, "rarity": "superRare" }
+  ],
+  "furniture": [
+    { "id": "wall_pink", "category": "wallpaper", "name": "ピンクかべがみ", "emoji": "🌸", "price": 20, "rarity": "common" },
+    { "id": "wall_star", "category": "wallpaper", "name": "ほしぞらかべがみ", "emoji": "🌌", "price": 20, "rarity": "common" },
+    { "id": "wall_stripe", "category": "wallpaper", "name": "ストライプかべがみ", "emoji": "🎀", "price": 40, "rarity": "rare" },
+    { "id": "wall_castle", "category": "wallpaper", "name": "おしろかべがみ", "emoji": "🏰", "price": 70, "rarity": "superRare" },
+    { "id": "floor_wood", "category": "floor", "name": "きのゆか", "emoji": "🪵", "price": 20, "rarity": "common" },
+    { "id": "floor_pink", "category": "floor", "name": "ピンクじゅうたん", "emoji": "🩷", "price": 20, "rarity": "common" },
+    { "id": "floor_cloud", "category": "floor", "name": "くものゆか", "emoji": "☁️", "price": 40, "rarity": "rare" },
+    { "id": "floor_star", "category": "floor", "name": "きらきらゆか", "emoji": "✨", "price": 70, "rarity": "superRare" },
+    { "id": "furn_bed", "category": "furniture", "name": "ベッド", "emoji": "🛏️", "price": 25, "rarity": "common" },
+    { "id": "furn_desk", "category": "furniture", "name": "つくえ", "emoji": "🪑", "price": 25, "rarity": "common" },
+    { "id": "furn_shelf", "category": "furniture", "name": "ほんだな", "emoji": "📚", "price": 25, "rarity": "common" },
+    { "id": "furn_plant", "category": "furniture", "name": "かんようしょくぶつ", "emoji": "🪴", "price": 25, "rarity": "common" },
+    { "id": "furn_mirror", "category": "furniture", "name": "かがみ", "emoji": "🪞", "price": 45, "rarity": "rare" },
+    { "id": "furn_piano", "category": "furniture", "name": "ピアノ", "emoji": "🎹", "price": 45, "rarity": "rare" },
+    { "id": "furn_throne", "category": "furniture", "name": "おうじょのいす", "emoji": "🪑", "price": 80, "rarity": "superRare" },
+    { "id": "furn_unicorn", "category": "furniture", "name": "ユニコーンのぬいぐるみ", "emoji": "🦄", "price": 80, "rarity": "superRare" }
+  ]
+}

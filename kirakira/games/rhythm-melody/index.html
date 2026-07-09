@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リズム＆メロディ（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab-btn {
+    flex: 1; font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    border-radius: 18px; padding: 12px; font-size: 1rem; color: #7c5cff; background: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,.08);
+  }
+  .tab-btn.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 4px 0 #5b3fd6; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* --- リズムタップ --- */
+  .rt-hud { display: flex; gap: 10px; margin-bottom: 10px; }
+  .rt-hud-box { background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 4px; flex: 1; text-align: center; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+  .rt-hud-label { font-size: .74rem; color: #9a8ac2; font-weight: 700; display: block; }
+  .rt-hud-value { font-size: 1.15rem; font-weight: 900; color: #4a3f6b; }
+  #rt-track {
+    position: relative; height: 340px; background: #fff; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 8px 18px rgba(91,75,138,.18); margin-bottom: 12px; display: flex;
+  }
+  .rt-lane { flex: 1; position: relative; border-left: 1px solid #f0eaff; }
+  .rt-lane:first-child { border-left: none; }
+  .rt-judge-line { position: absolute; left: 0; right: 0; bottom: 56px; height: 4px; background: #ffc2e0; }
+  .rt-note { position: absolute; left: 8%; width: 84%; height: 26px; border-radius: 8px; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 6px rgba(0,0,0,.15); }
+  #rt-start { display: block; margin: 0 auto 14px; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 14px 32px; font-size: 1.15rem; color: #fff; background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
+  .rt-lane-btn-row { display: flex; gap: 6px; }
+  .rt-lane-btn {
+    flex: 1; font-family: inherit; font-weight: 900; border: none; cursor: pointer; height: 56px;
+    border-radius: 14px; font-size: 1.3rem; color: #fff; background: linear-gradient(#ffb3d9, #ff8fbf); box-shadow: 0 4px 0 #d9548f;
+  }
+  .rt-lane-btn:active { transform: translateY(3px); box-shadow: none; }
+  .rt-judge-toast { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); font-weight: 900; font-size: 1.3rem; pointer-events: none; opacity: 0; transition: all .25s; }
+  .rt-judge-toast.show { opacity: 1; transform: translateX(-50%) translateY(-14px); }
+
+  /* --- メロディメーカー --- */
+  .mm-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+  .mm-label { width: 40px; font-size: .75rem; font-weight: 900; color: #7c5cff; flex: none; }
+  .mm-steps { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; flex: 1; }
+  .mm-cell { aspect-ratio: 1; background: #f3ecff; border-radius: 4px; cursor: pointer; }
+  .mm-cell.on { background: linear-gradient(#a78bfa, #7c5cff); }
+  .mm-cell.beat { outline: 1px solid #ddcfff; }
+  .mm-cell.playhead { box-shadow: inset 0 0 0 2px #ff6bb0; }
+  .mm-controls { display: flex; gap: 8px; justify-content: center; margin: 14px 0; }
+  .mm-btn { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 18px; padding: 10px 20px; font-size: .95rem; color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 4px 0 #5b3fd6; }
+  .mm-btn.stop { background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 4px 0 #d94886; }
+  .mm-save-row { display: flex; gap: 8px; justify-content: center; margin: 14px 0 20px; }
+  #mm-name { font-family: inherit; border: 2px solid #d9c8ff; border-radius: 14px; padding: 8px 12px; font-size: .95rem; width: 140px; }
+  .mm-gallery-title { font-weight: 900; color: #5b4b8a; margin: 4px 0 10px; }
+  .mm-song-list { display: flex; flex-direction: column; gap: 8px; }
+  .mm-song-item { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 3px 6px rgba(91,75,138,.1); font-weight: 700; color: #4a3f6b; }
+  .mm-play-btn { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 12px; padding: 6px 14px; color: #fff; background: linear-gradient(#7fe8d4, #4fd6bd); box-shadow: 0 3px 0 #2fae98; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="rt">🎯 リズムタップ</button>
+    <button class="tab-btn" data-tab="mm">🎹 メロディメーカー</button>
+  </div>
+
+  <section id="panel-rt" class="panel active">
+    <div class="rt-hud">
+      <div class="rt-hud-box"><span class="rt-hud-label">スコア</span><span class="rt-hud-value" id="rt-score">0</span></div>
+      <div class="rt-hud-box"><span class="rt-hud-label">コンボ</span><span class="rt-hud-value" id="rt-combo">0</span></div>
+    </div>
+    <button id="rt-start">▶️ スタート</button>
+    <div id="rt-track">
+      <div class="rt-lane" data-lane="0"></div>
+      <div class="rt-lane" data-lane="1"></div>
+      <div class="rt-lane" data-lane="2"></div>
+      <div class="rt-lane" data-lane="3"></div>
+      <div class="rt-judge-line"></div>
+      <div class="rt-judge-toast" id="rt-toast"></div>
+    </div>
+    <div class="rt-lane-btn-row">
+      <button class="rt-lane-btn" data-lane="0">D</button>
+      <button class="rt-lane-btn" data-lane="1">F</button>
+      <button class="rt-lane-btn" data-lane="2">J</button>
+      <button class="rt-lane-btn" data-lane="3">K</button>
+    </div>
+  </section>
+
+  <section id="panel-mm" class="panel">
+    <div id="mm-grid"></div>
+    <div class="mm-controls">
+      <button class="mm-btn" id="mm-play">▶️ さいせい</button>
+      <button class="mm-btn stop" id="mm-stop">⏹ ていし</button>
+      <button class="mm-btn" id="mm-clear" style="background:linear-gradient(#eee,#ddd);box-shadow:0 4px 0 #ccc;color:#888;">🧹 クリア</button>
+    </div>
+    <div class="mm-save-row">
+      <input id="mm-name" type="text" placeholder="きょくの なまえ" maxlength="12">
+      <button class="mm-btn" id="mm-save">💾 ほぞん</button>
+    </div>
+    <p class="mm-gallery-title">🎵 つくったきょく</p>
+    <div class="mm-song-list" id="mm-song-list"></div>
+  </section>
+</div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import * as Store from '../../core/store.js';
+  import { evaluateAndToast } from '../../core/badges.js';
+
+  const shell = new KiraShell({ gameId: 'rhythm-melody', title: 'リズム＆メロディ' });
+
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+      if (btn.dataset.tab === 'rt') stopMelody();
+    });
+  });
+
+  let audioCtx = null;
+  function ac() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, dur, type = 'sine', vol = 0.18) {
+    const c = ac();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, c.currentTime);
+    gain.gain.setValueAtTime(vol, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(); osc.stop(c.currentTime + dur);
+  }
+  function drumHit() { tone(110, 0.12, 'triangle', 0.25); }
+
+  /* ==================== リズムタップ ==================== */
+  const LANE_COUNT = 4;
+  const ARRIVE_MS = 1500;
+  const JUDGE_WINDOW_MS = 320;
+  const TRACK_H = 340, JUDGE_Y = TRACK_H - 56;
+
+  let rtSchedule = [];
+  let rtSpawned = [];
+  let rtActive = [];
+  let rtStartTime = 0;
+  let rtScore = 0, rtCombo = 0, rtJudgedCount = 0, rtHitCount = 0;
+  let rtRunning = false;
+  let rtRafId = null;
+
+  function buildSchedule() {
+    const sched = [];
+    const count = 24;
+    let t = 1500;
+    for (let i = 0; i < count; i++) {
+      sched.push({ t, lane: Math.floor(Math.random() * LANE_COUNT), judged: false, el: null });
+      t += 550 + Math.floor(Math.random() * 200);
+    }
+    return sched;
+  }
+
+  function rtUpdateHud() {
+    document.getElementById('rt-score').textContent = String(rtScore);
+    document.getElementById('rt-combo').textContent = String(rtCombo);
+  }
+
+  function rtToast(text, cls) {
+    const el = document.getElementById('rt-toast');
+    el.textContent = text;
+    el.className = `rt-judge-toast show ${cls}`;
+    el.style.color = cls === 'perfect' ? '#ff6bb0' : cls === 'good' ? '#7c5cff' : '#aaa';
+    clearTimeout(rtToast._t);
+    rtToast._t = setTimeout(() => el.classList.remove('show'), 400);
+  }
+
+  function rtJudge(note, diffMs) {
+    note.judged = true;
+    rtJudgedCount++;
+    const abs = Math.abs(diffMs);
+    if (abs < 130) { rtScore += 100; rtCombo++; rtHitCount++; rtToast('Perfect!', 'perfect'); shell.sound.play('correct'); }
+    else if (abs < JUDGE_WINDOW_MS) { rtScore += 50; rtCombo++; rtHitCount++; rtToast('Good', 'good'); shell.sound.play('correct'); }
+    else { rtCombo = 0; rtToast('Miss', 'miss'); shell.sound.play('wrong'); }
+    if (note.el) note.el.remove();
+    rtUpdateHud();
+    checkRtEnd();
+  }
+
+  function checkRtEnd() {
+    if (rtJudgedCount >= rtSchedule.length && rtRunning) {
+      rtRunning = false;
+      cancelAnimationFrame(rtRafId);
+      document.getElementById('rt-start').disabled = false;
+      setTimeout(() => {
+        shell.showResult({ correct: rtHitCount, total: rtSchedule.length, tokens: Math.max(1, Math.round(rtHitCount / 3)) });
+      }, 400);
+    }
+  }
+
+  function rtLoop() {
+    if (!rtRunning) return;
+    const now = performance.now() - rtStartTime;
+    rtSchedule.forEach((note) => {
+      if (!note.spawned && now >= note.t - ARRIVE_MS) {
+        note.spawned = true;
+        const el = document.createElement('div');
+        el.className = 'rt-note';
+        el.style.top = '-30px';
+        el.style.transition = `top ${ARRIVE_MS}ms linear`;
+        document.querySelectorAll('.rt-lane')[note.lane].appendChild(el);
+        requestAnimationFrame(() => { el.style.top = `${JUDGE_Y - 3}px`; });
+        note.el = el;
+      }
+      if (!note.judged && note.spawned && now > note.t + JUDGE_WINDOW_MS) {
+        rtJudge(note, 9999);
+      }
+    });
+    rtRafId = requestAnimationFrame(rtLoop);
+  }
+
+  function startRhythm() {
+    ac();
+    document.querySelectorAll('.rt-note').forEach((el) => el.remove());
+    rtSchedule = buildSchedule();
+    rtScore = 0; rtCombo = 0; rtJudgedCount = 0; rtHitCount = 0;
+    rtUpdateHud();
+    rtRunning = true;
+    document.getElementById('rt-start').disabled = true;
+    rtStartTime = performance.now();
+    rtRafId = requestAnimationFrame(rtLoop);
+  }
+
+  document.getElementById('rt-start').addEventListener('click', () => shell.startGame(startRhythm));
+  // 「もういちど」はリズムタップ画面をリセットするだけ(遊ぶには再度スタートを押す)
+  shell.onRetry(() => {
+    document.querySelectorAll('.rt-note').forEach((el) => el.remove());
+    rtScore = 0; rtCombo = 0;
+    rtUpdateHud();
+    document.getElementById('rt-start').disabled = false;
+  });
+
+  function tapLane(lane) {
+    if (!rtRunning) return;
+    const now = performance.now() - rtStartTime;
+    let best = null, bestDiff = Infinity;
+    rtSchedule.forEach((note) => {
+      if (note.judged || note.lane !== lane) return;
+      const diff = now - note.t;
+      if (Math.abs(diff) < JUDGE_WINDOW_MS && Math.abs(diff) < bestDiff) { best = note; bestDiff = diff; }
+    });
+    if (best) rtJudge(best, bestDiff);
+  }
+
+  document.querySelectorAll('.rt-lane-btn').forEach((btn) => {
+    btn.addEventListener('click', () => tapLane(Number(btn.dataset.lane)));
+  });
+  const KEY_LANE = { d: 0, f: 1, j: 2, k: 3 };
+  document.addEventListener('keydown', (ev) => {
+    const lane = KEY_LANE[ev.key.toLowerCase()];
+    if (lane !== undefined) tapLane(lane);
+  });
+
+  /* ==================== メロディメーカー ==================== */
+  const STEPS = 16;
+  const PITCHES = [
+    { name: 'ド', freq: 523.25 }, { name: 'シ', freq: 493.88 }, { name: 'ラ', freq: 440.00 },
+    { name: 'ソ', freq: 392.00 }, { name: 'ファ', freq: 349.23 }, { name: 'ミ', freq: 329.63 },
+    { name: 'レ', freq: 293.66 }, { name: 'ド', freq: 261.63 },
+  ];
+  const ROWS = PITCHES.length + 1; // 最後の行はドラム
+  let mmGrid = Array.from({ length: ROWS }, () => Array(STEPS).fill(false));
+  let mmPlaying = false;
+  let mmStep = 0;
+  let mmTimer = null;
+  const STEP_MS = 220;
+
+  function renderMmGrid() {
+    const wrap = document.getElementById('mm-grid');
+    wrap.innerHTML = '';
+    for (let r = 0; r < ROWS; r++) {
+      const row = document.createElement('div');
+      row.className = 'mm-row';
+      const label = document.createElement('div');
+      label.className = 'mm-label';
+      label.textContent = r < PITCHES.length ? PITCHES[r].name : '🥁';
+      row.appendChild(label);
+      const steps = document.createElement('div');
+      steps.className = 'mm-steps';
+      for (let c = 0; c < STEPS; c++) {
+        const cell = document.createElement('div');
+        cell.className = `mm-cell ${mmGrid[r][c] ? 'on' : ''} ${c % 4 === 0 ? 'beat' : ''}`;
+        cell.addEventListener('click', () => {
+          mmGrid[r][c] = !mmGrid[r][c];
+          renderMmGrid();
+        });
+        steps.appendChild(cell);
+      }
+      row.appendChild(steps);
+      wrap.appendChild(row);
+    }
+  }
+
+  function playStep(col) {
+    for (let r = 0; r < ROWS; r++) {
+      if (!mmGrid[r][col]) continue;
+      if (r < PITCHES.length) tone(PITCHES[r].freq, 0.18, 'triangle', 0.16);
+      else drumHit();
+    }
+  }
+
+  function playFromGrid(grid) {
+    stopMelody();
+    ac();
+    mmPlaying = true;
+    mmStep = 0;
+    mmTimer = setInterval(() => {
+      document.querySelectorAll('.mm-cell.playhead').forEach((el) => el.classList.remove('playhead'));
+      for (let r = 0; r < grid.length; r++) {
+        if (!grid[r][mmStep]) continue;
+        if (r < PITCHES.length) tone(PITCHES[r].freq, 0.18, 'triangle', 0.16);
+        else drumHit();
+      }
+      document.querySelectorAll('.mm-steps').forEach((rowEl) => {
+        const cell = rowEl.children[mmStep];
+        if (cell) cell.classList.add('playhead');
+      });
+      mmStep = (mmStep + 1) % STEPS;
+    }, STEP_MS);
+  }
+
+  function stopMelody() {
+    mmPlaying = false;
+    clearInterval(mmTimer);
+    document.querySelectorAll('.mm-cell.playhead').forEach((el) => el.classList.remove('playhead'));
+  }
+
+  document.getElementById('mm-play').addEventListener('click', () => playFromGrid(mmGrid));
+  document.getElementById('mm-stop').addEventListener('click', stopMelody);
+  document.getElementById('mm-clear').addEventListener('click', () => {
+    stopMelody();
+    mmGrid = Array.from({ length: ROWS }, () => Array(STEPS).fill(false));
+    renderMmGrid();
+  });
+
+  function renderSongList() {
+    const list = document.getElementById('mm-song-list');
+    const songs = Store.getSongs().slice().reverse();
+    list.innerHTML = songs.length
+      ? songs.map((s, i) => `<div class="mm-song-item"><span>🎵 ${s.name}</span><button class="mm-play-btn" data-idx="${songs.length - 1 - i}">▶️</button></div>`).join('')
+      : `<div style="color:#bbb;">まだ ないよ</div>`;
+    list.querySelectorAll('.mm-play-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const s = Store.getSongs()[Number(btn.dataset.idx)];
+        if (s) playFromGrid(s.grid);
+      });
+    });
+  }
+
+  document.getElementById('mm-save').addEventListener('click', async () => {
+    const name = document.getElementById('mm-name').value.trim() || 'マイソング';
+    Store.saveSong({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, grid: mmGrid.map((r) => r.slice()), createdAt: Date.now() });
+    shell.sound.play('coin');
+    document.getElementById('mm-name').value = '';
+    renderSongList();
+    await evaluateAndToast();
+  });
+
+  renderMmGrid();
+  renderSongList();
+</script>
+</body>
+</html>

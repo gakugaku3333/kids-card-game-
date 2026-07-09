@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バッジずかん（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
+  .lead { text-align: center; font-weight: 700; color: #5b4b8a; margin: 4px 0 18px; }
+  .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .badge-card {
+    background: #fff; border-radius: 20px; padding: 16px 10px; text-align: center;
+    box-shadow: 0 4px 10px rgba(91,75,138,.12); border: 2px solid transparent;
+  }
+  .badge-card.unlocked { border-color: #ffd76b; }
+  .badge-card .emoji { font-size: 2.4rem; filter: grayscale(1) opacity(.35); }
+  .badge-card.unlocked .emoji { filter: none; }
+  .badge-card .name { font-weight: 900; color: #4a3f6b; font-size: .9rem; margin: 8px 0 4px; }
+  .badge-card.unlocked .name { color: #7c5cff; }
+  .badge-card .desc { font-size: .74rem; color: #9a8ac2; line-height: 1.4; }
+  .progress-summary { text-align: center; font-weight: 900; color: #7c5cff; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="lead">がんばった あかしを あつめよう！</p>
+  <p class="progress-summary" id="progress-summary"></p>
+  <div class="badge-grid" id="badge-grid"></div>
+</div>
+
+<script type="module">
+  import { KiraShell } from './core/shell.js';
+  import * as Store from './core/store.js';
+  import { getAllBadgeDefs, evaluateBadges } from './core/badges.js';
+
+  new KiraShell({ gameId: 'badges', title: 'バッジずかん', homePath: 'index.html' });
+
+  await evaluateBadges();
+  const defs = await getAllBadgeDefs();
+  const grid = document.getElementById('badge-grid');
+  const unlockedCount = defs.filter((b) => Store.hasBadge(b.id)).length;
+  document.getElementById('progress-summary').textContent = `${unlockedCount} / ${defs.length} こ かくとく`;
+
+  grid.innerHTML = defs.map((b) => {
+    const unlocked = Store.hasBadge(b.id);
+    return `
+      <div class="badge-card ${unlocked ? 'unlocked' : ''}">
+        <div class="emoji">${b.emoji}</div>
+        <div class="name">${unlocked ? b.name : '？？？'}</div>
+        <div class="desc">${unlocked ? b.desc : 'まだ みつけていない'}</div>
+      </div>`;
+  }).join('');
+</script>
+</body>
+</html>
