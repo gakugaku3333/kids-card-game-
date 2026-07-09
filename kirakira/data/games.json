@@ -8,6 +8,9 @@
     { "id": "travel", "title": "日本一周トラベル", "emoji": "🗾", "path": "games/travel/index.html" },
     { "id": "magical-battle", "title": "マジカルバトル", "emoji": "⚔️", "path": "games/magical-battle/index.html" },
     { "id": "maze-ex", "title": "めいろEX", "emoji": "🧵", "path": "games/maze-ex/index.html" },
+    { "id": "typing-race", "title": "タイピングねこレース", "emoji": "⌨️", "path": "games/typing-race/index.html" },
+    { "id": "memory-ex", "title": "しんけいすいじゃくEX", "emoji": "🃏", "path": "games/memory-ex/index.html" },
+    { "id": "picross-mini", "title": "ピクロスmini", "emoji": "🧩", "path": "games/picross-mini/index.html" },
     { "id": "fb-review", "title": "リベンジクエスト", "emoji": "🔥", "path": "games/quiz/index.html?mode=fb-review" }
   ]
 }

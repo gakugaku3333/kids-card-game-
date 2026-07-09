@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイピングねこレース（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; box-sizing: border-box; }
+  #level-screen, #play-screen { display: none; }
+  #level-screen.active, #play-screen.active { display: block; }
+
+  .lead { font-size: 1.05rem; font-weight: 700; color: #5b4b8a; line-height: 1.7; margin: 10px 0 22px; }
+  .level-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    display: block; width: 100%; max-width: 320px; margin: 12px auto;
+    border-radius: 22px; padding: 16px 20px; font-size: 1.2rem; color: #fff;
+    box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s;
+  }
+  .level-btn:active { transform: translateY(4px); box-shadow: none; }
+  .level-btn small { display: block; font-size: .82rem; font-weight: 700; opacity: .9; }
+  .lv-easy { background: linear-gradient(#7fe8d4, #4fd6bd); box-shadow: 0 5px 0 #2fae98; }
+  .lv-normal { background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 5px 0 #5b3fd6; }
+  .lv-hard { background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
+
+  .hud { display: flex; gap: 10px; margin-bottom: 14px; }
+  .hud-box { background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 4px; flex: 1; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+  .hud-label { font-size: .74rem; color: #9a8ac2; font-weight: 700; display: block; }
+  .hud-value { font-size: 1.2rem; font-weight: 900; color: #4a3f6b; }
+
+  .track {
+    position: relative; height: 74px; background: linear-gradient(180deg, #fff 0%, #f3ecff 100%);
+    border-radius: 20px; box-shadow: 0 6px 14px rgba(91,75,138,.15); margin-bottom: 22px; overflow: hidden;
+  }
+  .track-line { position: absolute; left: 0; right: 60px; top: 50%; height: 4px; background: repeating-linear-gradient(90deg, #e0d4ff 0 14px, transparent 14px 28px); transform: translateY(-50%); }
+  .track-flag { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 2.2rem; }
+  #track-cat { position: absolute; left: 6px; top: 50%; transform: translate(0, -50%); font-size: 2.4rem; transition: left .5s cubic-bezier(.3,1.4,.6,1); }
+
+  .word-card { background: #fff; border-radius: 24px; padding: 26px 20px; box-shadow: 0 8px 18px rgba(91,75,138,.18); }
+  .word-emoji { font-size: 2.8rem; margin-bottom: 6px; }
+  .word-ja { font-size: 1.1rem; font-weight: 700; color: #9a8ac2; margin-bottom: 14px; }
+  .word-letters { font-family: 'Courier New', monospace; font-size: 2.6rem; font-weight: 900; letter-spacing: 4px; }
+  .word-letters .ch { display: inline-block; min-width: 1ch; color: #d9c8ff; }
+  .word-letters .ch.done { color: #4fd6bd; }
+  .word-letters .ch.cur { color: #7c5cff; text-decoration: underline; text-underline-offset: 6px; }
+  .word-card.shake { animation: wr-shake .3s ease; }
+  @keyframes wr-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+  .kbd-hint { margin-top: 18px; font-size: .95rem; color: #9a8ac2; font-weight: 700; }
+
+  @media (max-height: 700px) {
+    .track { height: 56px; margin-bottom: 12px; }
+    #track-cat { font-size: 1.9rem; }
+    .track-flag { font-size: 1.7rem; }
+    .word-card { padding: 16px 14px; }
+    .word-emoji { font-size: 2.1rem; }
+    .word-letters { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <section id="level-screen" class="active">
+    <div style="font-size:2.6rem; margin-top:6px;">⌨️🐈</div>
+    <p class="lead">えいたんごを うつと ねこが はしるよ！<br>8もん とくと ゴール。むずかしさを えらんでね。</p>
+    <button class="level-btn lv-easy" data-level="easy">やさしい<small>3〜4もじの たんご</small></button>
+    <button class="level-btn lv-normal" data-level="normal">ふつう<small>5〜6もじの たんご</small></button>
+    <button class="level-btn lv-hard" data-level="hard">むずかしい<small>7もじいじょうの たんご</small></button>
+  </section>
+
+  <section id="play-screen">
+    <div class="hud">
+      <div class="hud-box"><span class="hud-label">もんだい</span><span class="hud-value" id="hud-round">1/8</span></div>
+      <div class="hud-box"><span class="hud-label">タイム</span><span class="hud-value" id="hud-time">0:00</span></div>
+    </div>
+    <div class="track">
+      <div class="track-line"></div>
+      <span class="track-flag">🏁</span>
+      <span id="track-cat">🐈</span>
+    </div>
+    <div class="word-card" id="word-card">
+      <div class="word-emoji" id="word-emoji"></div>
+      <div class="word-ja" id="word-ja"></div>
+      <div class="word-letters" id="word-letters"></div>
+    </div>
+    <p class="kbd-hint">💡 キーボードで えいごを うってね</p>
+  </section>
+</div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import { WORDS } from './words.js';
+
+  const shell = new KiraShell({ gameId: 'typing-race', title: 'タイピングねこレース' });
+
+  const levelScreen = document.getElementById('level-screen');
+  const playScreen = document.getElementById('play-screen');
+  const hudRound = document.getElementById('hud-round');
+  const hudTime = document.getElementById('hud-time');
+  const trackCat = document.getElementById('track-cat');
+  const wordCard = document.getElementById('word-card');
+  const wordEmoji = document.getElementById('word-emoji');
+  const wordJa = document.getElementById('word-ja');
+  const wordLetters = document.getElementById('word-letters');
+
+  const TOKENS_PER_LEVEL = { easy: 3, normal: 4, hard: 5 };
+  const TOTAL_WORDS = 8;
+
+  let level = 'easy';
+  let queue = [];
+  let index = 0;
+  let typed = '';
+  let elapsed = 0;
+  let finished = false;
+
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function renderWord() {
+    const word = queue[index];
+    wordEmoji.textContent = word.emoji;
+    wordJa.textContent = word.ja;
+    wordLetters.innerHTML = word.en.split('').map((ch, i) => {
+      const cls = i < typed.length ? 'done' : (i === typed.length ? 'cur' : '');
+      return `<span class="ch ${cls}">${ch}</span>`;
+    }).join('');
+    hudRound.textContent = `${index + 1}/${TOTAL_WORDS}`;
+    trackCat.style.left = `calc(6px + ${(index / TOTAL_WORDS) * 100}%)`;
+  }
+
+  function onWrongKey() {
+    wordCard.classList.remove('shake');
+    void wordCard.offsetWidth;
+    wordCard.classList.add('shake');
+    shell.sound.play('wrong');
+  }
+
+  function onWordComplete() {
+    shell.sound.play('correct');
+    index++;
+    typed = '';
+    if (index >= TOTAL_WORDS) {
+      finished = true;
+      trackCat.style.left = `calc(6px + 100%)`;
+      document.removeEventListener('keydown', handleKey);
+      setTimeout(() => {
+        shell.showResult({ correct: TOTAL_WORDS, total: TOTAL_WORDS, tokens: TOKENS_PER_LEVEL[level], time: elapsed });
+      }, 500);
+      return;
+    }
+    renderWord();
+  }
+
+  function handleKey(ev) {
+    if (finished) return;
+    const key = ev.key;
+    if (key.length !== 1 || !/[a-zA-Z]/.test(key)) return;
+    ev.preventDefault();
+    const word = queue[index];
+    const expected = word.en[typed.length];
+    if (key.toLowerCase() === expected) {
+      typed += expected;
+      if (typed.length === word.en.length) {
+        onWordComplete();
+      } else {
+        renderWord();
+      }
+    } else {
+      onWrongKey();
+    }
+  }
+
+  function play() {
+    const pool = shuffled(WORDS[level]);
+    queue = pool.slice(0, TOTAL_WORDS);
+    index = 0;
+    typed = '';
+    elapsed = 0;
+    finished = false;
+    hudTime.textContent = '0:00';
+    levelScreen.classList.remove('active');
+    playScreen.classList.add('active');
+    trackCat.style.transition = 'none';
+    trackCat.style.left = '6px';
+    requestAnimationFrame(() => { trackCat.style.transition = ''; });
+    renderWord();
+    shell.setInterval(() => {
+      elapsed++;
+      hudTime.textContent = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+    }, 1000);
+    document.addEventListener('keydown', handleKey);
+  }
+
+  document.querySelectorAll('.level-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      level = btn.dataset.level;
+      shell.startGame(play);
+    });
+  });
+
+  shell.onRetry(() => {
+    document.removeEventListener('keydown', handleKey);
+    playScreen.classList.remove('active');
+    levelScreen.classList.add('active');
+  });
+</script>
+</body>
+</html>

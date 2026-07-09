@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ピクロスmini（キラキラひろば）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
+  .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; box-sizing: border-box; }
+  #level-screen, #play-screen { display: none; }
+  #level-screen.active, #play-screen.active { display: block; }
+
+  .lead { font-size: 1.05rem; font-weight: 700; color: #5b4b8a; line-height: 1.7; margin: 10px 0 22px; }
+  .level-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
+    display: block; width: 100%; max-width: 320px; margin: 12px auto;
+    border-radius: 22px; padding: 16px 20px; font-size: 1.2rem; color: #fff;
+    box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s;
+  }
+  .level-btn:active { transform: translateY(4px); box-shadow: none; }
+  .level-btn small { display: block; font-size: .82rem; font-weight: 700; opacity: .9; }
+  .lv-easy { background: linear-gradient(#7fe8d4, #4fd6bd); box-shadow: 0 5px 0 #2fae98; }
+  .lv-normal { background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 5px 0 #5b3fd6; }
+  .lv-hard { background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
+
+  .hud { display: flex; gap: 10px; margin-bottom: 14px; }
+  .hud-box { background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 4px; flex: 1; box-shadow: 0 4px 0 rgba(0,0,0,.08); }
+  .hud-label { font-size: .74rem; color: #9a8ac2; font-weight: 700; display: block; }
+  .hud-value { font-size: 1.2rem; font-weight: 900; color: #4a3f6b; }
+
+  #board-wrap { display: inline-grid; background: #fff; border-radius: 16px; padding: 10px; box-shadow: 0 8px 18px rgba(91,75,138,.18); }
+  .clue-corner { }
+  .clue-col {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    font-size: .8rem; font-weight: 900; color: #7c5cff; line-height: 1.1; padding-bottom: 3px;
+  }
+  .clue-row {
+    display: flex; align-items: center; justify-content: flex-end; gap: 3px;
+    font-size: .8rem; font-weight: 900; color: #7c5cff; padding-right: 5px;
+  }
+  .px-cell {
+    border: 1px solid #e0d4ff; box-sizing: border-box; cursor: pointer;
+  }
+  .px-cell.filled { background: #7c5cff; }
+  .px-cell.solved { border-color: transparent; background: #ff8fbf; }
+  #board-wrap.solved .clue-col, #board-wrap.solved .clue-row { opacity: 0; }
+  #board-wrap.solved .px-cell { border-color: transparent; }
+
+  #reveal-label {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    flex-direction: column; pointer-events: none; z-index: 500;
+  }
+  #reveal-label.show { display: flex; }
+  #reveal-label .rl-emoji { font-size: 4.2rem; animation: rl-pop .5s ease; filter: drop-shadow(0 6px 10px rgba(0,0,0,.2)); }
+  #reveal-label .rl-name { font-size: 1.5rem; font-weight: 900; color: #7c5cff; background: #fff; border-radius: 50px; padding: 8px 22px; margin-top: 8px; box-shadow: 0 6px 14px rgba(91,75,138,.25); }
+  @keyframes rl-pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <section id="level-screen" class="active">
+    <div style="font-size:2.6rem; margin-top:6px;">🧩✨</div>
+    <p class="lead">たての かずと よこの かずを ヒントに<br>マスを ぬって「え」を うかびあがらせよう！</p>
+    <button class="level-btn lv-easy" data-level="easy">やさしい<small>5×5・2もん</small></button>
+    <button class="level-btn lv-normal" data-level="normal">ふつう<small>7×7・2もん</small></button>
+    <button class="level-btn lv-hard" data-level="hard">むずかしい<small>10×10・2もん</small></button>
+  </section>
+
+  <section id="play-screen">
+    <div class="hud">
+      <div class="hud-box"><span class="hud-label">もんだい</span><span class="hud-value" id="hud-round">1/2</span></div>
+      <div class="hud-box"><span class="hud-label">タイム</span><span class="hud-value" id="hud-time">0:00</span></div>
+    </div>
+    <div id="board-wrap"></div>
+  </section>
+</div>
+
+<div id="reveal-label"><div class="rl-emoji" id="rl-emoji"></div><div class="rl-name" id="rl-name"></div></div>
+
+<script type="module">
+  import { KiraShell } from '../../core/shell.js';
+  import { PUZZLES } from './puzzles.js';
+
+  const shell = new KiraShell({ gameId: 'picross-mini', title: 'ピクロスmini' });
+
+  const levelScreen = document.getElementById('level-screen');
+  const playScreen = document.getElementById('play-screen');
+  const hudRound = document.getElementById('hud-round');
+  const hudTime = document.getElementById('hud-time');
+  const boardWrap = document.getElementById('board-wrap');
+  const revealLabel = document.getElementById('reveal-label');
+  const rlEmoji = document.getElementById('rl-emoji');
+  const rlName = document.getElementById('rl-name');
+
+  const TOKENS_PER_LEVEL = { easy: 4, normal: 5, hard: 6 };
+  const ROUNDS_PER_LEVEL = 2;
+  const CELL_PX = { easy: 42, normal: 36, hard: 30 };
+
+  let level = 'easy';
+  let order = [];
+  let round = 0;
+  let elapsed = 0;
+  let solution = [];
+  let filled = [];
+  let rows = 0, cols = 0;
+  let solved = false;
+
+  function runsOf(arr) {
+    const runs = [];
+    let cur = 0;
+    for (const v of arr) {
+      if (v) cur++;
+      else if (cur) { runs.push(cur); cur = 0; }
+    }
+    if (cur) runs.push(cur);
+    return runs.length ? runs : [0];
+  }
+
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function checkSolved() {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!!filled[r][c] !== !!solution[r][c]) return false;
+      }
+    }
+    return true;
+  }
+
+  function renderBoard() {
+    const cell = CELL_PX[level];
+    const colClues = [];
+    for (let c = 0; c < cols; c++) colClues.push(runsOf(solution.map((row) => row[c])));
+    const rowClues = solution.map((row) => runsOf(row));
+
+    boardWrap.className = '';
+    boardWrap.style.gridTemplateColumns = `auto repeat(${cols}, ${cell}px)`;
+    boardWrap.style.gridTemplateRows = `auto repeat(${rows}, ${cell}px)`;
+    boardWrap.innerHTML = '';
+
+    const corner = document.createElement('div');
+    corner.className = 'clue-corner';
+    boardWrap.appendChild(corner);
+
+    colClues.forEach((clue) => {
+      const el = document.createElement('div');
+      el.className = 'clue-col';
+      el.style.minHeight = `${cell}px`;
+      el.innerHTML = clue.map((n) => `<span>${n}</span>`).join('<br>');
+      boardWrap.appendChild(el);
+    });
+
+    for (let r = 0; r < rows; r++) {
+      const rc = document.createElement('div');
+      rc.className = 'clue-row';
+      rc.style.minWidth = `${cell}px`;
+      rc.textContent = rowClues[r].join(' ');
+      boardWrap.appendChild(rc);
+
+      for (let c = 0; c < cols; c++) {
+        const px = document.createElement('div');
+        px.className = 'px-cell';
+        px.style.width = `${cell}px`;
+        px.style.height = `${cell}px`;
+        px.dataset.r = r;
+        px.dataset.c = c;
+        px.addEventListener('click', () => onCellClick(r, c, px));
+        boardWrap.appendChild(px);
+      }
+    }
+  }
+
+  function onCellClick(r, c, el) {
+    if (solved) return;
+    filled[r][c] = filled[r][c] ? 0 : 1;
+    el.classList.toggle('filled', !!filled[r][c]);
+    if (checkSolved()) onSolved();
+  }
+
+  function onSolved() {
+    solved = true;
+    shell.sound.play('correct');
+    boardWrap.classList.add('solved');
+    document.querySelectorAll('.px-cell.filled').forEach((el) => el.classList.add('solved'));
+    const puzzle = order[round];
+    setTimeout(() => {
+      rlEmoji.textContent = puzzle.emoji;
+      rlName.textContent = puzzle.name + 'だった！';
+      revealLabel.classList.add('show');
+      setTimeout(() => {
+        revealLabel.classList.remove('show');
+        round++;
+        if (round >= ROUNDS_PER_LEVEL) {
+          shell.showResult({ correct: ROUNDS_PER_LEVEL, total: ROUNDS_PER_LEVEL, tokens: TOKENS_PER_LEVEL[level], time: elapsed });
+        } else {
+          setupRound();
+        }
+      }, 1400);
+    }, 400);
+  }
+
+  function setupRound() {
+    const puzzle = order[round];
+    solution = puzzle.solution;
+    rows = solution.length;
+    cols = solution[0].length;
+    filled = Array.from({ length: rows }, () => Array(cols).fill(0));
+    solved = false;
+    hudRound.textContent = `${round + 1}/${ROUNDS_PER_LEVEL}`;
+    renderBoard();
+  }
+
+  function play() {
+    order = shuffled(PUZZLES[level]);
+    round = 0;
+    elapsed = 0;
+    hudTime.textContent = '0:00';
+    levelScreen.classList.remove('active');
+    playScreen.classList.add('active');
+    shell.setInterval(() => {
+      elapsed++;
+      hudTime.textContent = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+    }, 1000);
+    setupRound();
+  }
+
+  document.querySelectorAll('.level-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      level = btn.dataset.level;
+      shell.startGame(play);
+    });
+  });
+
+  shell.onRetry(() => {
+    playScreen.classList.remove('active');
+    levelScreen.classList.add('active');
+  });
+</script>
+</body>
+</html>

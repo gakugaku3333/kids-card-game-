@@ -166,25 +166,28 @@ export class KiraShell {
     fn();
   }
 
-  // time(秒)を渡すとタイム表示モードになり、自己ベストは「タイムが短いほど良い」で比較する(めいろEX等)。
-  showResult({ correct = 0, total = 0, tokens = 0, time } = {}) {
+  // time(秒)かmoves(手数)を渡すと「小さいほど良い」自己ベスト比較に切り替わる(めいろEX/しんけいすいじゃくEX等)。
+  // 両方渡された場合はtimeを優先。moves使用時はmovesLabelでラベル文言を指定できる(既定「てすう」)。
+  showResult({ correct = 0, total = 0, tokens = 0, time, moves, movesLabel = 'てすう' } = {}) {
     this._cleanup();
     if (tokens > 0) Store.addTokens(tokens);
-    const lowerIsBetter = typeof time === 'number';
-    const { isNewBest, best } = Store.recordScore(this.gameId, { correct, total, tokens, time }, { lowerIsBetter });
+    const field = typeof time === 'number' ? 'time' : (typeof moves === 'number' ? 'moves' : null);
+    const { isNewBest, best } = Store.recordScore(this.gameId, { correct, total, tokens, time, moves }, { compareField: field });
     const correctLabelEl = document.querySelector(`#${RESULT_MODAL_ID} .kira-result-item:first-child .r-label`);
-    if (correctLabelEl) correctLabelEl.textContent = lowerIsBetter ? 'タイム' : 'せいかい';
+    const label = field === 'time' ? 'タイム' : field === 'moves' ? movesLabel : 'せいかい';
+    if (correctLabelEl) correctLabelEl.textContent = label;
     document.getElementById('kira-r-correct').textContent =
-      lowerIsBetter ? formatTime(time) : (total ? `${correct}/${total}` : String(correct));
+      field === 'time' ? formatTime(time) : field === 'moves' ? String(moves) : (total ? `${correct}/${total}` : String(correct));
     document.getElementById('kira-r-tokens').textContent = String(tokens);
     const bestEl = document.getElementById('kira-r-best');
     if (bestEl) {
       if (!best) bestEl.textContent = '-';
-      else if (lowerIsBetter) bestEl.textContent = typeof best.time === 'number' ? formatTime(best.time) : '-';
+      else if (field === 'time') bestEl.textContent = typeof best.time === 'number' ? formatTime(best.time) : '-';
+      else if (field === 'moves') bestEl.textContent = typeof best.moves === 'number' ? String(best.moves) : '-';
       else bestEl.textContent = best.total ? `${best.correct}/${best.total}` : String(best.correct);
     }
     const banner = document.getElementById('kira-newbest-banner');
-    const showBanner = lowerIsBetter ? isNewBest : (isNewBest && correct > 0);
+    const showBanner = field ? isNewBest : (isNewBest && correct > 0);
     if (banner) banner.style.display = showBanner ? 'block' : 'none';
     sound.play(showBanner ? 'coin' : 'clear');
     openModal(this.resultModal);

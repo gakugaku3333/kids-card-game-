@@ -50,20 +50,23 @@ export function buy(id, price) {
   return true;
 }
 
-// 自己ベスト。correctが多いほど良い、という単純な比較(本家Phase Aと同じ設計)。
-// timeが渡された場合はlowerIsBetter:trueで「タイムが短いほど良い」比較に切り替える(めいろEX等)。
+// 自己ベスト。既定はcorrectが多いほど良い、という単純な比較(本家Phase Aと同じ設計)。
+// compareField('time'|'moves')が渡された場合はその値が小さいほど良い比較に切り替える(めいろEX/しんけいすいじゃくEX等)。
 export function getBestScore(gameId) {
   return data.bestScores[gameId] || null;
 }
 
-export function recordScore(gameId, { correct = 0, total = 0, tokens = 0, time } = {}, { lowerIsBetter = false } = {}) {
+export function recordScore(gameId, { correct = 0, total = 0, tokens = 0, time, moves } = {}, { compareField = null } = {}) {
   const prev = data.bestScores[gameId];
-  const hasTime = typeof time === 'number';
-  const isNewBest = lowerIsBetter
-    ? (hasTime && (!prev || typeof prev.time !== 'number' || time < prev.time))
+  const val = compareField === 'time' ? time : compareField === 'moves' ? moves : null;
+  const hasVal = typeof val === 'number';
+  const isNewBest = compareField
+    ? (hasVal && (!prev || typeof prev[compareField] !== 'number' || val < prev[compareField]))
     : (!prev || correct > prev.correct);
   if (isNewBest) {
-    data.bestScores[gameId] = hasTime ? { correct, total, tokens, time } : { correct, total, tokens };
+    data.bestScores[gameId] = compareField && hasVal
+      ? { correct, total, tokens, [compareField]: val }
+      : { correct, total, tokens };
     save();
   }
   return { isNewBest, best: data.bestScores[gameId] };
