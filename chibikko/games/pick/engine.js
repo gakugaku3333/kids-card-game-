@@ -73,6 +73,7 @@ export class PickEngine {
     else if (this.set.mode === 'category') this._nextCategory();
     else if (this.set.mode === 'emotion') this._nextEmotion();
     else if (this.set.mode === 'compare') this._nextCompare();
+    else if (this.set.mode === 'letter') this._nextLetter();
     else this._nextSwatch();
   }
 
@@ -214,6 +215,26 @@ export class PickEngine {
       return `<circle cx="${30 + col * 45}" cy="${30 + row * 45}" r="16" fill="#ff8fc7"/>`;
     }).join('');
     return `<svg viewBox="0 0 160 160" width="140" height="140">${dots}</svg>`;
+  }
+
+  // 「『あ』はどれかな？」— 文字を読ませるのではなく、音とかたちのペアを探す遊び（3歳→4歳の橋）。
+  _nextLetter() {
+    const pool = this.set.pool;
+    const target = pool[Math.floor(Math.random() * pool.length)];
+    const choices = shuffle(this._buildChoicePool(pool, target, 'id')).slice(0, this.choiceCount);
+    if (!choices.some((c) => c.id === target.id)) choices[0] = target;
+    const finalChoices = shuffle(choices);
+
+    finalChoices.forEach((choice) => {
+      const btn = document.createElement('button');
+      btn.className = 'pick-choice pick-letter';
+      btn.textContent = choice.char;
+      btn.setAttribute('aria-label', choice.label);
+      btn.addEventListener('click', () => this._onAnswer(choice.id === target.id, btn, target.id));
+      this.dom.choicesEl.appendChild(btn);
+    });
+
+    setTimeout(() => this.shell.voice.speak(target.askVoiceId), 300);
   }
 
   _buildChoicePool(pool, target, key) {

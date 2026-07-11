@@ -1,0 +1,23 @@
+{
+  "id": "hiragana-search",
+  "mode": "letter",
+  "totalQuestions": 5,
+  "choiceCount": 3,
+  "pool": [
+    { "id": "a", "char": "あ", "label": "あ", "askVoiceId": "hira-a-q" },
+    { "id": "i", "char": "い", "label": "い", "askVoiceId": "hira-i-q" },
+    { "id": "u", "char": "う", "label": "う", "askVoiceId": "hira-u-q" },
+    { "id": "e", "char": "え", "label": "え", "askVoiceId": "hira-e-q" },
+    { "id": "o", "char": "お", "label": "お", "askVoiceId": "hira-o-q" },
+    { "id": "ka", "char": "か", "label": "か", "askVoiceId": "hira-ka-q" },
+    { "id": "ki", "char": "き", "label": "き", "askVoiceId": "hira-ki-q" },
+    { "id": "ku", "char": "く", "label": "く", "askVoiceId": "hira-ku-q" },
+    { "id": "ke", "char": "け", "label": "け", "askVoiceId": "hira-ke-q" },
+    { "id": "ko", "char": "こ", "label": "こ", "askVoiceId": "hira-ko-q" },
+    { "id": "sa", "char": "さ", "label": "さ", "askVoiceId": "hira-sa-q" },
+    { "id": "shi", "char": "し", "label": "し", "askVoiceId": "hira-shi-q" },
+    { "id": "su", "char": "す", "label": "す", "askVoiceId": "hira-su-q" },
+    { "id": "se", "char": "せ", "label": "せ", "askVoiceId": "hira-se-q" },
+    { "id": "so", "char": "そ", "label": "そ", "askVoiceId": "hira-so-q" }
+  ]
+}

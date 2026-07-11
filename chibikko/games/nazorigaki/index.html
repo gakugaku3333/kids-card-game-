@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>なぞりがき</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#f0e6ff, #e0d0ff);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 560px; padding: 76px 12px 20px; box-sizing: border-box; text-align: center; }
+  #trace-canvas {
+    background: #fff; border-radius: 24px; box-shadow: 0 8px 18px rgba(0,0,0,.15);
+    touch-action: none; display: block; margin: 0 auto;
+  }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 66px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <canvas id="trace-canvas"></canvas>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import * as Confetti from '../../core/confetti.js';
+
+  const shell = new ToddlerShell({ gameId: 'nazorigaki' });
+  const canvas = document.getElementById('trace-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // ひらがな前段の運筆遊び。めいろの「指へ向かって進む」ドラッグ操作を流用し、
+  // 迷路の壁判定の代わりに「決められた点列を順になぞる」判定に置き換えている。
+  const SHAPES = [
+    { points: (w, h) => [[0.15, 0.5], [0.4, 0.5], [0.6, 0.5], [0.85, 0.5]].map(([x, y]) => ({ x: x * w, y: y * h })), reveal: '⭐' },
+    { points: (w, h) => {
+        const cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.32;
+        return Array.from({ length: 9 }, (_, i) => {
+          const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+          return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+        });
+      }, reveal: '☀️' },
+    { points: (w, h) => [[0.12, 0.3], [0.32, 0.7], [0.52, 0.3], [0.72, 0.7], [0.9, 0.3]].map(([x, y]) => ({ x: x * w, y: y * h })), reveal: '🌈' },
+  ];
+
+  let round = 0;
+  let points = [];
+  let progress = 0; // 次に目指す points のインデックス
+  let dragging = false;
+  let finished = false;
+  let cell = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 見本の点線ガイド
+    ctx.strokeStyle = '#d9c6ff';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([2, 16]);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // なぞった軌跡
+    if (progress > 0) {
+      ctx.strokeStyle = '#b06de0';
+      ctx.lineWidth = cell;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let i = 0; i <= progress; i++) {
+        const p = points[i];
+        i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    }
+
+    // スタート・ゴールの目印
+    ctx.font = `${Math.floor(cell * 1.6)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✋', points[0].x, points[0].y);
+    if (!finished) ctx.fillText('🎯', points[points.length - 1].x, points[points.length - 1].y);
+  }
+
+  function setupRound() {
+    const maxW = Math.min(window.innerWidth - 24, 536);
+    const maxH = Math.min(window.innerHeight - 110, 420);
+    canvas.width = maxW;
+    canvas.height = maxH;
+    cell = Math.min(maxW, maxH) * 0.05;
+    points = SHAPES[round].points(maxW, maxH);
+    progress = 0;
+    finished = false;
+    draw();
+  }
+
+  function pointerPos(ev) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (ev.clientX - rect.left) * (canvas.width / rect.width),
+      y: (ev.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  function advance(pt) {
+    if (finished || progress >= points.length - 1) return;
+    const next = points[progress + 1];
+    const dist = Math.hypot(pt.x - next.x, pt.y - next.y);
+    if (dist < cell * 2.6) {
+      progress++;
+      draw();
+      if (progress >= points.length - 1) onComplete();
+    }
+  }
+
+  function onComplete() {
+    finished = true;
+    dragging = false;
+    shell.sound.play('correct');
+    shell.voice.praise();
+    Confetti.burst();
+    ctx.font = `${Math.floor(Math.min(canvas.width, canvas.height) * 0.4)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(SHAPES[round].reveal, canvas.width / 2, canvas.height / 2);
+    setTimeout(() => {
+      round++;
+      if (round >= SHAPES.length) {
+        shell.showResult({ correct: SHAPES.length, total: SHAPES.length });
+      } else {
+        setupRound();
+      }
+    }, 1400);
+  }
+
+  canvas.addEventListener('pointerdown', (ev) => {
+    if (finished) return;
+    dragging = true;
+    canvas.setPointerCapture(ev.pointerId);
+    advance(pointerPos(ev));
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!dragging || finished) return;
+    advance(pointerPos(ev));
+  });
+  ['pointerup', 'pointercancel'].forEach((evName) => {
+    canvas.addEventListener(evName, () => { dragging = false; });
+  });
+
+  function startGame() {
+    round = 0;
+    setupRound();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.autoStart({ greeting: 'start-nazorigaki', onStart: () => startGame() });
+</script>
+</body>
+</html>

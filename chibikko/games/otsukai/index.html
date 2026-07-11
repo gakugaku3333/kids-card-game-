@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>おつかいごっこ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(#fff6e0, #ffe6b8);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .game-wrap { width: 100%; max-width: 560px; padding: 90px 16px 24px; box-sizing: border-box; text-align: center; }
+  #order-card {
+    background: #fff; border-radius: 24px; padding: 14px; margin: 0 auto 18px;
+    box-shadow: 0 6px 14px rgba(0,0,0,.15); display: inline-flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center; min-height: 64px; align-items: center;
+  }
+  #order-card img { width: 52px; height: 52px; object-fit: contain; }
+  #basket {
+    background: #ffe9c7; border-radius: 20px; padding: 10px; margin: 0 auto 20px;
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 56px; max-width: 460px;
+    align-items: center;
+  }
+  #basket img { width: 42px; height: 42px; object-fit: contain; }
+  #shelf { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+  .shelf-item {
+    width: 110px; height: 110px; border-radius: 24px; border: none; background: #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,.15); cursor: pointer; padding: 12px;
+  }
+  .shelf-item img { width: 100%; height: 100%; object-fit: contain; }
+  .shelf-item.wobble { animation: wobble .4s; }
+  @keyframes wobble { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+  @media (max-height: 700px) {
+    .game-wrap { padding-top: 70px; }
+    .shelf-item { width: 84px; height: 84px; }
+  }
+</style>
+</head>
+<body>
+<script>window.CHIBIKKO_ROOT = '../../../';</script>
+<div class="game-wrap">
+  <div id="order-card"></div>
+  <div id="basket"></div>
+  <div id="shelf"></div>
+</div>
+<script type="module">
+  import { ToddlerShell } from '../../core/shell.js';
+  import { asset } from '../../core/paths.js';
+  import * as Confetti from '../../core/confetti.js';
+
+  const shell = new ToddlerShell({ gameId: 'otsukai' });
+  const orderEl = document.getElementById('order-card');
+  const basketEl = document.getElementById('basket');
+  const shelfEl = document.getElementById('shelf');
+
+  // 「アルゴリズム層のみ」流用（本家おかいものやさんとは別設計）: ここでは金額計算をせず
+  // 「見本の数だけ同じ品物をタップする」という3歳向けの数マッチングに絞る。
+  const ITEMS = [
+    { id: 'ringo', file: 'assets/fruits/ringo.png', voice: 'item-ringo' },
+    { id: 'banana', file: 'assets/fruits/banana.png', voice: 'item-banana' },
+    { id: 'ichigo', file: 'assets/fruits/ichigo.png', voice: 'item-ichigo' },
+    { id: 'mikan', file: 'assets/fruits/mikan.png', voice: 'item-mikan' },
+    { id: 'budou', file: 'assets/fruits/budou.png', voice: 'item-budou' },
+    { id: 'momo', file: 'assets/fruits/momo.png', voice: 'item-momo' },
+  ];
+  const ROUNDS = 3;
+
+  let round = 0;
+  let target = null;
+  let basketCount = 0;
+  let finished = false;
+
+  function renderShelf() {
+    shelfEl.innerHTML = '';
+    ITEMS.forEach((item) => {
+      const btn = document.createElement('button');
+      btn.className = 'shelf-item';
+      btn.innerHTML = `<img src="${asset(item.file)}" alt="${item.id}" />`;
+      btn.addEventListener('click', () => onShelfTap(item, btn));
+      shelfEl.appendChild(btn);
+    });
+  }
+
+  function renderOrder() {
+    orderEl.innerHTML = '';
+    for (let i = 0; i < target.count; i++) {
+      const img = document.createElement('img');
+      img.src = asset(target.item.file);
+      img.alt = target.item.id;
+      orderEl.appendChild(img);
+    }
+  }
+
+  function renderBasket() {
+    basketEl.innerHTML = '';
+    for (let i = 0; i < basketCount; i++) {
+      const img = document.createElement('img');
+      img.src = asset(target.item.file);
+      img.alt = target.item.id;
+      basketEl.appendChild(img);
+    }
+  }
+
+  function onShelfTap(item, btn) {
+    if (finished) return;
+    if (item.id !== target.item.id || basketCount >= target.count) {
+      btn.classList.remove('wobble');
+      void btn.offsetWidth;
+      btn.classList.add('wobble');
+      return;
+    }
+    basketCount++;
+    renderBasket();
+    shell.sound.play('correct');
+    if (basketCount >= target.count) onOrderComplete();
+  }
+
+  function onOrderComplete() {
+    finished = true;
+    shell.voice.praise();
+    Confetti.burst();
+    setTimeout(() => {
+      round++;
+      if (round >= ROUNDS) {
+        shell.showResult({ correct: ROUNDS, total: ROUNDS });
+      } else {
+        setupRound();
+      }
+    }, 1300);
+  }
+
+  function setupRound() {
+    finished = false;
+    basketCount = 0;
+    const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+    const count = 1 + Math.floor(Math.random() * 3);
+    target = { item, count };
+    renderOrder();
+    renderBasket();
+    renderShelf();
+    setTimeout(() => {
+      shell.voice.speak('otsukai-order-q');
+      shell.voice.speak(target.item.voice);
+    }, 300);
+  }
+
+  function startGame() {
+    round = 0;
+    setupRound();
+  }
+
+  shell.onRetry(() => startGame());
+  shell.autoStart({ greeting: 'start-otsukai', onStart: () => startGame() });
+</script>
+</body>
+</html>

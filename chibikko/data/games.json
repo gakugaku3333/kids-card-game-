@@ -90,5 +90,25 @@
       "path": "games/maze/index.html",
       "icon": "assets/icons/maze.svg"
     }
+  ],
+  "growthGames": [
+    {
+      "id": "hiragana-search",
+      "title": "ひらがなさがし",
+      "path": "games/hiragana-search/index.html",
+      "emoji": "🔤"
+    },
+    {
+      "id": "otsukai",
+      "title": "おつかいごっこ",
+      "path": "games/otsukai/index.html",
+      "emoji": "🛍️"
+    },
+    {
+      "id": "nazorigaki",
+      "title": "なぞりがき",
+      "path": "games/nazorigaki/index.html",
+      "emoji": "✏️"
+    }
   ]
 }

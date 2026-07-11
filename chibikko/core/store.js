@@ -76,7 +76,8 @@ function load() {
     playCount: typeof raw.playCount === 'number' ? raw.playCount : 0,
     gamePlayCounts: (raw.gamePlayCounts && typeof raw.gamePlayCounts === 'object') ? raw.gamePlayCounts : {},
     selectedTheme: typeof raw.selectedTheme === 'string' ? raw.selectedTheme : 'sora',
-    pickProgress: (raw.pickProgress && typeof raw.pickProgress === 'object') ? raw.pickProgress : {}
+    pickProgress: (raw.pickProgress && typeof raw.pickProgress === 'object') ? raw.pickProgress : {},
+    revealedGrowthGames: Array.isArray(raw.revealedGrowthGames) ? raw.revealedGrowthGames : []
   };
 }
 
@@ -202,4 +203,41 @@ export function isGrowthUnlocked() {
 }
 
 export function getPlayCount() { return data.playCount; }
+
+// Phase C1: 解放ゲーム3本の個別解放条件（計画書 tasks/ちびっこキラキラ_バージョンアップ計画書.md 3章）。
+// 新しいスキーマ追加はせず、既存の gamePlayCounts / pickProgress だけで判定する。
+const UNLOCK_PLAYS = 8;
+
+export function isHiraganaSearchUnlocked() {
+  return getPickLevel('number-touch') >= 3 && (data.gamePlayCounts['color-touch'] || 0) >= UNLOCK_PLAYS;
+}
+export function isOtsukaiUnlocked() {
+  return getPickLevel('number-touch') >= 3 && (data.gamePlayCounts['nakama'] || 0) >= UNLOCK_PLAYS;
+}
+export function isNazorigakiUnlocked() {
+  return (data.gamePlayCounts['maze'] || 0) >= UNLOCK_PLAYS;
+}
+
+const GROWTH_UNLOCK_MAP = {
+  'hiragana-search': isHiraganaSearchUnlocked,
+  otsukai: isOtsukaiUnlocked,
+  nazorigaki: isNazorigakiUnlocked,
+};
+
+export function isGrowthGameUnlocked(gameId) {
+  const fn = GROWTH_UNLOCK_MAP[gameId];
+  return fn ? fn() : false;
+}
+
+// 解放お祝い演出は初回だけ出す。一度見せたらフラグを立てて、以降はハブに通常表示。
+export function hasSeenUnlockCelebration(gameId) {
+  return (data.revealedGrowthGames || []).indexOf(gameId) !== -1;
+}
+export function markUnlockCelebrationSeen(gameId) {
+  if (data.revealedGrowthGames.indexOf(gameId) === -1) {
+    data.revealedGrowthGames.push(gameId);
+    save();
+  }
+}
+
 export function reload() { data = load(); return data; }

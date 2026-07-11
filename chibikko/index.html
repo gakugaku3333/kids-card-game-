@@ -30,7 +30,24 @@
   .game-card img { width: 100%; height: 100%; object-fit: contain; }
   .game-card:active { transform: scale(.95); }
   .game-card.teaser { font-size: 2.6rem; background: linear-gradient(#fff6ec, #ffe6c4); }
+  .game-card.emoji-card { font-size: 3.2rem; }
   @media (max-width: 380px) { #cards { gap: 14px; } }
+  #unlock-overlay {
+    position: fixed; inset: 0; z-index: 2000; display: none;
+    align-items: center; justify-content: center; background: rgba(92,76,81,.5); padding: 20px;
+  }
+  #unlock-overlay.show { display: flex; }
+  .unlock-card {
+    background: #fff; border-radius: 32px; padding: 34px 26px; max-width: 340px; width: 100%;
+    text-align: center; box-shadow: 0 14px 34px rgba(0,0,0,.3); cursor: pointer;
+  }
+  .unlock-card .unlock-emoji { font-size: 4rem; animation: unlock-pop .6s ease; }
+  .unlock-card p { font-weight: 900; color: #ff6b35; font-size: 1.1rem; margin-top: 10px; }
+  @keyframes unlock-pop {
+    0% { transform: scale(.4); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+  }
 </style>
 </head>
 <body>
@@ -38,10 +55,18 @@
 <div id="hub-wrap">
   <div id="cards"></div>
 </div>
+<div id="unlock-overlay">
+  <div class="unlock-card">
+    <div class="unlock-emoji">🎁</div>
+    <div id="unlock-emoji2" style="font-size:3rem;"></div>
+    <p id="unlock-title"></p>
+  </div>
+</div>
 <script type="module">
   import * as Voice from './core/voice.js';
   import * as sound from './core/sound.js';
   import * as Store from './core/store.js';
+  import * as Confetti from './core/confetti.js';
   import { asset } from './core/paths.js';
 
   window.CHIBIKKO_ROOT = '../';
@@ -59,7 +84,7 @@
 
   const cardsEl = document.getElementById('cards');
   const res = await fetch('data/games.json');
-  const { games } = await res.json();
+  const { games, growthGames } = await res.json();
   games.forEach((g) => {
     const btn = document.createElement('button');
     btn.className = 'game-card';
@@ -71,9 +96,24 @@
     cardsEl.appendChild(btn);
   });
 
-  // 「成長したら解放」の準備: 本人が十分あそびこんだら、次のあそびが来る予感だけを見せる。
-  // まだ本体のゲームは無いので遷移先は持たせず、タップしても音声だけ流す（誤タップで壊れない設計を維持）。
-  if (Store.isGrowthUnlocked()) {
+  // Phase C1: 解放ゲーム本体（tasks/ちびっこキラキラ_バージョンアップ計画書.md 3章）。
+  // 個別の解放条件を満たしたものだけ実カードにする。全部揃うまでは「予感」の🎁を残す。
+  const unlockedGames = growthGames.filter((g) => Store.isGrowthGameUnlocked(g.id));
+  const toCelebrate = unlockedGames.filter((g) => !Store.hasSeenUnlockCelebration(g.id));
+
+  unlockedGames.forEach((g) => {
+    const btn = document.createElement('button');
+    btn.className = 'game-card emoji-card';
+    btn.textContent = g.emoji;
+    btn.setAttribute('aria-label', g.title);
+    btn.addEventListener('click', () => {
+      Voice.speak(`game-${g.id}`);
+      setTimeout(() => { window.location.href = g.path; }, 500);
+    });
+    cardsEl.appendChild(btn);
+  });
+
+  if (unlockedGames.length < growthGames.length) {
     const teaser = document.createElement('button');
     teaser.className = 'game-card teaser';
     teaser.setAttribute('aria-label', 'つぎのあそび');
@@ -81,6 +121,25 @@
     teaser.addEventListener('click', () => Voice.speak('growth-teaser'));
     cardsEl.appendChild(teaser);
   }
+
+  // 「お姉さんになったから来た」を最大限演出する: 解放直後の初回訪問だけプレゼント箱の開封を見せる。
+  function showNextCelebration() {
+    if (!toCelebrate.length) return;
+    const g = toCelebrate.shift();
+    const overlay = document.getElementById('unlock-overlay');
+    document.getElementById('unlock-emoji2').textContent = g.emoji;
+    document.getElementById('unlock-title').textContent = '';
+    overlay.classList.add('show');
+    Confetti.burst();
+    Voice.speak(`growth-unlock-${g.id}`);
+    sound.play('coin');
+    overlay.querySelector('.unlock-card').onclick = () => {
+      overlay.classList.remove('show');
+      Store.markUnlockCelebrationSeen(g.id);
+      showNextCelebration();
+    };
+  }
+  document.body.addEventListener('pointerdown', () => showNextCelebration(), { once: true });
 </script>
 </body>
 </html>
