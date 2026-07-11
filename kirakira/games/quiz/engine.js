@@ -94,7 +94,7 @@ export class KiraQuizEngine {
       if (this.remainingPool.length === 0) this.remainingPool = this.quiz.questions.slice();
       const idx = Math.floor(Math.random() * this.remainingPool.length);
       const q = this.remainingPool.splice(idx, 1)[0];
-      return { text: q.q, answer: q.a, meta: q.meta };
+      return { text: q.q, answer: q.a, meta: q.meta, choices: q.choices };
     }
     if (this.presetQueue && this.presetQueue.length > 0) return this.presetQueue.shift();
     const level = this.quiz.levels[this.levelIndex];
@@ -135,6 +135,7 @@ export class KiraQuizEngine {
     }
     this.index++;
     this.current = this._nextProblem();
+    this.callbacks.onProblem && this.callbacks.onProblem(this.current);
     this.dom.statNumEl.textContent = String(this.index);
     this.dom.statTotalEl.textContent = String(this.total);
     this.dom.statCorrectEl.textContent = String(this.correct);
@@ -200,7 +201,11 @@ export class KiraQuizEngine {
         const already = this.sessionWrong.some((p) => p.text === this.current.text);
         if (!already) {
           this.sessionWrong.push(this.current);
-          FireLog.logWrong(this.gameKey, this.current.text, String(this.current.answer));
+          // 地図などページ内の表示が前提の問題はテキスト単体で復習できないため、
+          // quiz.fireLog === false でFirestoreへの誤答ログを止められる（セッション内リベンジは残る）
+          if (this.quiz.fireLog !== false) {
+            FireLog.logWrong(this.gameKey, this.current.text, String(this.current.answer));
+          }
         }
       }
     }

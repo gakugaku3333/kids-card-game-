@@ -3,34 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="キラキラひろば「日本一周トラベル」。県庁所在地クエストで日本地図をぬりつぶそう。">
+  <meta name="description" content="キラキラひろば「日本一周トラベル」。地図でひかっている都道府県を当てて、日本地図をぬりつぶそう。">
   <title>日本一周トラベル</title>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     body { background: linear-gradient(160deg, #e6f2ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; font-family: 'Zen Maru Gothic', sans-serif; }
     .game-container { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; text-align: center; }
     h1 { color: #2f78c4; margin-bottom: 4px; }
-    .sub { color: #9a8ac2; margin-top: 0; }
+    .sub { color: #9a8ac2; margin-top: 0; font-size: .92rem; }
     #start-screen, #play-screen { display: none; }
     #start-screen.active, #play-screen.active { display: block; }
 
-    .menu-board { background: rgba(255,255,255,.85); border-radius: 20px; padding: 14px; margin: 16px 0; border: 2px solid #cfe0ff; }
-    .menu-board h2 { font-size: 1rem; color: #2f78c4; margin: 0 0 6px; }
-    .visit-count { color: #9a8ac2; font-size: .85rem; margin-bottom: 8px; }
-    .pref-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 260px; overflow-y: auto; }
-    .pref-item { background: #f0f6ff; border-radius: 10px; padding: 6px 2px; font-size: .68rem; color: #b8c4dc; }
-    .pref-item.visited { background: linear-gradient(#d6ecff, #b9dcff); color: #2f78c4; font-weight: 900; }
+    .map-board { background: rgba(255,255,255,.85); border-radius: 20px; padding: 10px 8px 4px; margin: 12px 0; border: 2px solid #cfe0ff; }
+    .map-board svg { width: 100%; height: auto; max-height: 52vh; display: block; margin: 0 auto; }
+    #play-screen .map-board svg { max-height: 40vh; }
+    .visit-count { color: #5b4b8a; font-weight: 900; font-size: .95rem; margin: 4px 0 8px; }
+    .visit-count .num { color: #2f78c4; font-size: 1.2rem; }
+
+    .pref-path { stroke: #fff; stroke-width: 0.7; stroke-linejoin: round; }
+    .pref-path.unvisited { fill: #e9e6f2; }
+    .pref-path.target {
+      fill: #ffd93d !important; stroke: #ff9d2e; stroke-width: 1.4;
+      animation: target-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes target-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    .inset-frame { fill: #f0f8ff; stroke: #aac8e0; stroke-width: 1; }
+    .inset-label { font-size: 9px; fill: #8aa4c0; font-family: inherit; }
+
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; padding: 2px 4px 8px; }
+    .leg-item { display: flex; align-items: center; gap: 3px; font-size: .66rem; color: #8a7ab0; font-weight: 700; }
+    .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     .start-btn { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 16px 34px; font-size: 1.2rem; color: #fff; background: linear-gradient(#7fa9ff, #2f78c4); box-shadow: 0 5px 0 #1c5590; margin-top: 8px; }
 
-    .quiz-meta { display: flex; justify-content: space-around; font-weight: 900; color: #5b4b8a; margin: 10px 0 20px; }
-    .question { font-size: 1.4rem; font-weight: 900; margin: 20px 0 8px; color: #4a3f6b; }
+    .quiz-meta { display: flex; justify-content: space-around; font-weight: 900; color: #5b4b8a; margin: 10px 0 4px; }
+    .question { font-size: 1.15rem; font-weight: 900; margin: 10px 0 8px; color: #4a3f6b; }
     .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .choice-btn { font-family: inherit; font-size: 1.2rem; font-weight: 900; border: none; border-radius: 18px; padding: 18px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer; }
+    .choice-btn { font-family: inherit; font-size: 1.15rem; font-weight: 900; border: none; border-radius: 18px; padding: 16px 8px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.1); cursor: pointer; }
     .choice-btn.correct { background: #c8f7d6; }
     .choice-btn.wrong { background: #ffd6d6; opacity: .6; }
     .choice-btn:disabled { cursor: default; }
-    .feedback { min-height: 1.6rem; font-size: 1.2rem; font-weight: 900; margin-top: 14px; }
+    .feedback { min-height: 1.6rem; font-size: 1.15rem; font-weight: 900; margin-top: 12px; }
     .feedback.correct { color: #38c172; }
     .feedback.wrong { color: #e3342f; }
   </style>
@@ -39,11 +55,11 @@
   <div class="game-container">
     <section id="start-screen">
       <h1>🗾 日本一周トラベル</h1>
-      <p class="sub">県庁所在地クエストに こたえて、日本地図の 訪問マップを ぬりつぶそう！</p>
-      <div class="menu-board">
-        <h2>🧭 訪問マップ</h2>
-        <div class="visit-count"><span id="visit-count">0</span>/47 けん 訪問ずみ</div>
-        <div id="pref-grid" class="pref-grid"></div>
+      <p class="sub">地図で ひかっている 都道府県を あてて、<br>訪問マップを ぬりつぶそう！</p>
+      <div class="map-board">
+        <div class="visit-count"><span class="num" id="visit-count">0</span> / 47 けん 訪問ずみ</div>
+        <div id="start-map"></div>
+        <div class="legend" id="legend"></div>
       </div>
       <button id="btn-start" class="start-btn">たびに でる！</button>
     </section>
@@ -51,7 +67,10 @@
     <section id="play-screen">
       <div class="quiz-meta">
         <span>せいかい: <span id="stat-correct">0</span></span>
-        <span>もんだい: <span id="stat-num">1</span>/<span id="stat-total">8</span></span>
+        <span>クエスト: <span id="stat-num">1</span>/<span id="stat-total">8</span></span>
+      </div>
+      <div class="map-board">
+        <div id="play-map"></div>
       </div>
       <div class="question" id="question-display">?</div>
       <div class="choices" id="choices"></div>
@@ -64,21 +83,148 @@
   <script type="module">
     import { KiraShell } from '../../core/shell.js';
     import * as Store from '../../core/store.js';
-    import { loadQuiz, KiraQuizEngine } from '../quiz/engine.js';
+    import { KiraQuizEngine } from '../quiz/engine.js';
     import { showUnlockToast } from '../../core/questSkin.js';
+    import { VIEWBOX, INSET, REGION_NAMES, REGION_COLORS, OKINAWA_LOCAL, PREFS } from './map-data.js';
 
     const GAME_ID = 'kirakira-travel';
-    const ALL_PREFS = [
-      '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県',
-      '岐阜県', '静岡県', '愛知県', '三重県',
-      '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
-      '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-      '徳島県', '香川県', '愛媛県', '高知県',
-      '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-    ];
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const QUESTIONS_PER_TRIP = 8;
 
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const visitedSet = () => new Set(Store.getQuestProgress(GAME_ID).unlockedItems || []);
+
+    // ── 地図描画 ─────────────────────────────────────
+    // prefix付きIDで開始画面用・プレイ画面用の2枚を独立に描く
+    function renderMap(containerId, prefix) {
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('viewBox', VIEWBOX.join(' '));
+      const visited = visitedSet();
+
+      PREFS.filter((p) => p.d !== 'INSET').forEach((p) => {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', p.d);
+        path.setAttribute('id', `${prefix}-pref-${p.id}`);
+        path.setAttribute('class', 'pref-path' + (visited.has(p.name) ? '' : ' unvisited'));
+        if (visited.has(p.name)) path.setAttribute('fill', REGION_COLORS[p.r]);
+        svg.appendChild(path);
+      });
+
+      // 沖縄インセット
+      const frame = document.createElementNS(SVG_NS, 'rect');
+      frame.setAttribute('x', INSET.x); frame.setAttribute('y', INSET.y);
+      frame.setAttribute('width', INSET.w); frame.setAttribute('height', INSET.h);
+      frame.setAttribute('rx', 5);
+      frame.setAttribute('class', 'inset-frame');
+      svg.appendChild(frame);
+      const okiLabel = document.createElementNS(SVG_NS, 'text');
+      okiLabel.setAttribute('x', INSET.x + 4); okiLabel.setAttribute('y', INSET.y + 11);
+      okiLabel.setAttribute('class', 'inset-label');
+      okiLabel.textContent = '沖縄';
+      svg.appendChild(okiLabel);
+      const oki = PREFS.find((p) => p.id === 47);
+      const okiPath = document.createElementNS(SVG_NS, 'path');
+      okiPath.setAttribute('d', OKINAWA_LOCAL);
+      okiPath.setAttribute('id', `${prefix}-pref-47`);
+      okiPath.setAttribute('class', 'pref-path' + (visited.has(oki.name) ? '' : ' unvisited'));
+      if (visited.has(oki.name)) okiPath.setAttribute('fill', REGION_COLORS[oki.r]);
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('transform', `translate(${INSET.x}, ${INSET.y})`);
+      g.appendChild(okiPath);
+      svg.appendChild(g);
+
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      container.appendChild(svg);
+      return svg;
+    }
+
+    function paintVisited(prefix, pref) {
+      const el = document.getElementById(`${prefix}-pref-${pref.id}`);
+      if (!el) return;
+      el.classList.remove('unvisited', 'target');
+      el.setAttribute('fill', REGION_COLORS[pref.r]);
+    }
+
+    // ── viewBoxズーム（イージング付き） ──────────────
+    let playSvg = null;
+    let vbCurrent = VIEWBOX.slice();
+    let vbAnim = null;
+    let vbSnap = null;
+    // 経過時間ベースのアニメ（フレームが間引かれても必ず目標値に到達する）
+    function animateViewBox(target) {
+      if (vbAnim) cancelAnimationFrame(vbAnim);
+      if (vbSnap) clearTimeout(vbSnap);
+      const from = vbCurrent.slice();
+      const DURATION = 550;
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / DURATION);
+        const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        for (let i = 0; i < 4; i++) vbCurrent[i] = from[i] + (target[i] - from[i]) * e;
+        if (playSvg) playSvg.setAttribute('viewBox', vbCurrent.map((v) => v.toFixed(2)).join(' '));
+        if (t < 1) vbAnim = requestAnimationFrame(step);
+      };
+      step(start);
+      // rAFが間引かれる環境でも最終的に目標へ確実に到達させる保険
+      vbSnap = setTimeout(() => {
+        if (vbAnim) cancelAnimationFrame(vbAnim);
+        vbCurrent = target.slice();
+        if (playSvg) playSvg.setAttribute('viewBox', vbCurrent.map((v) => v.toFixed(2)).join(' '));
+      }, DURATION + 80);
+    }
+
+    function zoomToRegion(regionIndex) {
+      if (regionIndex === 8) { // 沖縄: インセット枠へ
+        const pad = 14;
+        animateViewBox([INSET.x - pad, INSET.y - pad, INSET.w + pad * 2, INSET.h + pad * 2]);
+        return;
+      }
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      PREFS.filter((p) => p.r === regionIndex && p.d !== 'INSET').forEach((p) => {
+        const el = document.getElementById(`play-pref-${p.id}`);
+        if (!el) return;
+        const bb = el.getBBox();
+        x0 = Math.min(x0, bb.x); y0 = Math.min(y0, bb.y);
+        x1 = Math.max(x1, bb.x + bb.width); y1 = Math.max(y1, bb.y + bb.height);
+      });
+      if (x0 === Infinity) { animateViewBox(VIEWBOX.slice()); return; }
+      const pad = 30;
+      animateViewBox([x0 - pad, y0 - pad, (x1 - x0) + pad * 2, (y1 - y0) + pad * 2]);
+    }
+
+    // ── 出題の組み立て ───────────────────────────────
+    // 未訪問の県を優先して1たび分のクエストを選ぶ。まちがい選択肢は同じ地方から優先して選ぶ
+    function buildTripQuestions() {
+      const visited = visitedSet();
+      const unvisited = shuffle(PREFS.filter((p) => !visited.has(p.name)));
+      const rest = shuffle(PREFS.filter((p) => visited.has(p.name)));
+      const picked = unvisited.concat(rest).slice(0, QUESTIONS_PER_TRIP);
+
+      return shuffle(picked).map((p) => {
+        const sameRegion = shuffle(PREFS.filter((x) => x.r === p.r && x.id !== p.id)).map((x) => x.name);
+        const others = shuffle(PREFS.filter((x) => x.r !== p.r)).map((x) => x.name);
+        const wrongs = sameRegion.concat(others).slice(0, 3);
+        // 1県だけの地方(北海道・沖縄)は地方名を出すと答えそのものになるので伏せる
+        const hint = sameRegion.length > 0 ? `${REGION_NAMES[p.r]}の ` : '';
+        return {
+          q: `ひかっている ${hint}都道府県は？`,
+          a: p.name,
+          meta: { pref: p.name },
+          choices: [p.name].concat(wrongs)
+        };
+      });
+    }
+
+    // ── 画面制御 ─────────────────────────────────────
     const startScreen = document.getElementById('start-screen');
     const playScreen = document.getElementById('play-screen');
     function showScreen(el) {
@@ -86,15 +232,13 @@
       el.classList.add('active');
     }
 
-    function renderMap() {
-      const visited = Store.getQuestProgress(GAME_ID).unlockedItems || [];
-      document.getElementById('visit-count').textContent = String(visited.length);
-      document.getElementById('pref-grid').innerHTML = ALL_PREFS.map((p) => {
-        const has = visited.indexOf(p) !== -1;
-        return `<div class="pref-item${has ? ' visited' : ''}">${p.replace(/[都道府県]$/, '')}</div>`;
-      }).join('');
+    function renderStartScreen() {
+      renderMap('start-map', 'start');
+      document.getElementById('visit-count').textContent = String(visitedSet().size);
+      document.getElementById('legend').innerHTML = REGION_NAMES.map((n, i) =>
+        `<div class="leg-item"><div class="leg-dot" style="background:${REGION_COLORS[i]}"></div>${n.replace('地方', '')}</div>`
+      ).join('');
     }
-    renderMap();
 
     const dom = {
       questionEl: document.getElementById('question-display'),
@@ -106,33 +250,54 @@
       statTotalEl: document.getElementById('stat-total')
     };
 
-    const quiz = await loadQuiz(GAME_ID);
-    const shell = new KiraShell({ gameId: quiz.id, title: '🗾 日本一周トラベル' });
+    const shell = new KiraShell({ gameId: GAME_ID, title: '🗾 日本一周トラベル' });
+    let engine = null;
 
-    const engine = new KiraQuizEngine(shell, quiz, dom, {
-      onCorrect(problem) {
-        if (problem.meta && problem.meta.pref) {
+    function startTrip() {
+      const quiz = {
+        id: GAME_ID,
+        title: '日本一周トラベル',
+        type: 'choice',
+        totalQuestions: QUESTIONS_PER_TRIP,
+        choiceCount: 4,
+        reward: { perCorrect: 3, reviewMultiplier: 2 },
+        fireLog: false, // 地図を見ないと答えられない問題なのでFirestore誤答ログには載せない
+        questions: buildTripQuestions()
+      };
+      engine = new KiraQuizEngine(shell, quiz, dom, {
+        onProblem(problem) {
+          const pref = PREFS.find((p) => p.name === problem.meta.pref);
+          if (!pref) return;
+          document.querySelectorAll('.pref-path.target').forEach((el) => el.classList.remove('target'));
+          const el = document.getElementById(`play-pref-${pref.id}`);
+          if (el) el.classList.add('target');
+          zoomToRegion(pref.r);
+        },
+        onCorrect(problem) {
+          const pref = PREFS.find((p) => p.name === problem.meta.pref);
           const isNew = Store.unlockQuestItem(GAME_ID, problem.meta.pref);
-          if (isNew) {
-            showUnlockToast({ emoji: '🗺️', name: `${problem.meta.pref} を 訪問した！` });
-            renderMap();
-          }
+          if (pref) paintVisited('play', pref);
+          if (isNew) showUnlockToast({ emoji: '🗺️', name: `${problem.meta.pref} を 訪問した！` });
+        },
+        onReviewOffer() {
+          engine.callbacks.onFinish({ correct: engine.correct, total: engine.total, tokens: engine.tokens });
+        },
+        onFinish(result) {
+          renderStartScreen();
+          shell.showResult(result);
         }
-      },
-      onReviewOffer() {
-        engine.callbacks.onFinish({ correct: engine.correct, total: engine.total, tokens: engine.tokens });
-      },
-      onFinish(result) {
-        shell.showResult(result);
-      }
-    });
-    shell.onRetry(() => { showScreen(startScreen); });
+      });
 
-    document.getElementById('btn-start').addEventListener('click', () => {
       showScreen(playScreen);
+      playSvg = renderMap('play-map', 'play');
+      vbCurrent = VIEWBOX.slice();
       shell.startGame(() => engine.startLevel(0));
-    });
+    }
 
+    shell.onRetry(() => { showScreen(startScreen); renderStartScreen(); });
+    document.getElementById('btn-start').addEventListener('click', startTrip);
+
+    renderStartScreen();
     showScreen(startScreen);
   </script>
 </body>
