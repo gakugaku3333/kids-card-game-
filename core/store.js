@@ -61,6 +61,7 @@ function load() {
     ownedItems: Array.isArray(raw.ownedItems) ? raw.ownedItems : [],
     bestScores: bs,
     kanaCards: Array.isArray(raw.kanaCards) ? raw.kanaCards : [],
+    questProgress: (raw.questProgress && typeof raw.questProgress === 'object') ? raw.questProgress : {},
     avatar: {
       base: typeof av.base === 'string' ? av.base : null,
       accessory: typeof av.accessory === 'string' ? av.accessory : null,
@@ -151,6 +152,26 @@ export function grantKanaCard(kana) {
     save();
   }
   return isNew;
+}
+
+// 本家Phase C: キラキラのquestSkin基盤の逆輸入。クイズ種別(gameId)ごとに世界観アイテムを
+// 順番に1つずつ解放する。進行はkatakana_game_data内の新フィールドに持つ（後方互換）。
+function ensureQuestProgress(gameId) {
+  if (!data.questProgress[gameId]) data.questProgress[gameId] = { unlockedItems: [] };
+  return data.questProgress[gameId];
+}
+
+export function getQuestProgress(gameId) {
+  return ensureQuestProgress(gameId);
+}
+
+export function grantQuestItem(gameId, allItems) {
+  const p = ensureQuestProgress(gameId);
+  const next = allItems.find((item) => p.unlockedItems.indexOf(item.id) === -1);
+  if (!next) return null;
+  p.unlockedItems.push(next.id);
+  save();
+  return next;
 }
 
 export function slotOf(id) {

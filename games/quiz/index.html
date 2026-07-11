@@ -33,12 +33,20 @@
     .feedback.correct { color: #38c172; }
     .feedback.wrong { color: #e3342f; }
     #review-offer-screen .emoji { font-size: 3rem; margin: 20px 0; }
+    #quest-gallery { display: none; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0; }
+    #quest-gallery.active { display: flex; }
+    .quest-item {
+      width: 46px; height: 46px; border-radius: 12px; background: #fff6ff; border: 2px solid #ecdcff;
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem; opacity: .45;
+    }
+    .quest-item.unlocked { opacity: 1; background: #fff; border-color: #d9c8ff; }
   </style>
 </head>
 <body>
   <div class="game-container">
     <section id="start-screen">
       <h1 id="quiz-title">クイズ</h1>
+      <div id="quest-gallery"></div>
       <div id="start-simple" class="hidden"><button id="btn-start">スタート！</button></div>
       <div id="level-select" class="hidden"></div>
     </section>
@@ -67,6 +75,7 @@
   <script type="module">
     import { GameShell } from '../../core/shell.js';
     import * as FireLog from '../../core/firelog.js';
+    import * as QuestSkin from '../../core/questSkin.js';
     import { loadQuiz, QuizEngine } from './engine.js';
 
     const startScreen = document.getElementById('start-screen');
@@ -104,6 +113,11 @@
       }
       const quiz = await loadQuiz(setId);
       const shell = new GameShell({ gameId: quiz.id, title: (quiz.emoji ? quiz.emoji + ' ' : '') + quiz.title });
+      const galleryEl = document.getElementById('quest-gallery');
+      if (quiz.questItems) {
+        galleryEl.classList.add('active');
+        QuestSkin.renderItemGallery(galleryEl, quiz.questItems, quiz.id);
+      }
       const engine = new QuizEngine(shell, quiz, dom, {
         onReviewOffer(count, wrongItems) {
           document.getElementById('review-count').textContent = String(count);
@@ -114,7 +128,11 @@
           };
         },
         onFinish(result) {
+          if (quiz.questItems) QuestSkin.renderItemGallery(galleryEl, quiz.questItems, quiz.id);
           shell.showResult(result);
+        },
+        onItemUnlock(item) {
+          QuestSkin.showUnlockToast(item);
         }
       });
       shell.onRetry(() => engine.startLevel(engine.levelIndex));

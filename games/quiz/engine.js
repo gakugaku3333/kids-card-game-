@@ -140,7 +140,7 @@ export const GENERATORS = {
 function buildSumLe10Preset() {
   const list = [];
   for (let a = 1; a <= 9; a++) {
-    for (let b = 1; a + b <= 10; b++) list.push({ text: `${a} + ${b}`, answer: a + b });
+    for (let b = 1; a + b <= 10; b++) list.push({ text: `${a} + ${b}`, answer: a + b, vars: { num1: a, num2: b } });
   }
   return shuffle(list);
 }
@@ -291,10 +291,17 @@ export class QuizEngine {
       this.tokens += reward;
 
       const isNewCard = this.quiz.collectCards ? Store.grantKanaCard(this.current.text) : false;
+      // 本家Phase C: キラキラのquestSkin基盤の逆輸入。正解のごほうびとして世界観アイテムを解放する
+      // （たしざん→おかしこうじょう等）。ロジックはquestItemsをJSONに足すだけで他クイズにも展開できる。
+      const unlockedItem = this.quiz.questItems ? Store.grantQuestItem(this.gameKey, this.quiz.questItems) : null;
 
       if (isComboBonus) {
         this.dom.feedbackEl.textContent = `🌟 ${this.combo}れんぞくせいかい！ボーナス +${this.comboBonusTokens}⭐`;
         this.shell.sound.play('coin');
+      } else if (unlockedItem) {
+        this.dom.feedbackEl.textContent = `🎁 New！ ${unlockedItem.emoji} ${unlockedItem.name}`;
+        this.shell.sound.play('coin');
+        this.callbacks.onItemUnlock && this.callbacks.onItemUnlock(unlockedItem);
       } else if (isNewCard) {
         this.dom.feedbackEl.textContent = `🎴 あたらしい カードを ゲット！「${this.current.text}」`;
         this.shell.sound.play('coin');

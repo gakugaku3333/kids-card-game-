@@ -65,6 +65,8 @@
         // このファイルは解釈しないが、save() で消さないよう素通りで保持する。
         var bs = (data.bestScores && typeof data.bestScores === 'object') ? data.bestScores : {};
         var kc = Array.isArray(data.kanaCards) ? data.kanaCards : [];
+        // questProgress も同様に core/store.js (ESM版) 側の管轄。素通りで保持する。
+        var qp = (data.questProgress && typeof data.questProgress === 'object') ? data.questProgress : {};
         return {
             tokens: typeof data.tokens === 'number' ? data.tokens : 0,
             totalCorrect: typeof data.totalCorrect === 'number' ? data.totalCorrect : 0,
@@ -72,6 +74,7 @@
             ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : [],
             bestScores: bs,
             kanaCards: kc,
+            questProgress: qp,
             avatar: {
                 base: typeof av.base === 'string' ? av.base : null,
                 accessory: typeof av.accessory === 'string' ? av.accessory : null,

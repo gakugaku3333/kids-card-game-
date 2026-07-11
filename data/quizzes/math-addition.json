@@ -6,12 +6,23 @@
   "totalQuestions": 10,
   "choiceCount": 4,
   "reward": { "perCorrect": 2 },
+  "questItems": [
+    { "id": "cookie", "emoji": "🍪", "name": "クッキー" },
+    { "id": "donut", "emoji": "🍩", "name": "ドーナツ" },
+    { "id": "cake", "emoji": "🍰", "name": "ショートケーキ" },
+    { "id": "cupcake", "emoji": "🧁", "name": "カップケーキ" },
+    { "id": "chocolate", "emoji": "🍫", "name": "チョコレート" },
+    { "id": "candy", "emoji": "🍬", "name": "あめ" },
+    { "id": "lollipop", "emoji": "🍭", "name": "ぺろぺろキャンディ" },
+    { "id": "pudding", "emoji": "🍮", "name": "プリン" }
+  ],
   "levels": [
     {
       "name": "レベル1: 1けた+1けた (こたえ10いか)",
       "desc": "3+7=10",
       "preset": "sumLe10",
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
     },
     {
       "name": "レベル2: 1けた+1けた (こたえ2けた)",
@@ -19,7 +30,8 @@
       "kind": "sum",
       "num1Range": [5, 9],
       "num2Range": [5, 9],
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
     },
     {
       "name": "レベル3: 2けた+1けた",
@@ -27,7 +39,8 @@
       "kind": "sum",
       "num1Range": [10, 99],
       "num2Range": [1, 9],
-      "choiceRange": 20
+      "choiceRange": 20,
+      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
     },
     {
       "name": "レベル4: 2けた+2けた",
@@ -35,7 +48,8 @@
       "kind": "sum",
       "num1Range": [10, 99],
       "num2Range": [10, 99],
-      "choiceRange": 20
+      "choiceRange": 20,
+      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
     }
   ]
 }

@@ -6,6 +6,16 @@
   "totalQuestions": 10,
   "choiceCount": 4,
   "reward": { "perCorrect": 2 },
+  "questItems": [
+    { "id": "gem", "emoji": "💎", "name": "たからのほうせき" },
+    { "id": "crown", "emoji": "👑", "name": "おうかん" },
+    { "id": "trophy", "emoji": "🏆", "name": "トロフィー" },
+    { "id": "key", "emoji": "🗝️", "name": "たからのかぎ" },
+    { "id": "chest", "emoji": "📦", "name": "たからばこ" },
+    { "id": "emblem", "emoji": "⚜️", "name": "たからのしるし" },
+    { "id": "coin", "emoji": "🪙", "name": "きんか" },
+    { "id": "gift", "emoji": "🎁", "name": "おたからばこ" }
+  ],
   "levels": [
     {
       "name": "レベル1: 1けた÷1けた",
@@ -13,7 +23,8 @@
       "kind": "quotientExact",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこ？"
     },
     {
       "name": "レベル2: 2けた÷1けた (わりきれる)",
@@ -21,7 +32,8 @@
       "kind": "quotientExact",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこ？"
     },
     {
       "name": "レベル3: 2けた÷1けた (あまりあり)",
@@ -29,7 +41,8 @@
       "kind": "quotientRemainder",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこで、あまりは なんこ？"
     }
   ]
 }

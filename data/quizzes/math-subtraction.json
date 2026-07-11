@@ -6,6 +6,16 @@
   "totalQuestions": 10,
   "choiceCount": 4,
   "reward": { "perCorrect": 2 },
+  "questItems": [
+    { "id": "rabbit", "emoji": "🐰", "name": "うさぎ" },
+    { "id": "dog", "emoji": "🐶", "name": "いぬ" },
+    { "id": "cat", "emoji": "🐱", "name": "ねこ" },
+    { "id": "bear", "emoji": "🐻", "name": "くま" },
+    { "id": "panda", "emoji": "🐼", "name": "ぱんだ" },
+    { "id": "lion", "emoji": "🦁", "name": "らいおん" },
+    { "id": "monkey", "emoji": "🐵", "name": "さる" },
+    { "id": "frog", "emoji": "🐸", "name": "かえる" }
+  ],
   "levels": [
     {
       "name": "レベル1: 1けた-1けた",
@@ -13,7 +23,8 @@
       "kind": "diff",
       "num1Range": [5, 9],
       "num2LtNum1": true,
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
     },
     {
       "name": "レベル2: 2けた-1けた",
@@ -21,7 +32,8 @@
       "kind": "diff",
       "num1Range": [10, 99],
       "num2Range": [1, 9],
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
     },
     {
       "name": "レベル3: 2けた-2けた",
@@ -29,7 +41,8 @@
       "kind": "diff",
       "num1Range": [10, 99],
       "num2LtNum1": true,
-      "choiceRange": 10
+      "choiceRange": 10,
+      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
     }
   ]
 }
