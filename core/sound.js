@@ -43,8 +43,30 @@ function tone(freqStart, freqEnd, duration, volume) {
   osc.stop(c.currentTime + duration);
 }
 
+function note(freq, duration, volume, delay) {
+  if (isMuted()) return;
+  const c = ensureContext();
+  if (!c) return;
+  const start = c.currentTime + delay;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain);
+  gain.connect(c.destination);
+  osc.start(start);
+  osc.stop(start + duration);
+}
+
 const EFFECTS = {
-  correct: () => tone(500, 900, 0.14, 0.16),
+  // 単発の「ピー」から、跳ねる2音の「タンッ↑」に変更(6〜10歳向けなので3歳版の3音より控えめ)
+  correct: () => {
+    note(783.99, 0.11, 0.16, 0);
+    note(1046.5, 0.18, 0.17, 0.07);
+  },
   wrong: () => tone(300, 160, 0.22, 0.14),
   clear: () => { tone(500, 800, 0.12, 0.15); setTimeout(() => tone(700, 1100, 0.18, 0.15), 120); },
   coin: () => tone(700, 1200, 0.10, 0.14)
