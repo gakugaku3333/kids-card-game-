@@ -50,6 +50,7 @@
 <script type="module">
   import { ToddlerShell } from '../../core/shell.js';
   import { asset } from '../../core/paths.js';
+  import { muted } from '../../core/sound.js';
 
   const shell = new ToddlerShell({ gameId: 'music' });
   const keysEl = document.getElementById('keys');
@@ -81,6 +82,7 @@
   }
 
   function playNote(freq, duration) {
+    if (muted()) return;
     const c = ensureCtx();
     const osc = c.createOscillator();
     const gain = c.createGain();

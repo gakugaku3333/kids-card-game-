@@ -109,6 +109,7 @@
   import { KiraShell } from '../../core/shell.js';
   import * as Store from '../../core/store.js';
   import { evaluateAndToast } from '../../core/badges.js';
+  import { muted } from '../../../core/sound.js';
 
   const shell = new KiraShell({ gameId: 'rhythm-melody', title: 'リズム＆メロディ' });
 
@@ -129,6 +130,7 @@
     return audioCtx;
   }
   function tone(freq, dur, type = 'sine', vol = 0.18) {
+    if (muted()) return;
     const c = ac();
     const osc = c.createOscillator();
     const gain = c.createGain();

@@ -8,6 +8,7 @@
  * speechSynthesis にフォールバックする（テキストは voice-lines.json 側に保持）。
  */
 import { asset } from './paths.js';
+import { muted } from './sound.js';
 
 let unlocked = false;
 let jaVoice = null;
@@ -69,6 +70,7 @@ function getAudio(id) {
  * @param {string} id
  */
 export function speak(id) {
+  if (muted()) return;
   _play(id);
 }
 

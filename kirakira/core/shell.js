@@ -39,6 +39,11 @@ function injectStyles() {
       font-weight: 900; background: rgba(255,255,255,.85); border-radius: 50px; padding: 8px 14px;
       white-space: nowrap; color: #5b4b8a;
     }
+    #${HEADER_ID} .kira-mute {
+      font-family: inherit; border: none; cursor: pointer; font-size: 1.2rem;
+      background: rgba(255,255,255,.85); border-radius: 50%; width: 40px; height: 40px;
+      box-shadow: 0 3px 8px rgba(124,92,255,.18); flex-shrink: 0;
+    }
     @media (max-height: 700px) {
       #${HEADER_ID} { padding: 6px 10px; font-size: .9rem; }
     }
@@ -102,11 +107,16 @@ export class KiraShell {
     header.innerHTML =
       `<a href="${this.homePath}" class="kira-back">🏠 もどる</a>` +
       `<h1 class="kira-title">${this.title}</h1>` +
-      `<span class="kira-tokens">🌟 <span id="kira-tokens-value">${Store.getTokens()}</span></span>`;
+      `<span class="kira-tokens">🌟 <span id="kira-tokens-value">${Store.getTokens()}</span></span>` +
+      `<button class="kira-mute" id="kira-mute-btn">${sound.muted() ? '🔇' : '🔈'}</button>`;
     document.body.prepend(header);
     document.addEventListener('kirakira-tokens-changed', () => {
       const el = document.getElementById('kira-tokens-value');
       if (el) el.textContent = Store.getTokens();
+    });
+    header.querySelector('#kira-mute-btn').addEventListener('click', (ev) => {
+      const nowMuted = sound.toggleMute();
+      ev.currentTarget.textContent = nowMuted ? '🔇' : '🔈';
     });
   }
 

@@ -33,6 +33,11 @@ function injectStyles() {
       font-weight: 900; background: rgba(255,255,255,.85); border-radius: 50px; padding: 8px 14px;
       white-space: nowrap;
     }
+    #${HEADER_ID} .shell-mute {
+      font-family: inherit; border: none; cursor: pointer; font-size: 1.2rem;
+      background: rgba(255,255,255,.85); border-radius: 50%; width: 40px; height: 40px;
+      box-shadow: 0 3px 8px rgba(0,0,0,.18); flex-shrink: 0;
+    }
     #${HEADER_ID} .shell-avatar {
       width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.85);
       display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
@@ -118,11 +123,16 @@ export class GameShell {
       avatarHtml +
       buddyHtml +
       `<h1 class="shell-title">${this.title}</h1>` +
-      `<span class="shell-tokens">⭐ <span id="shell-tokens-value">${Store.getTokens()}</span></span>`;
+      `<span class="shell-tokens">⭐ <span id="shell-tokens-value">${Store.getTokens()}</span></span>` +
+      `<button class="shell-mute" id="shell-mute-btn">${sound.muted() ? '🔇' : '🔈'}</button>`;
     document.body.prepend(header);
     document.addEventListener('tokens-changed', () => {
       const el = document.getElementById('shell-tokens-value');
       if (el) el.textContent = Store.getTokens();
+    });
+    header.querySelector('#shell-mute-btn').addEventListener('click', (ev) => {
+      const nowMuted = sound.toggleMute();
+      ev.currentTarget.textContent = nowMuted ? '🔇' : '🔈';
     });
   }
 
