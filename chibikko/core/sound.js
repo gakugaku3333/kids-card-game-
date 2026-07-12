@@ -42,8 +42,31 @@ function tone(freqStart, freqEnd, duration, volume) {
   osc.stop(c.currentTime + duration);
 }
 
+function note(freq, duration, volume, delay) {
+  if (isMuted()) return;
+  const c = ensureContext();
+  if (!c) return;
+  const start = c.currentTime + delay;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain);
+  gain.connect(c.destination);
+  osc.start(start);
+  osc.stop(start + duration);
+}
+
 const EFFECTS = {
-  correct: () => tone(500, 900, 0.14, 0.16),
+  // ドレミの3音を弾ませる「キラッ」としたアルペジオ。単発ピー音より嬉しさが伝わる
+  correct: () => {
+    note(1046.5, 0.13, 0.17, 0);
+    note(1318.5, 0.13, 0.17, 0.06);
+    note(1568, 0.22, 0.18, 0.12);
+  },
   wrong: () => tone(300, 260, 0.18, 0.1),
   clear: () => { tone(500, 800, 0.12, 0.15); setTimeout(() => tone(700, 1100, 0.18, 0.15), 120); },
   coin: () => tone(700, 1200, 0.10, 0.14),

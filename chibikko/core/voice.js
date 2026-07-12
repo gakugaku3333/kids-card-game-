@@ -13,8 +13,6 @@ let unlocked = false;
 let jaVoice = null;
 let linesPromise = null;
 const audioCache = new Map();
-const queue = [];
-let playing = false;
 
 function pickJaVoice() {
   if (typeof speechSynthesis === 'undefined') return null;
@@ -43,21 +41,15 @@ export function unlock() {
   }
 }
 
-function fallbackSpeak(text, onEnd) {
-  if (typeof speechSynthesis === 'undefined' || !text) {
-    if (onEnd) onEnd();
-    return;
-  }
+function fallbackSpeak(text) {
+  if (typeof speechSynthesis === 'undefined' || !text) return;
+  // speechSynthesisは同時発話できないため直前の発話を打ち切って最新を優先する
   speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
   utter.rate = 0.9;
   utter.pitch = 1.1;
   if (jaVoice) utter.voice = jaVoice;
-  if (onEnd) {
-    utter.addEventListener('end', onEnd, { once: true });
-    utter.addEventListener('error', onEnd, { once: true });
-  }
   speechSynthesis.speak(utter);
 }
 
@@ -71,38 +63,25 @@ function getAudio(id) {
 }
 
 /**
- * data/voice-lines.json のIDで音声を再生する。複数回呼ばれても重ならないよう
- * 内部キューに積んで順番に再生する。
+ * data/voice-lines.json のIDで音声を即時再生する。
+ * 3歳向けはタップへの反応速度が最優先のため、キューに積まず重なりを許容する。
+ * 同じIDの連打は頭出しリスタート、別IDは並行再生になる。
  * @param {string} id
  */
 export function speak(id) {
-  queue.push(id);
-  _playNext();
+  _play(id);
 }
 
-async function _playNext() {
-  if (playing || queue.length === 0) return;
-  playing = true;
-  const id = queue.shift();
+async function _play(id) {
   const lines = await loadLines();
   const line = lines[id];
-  if (!line) {
-    playing = false;
-    _playNext();
-    return;
-  }
+  if (!line) return;
   const audio = getAudio(id);
   audio.currentTime = 0;
-  const done = () => {
-    playing = false;
-    _playNext();
-  };
-  audio.addEventListener('ended', done, { once: true });
   try {
     await audio.play();
   } catch (e) {
-    audio.removeEventListener('ended', done);
-    fallbackSpeak(line.text, done);
+    fallbackSpeak(line.text);
   }
 }
 
