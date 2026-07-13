@@ -69,16 +69,9 @@
     import { renderItemGallery, pickNextUnlock, showUnlockToast } from '../../core/questSkin.js';
 
     const GAME_ID = 'kirakira-shopping-mall';
-    const COUPONS = [
-      { id: 'coupon10', emoji: '🎟️', name: '10%オフけん' },
-      { id: 'coupon20', emoji: '🏷️', name: '20%オフけん' },
-      { id: 'freeship', emoji: '📦', name: 'そうりょう無料けん' },
-      { id: 'point2x', emoji: '⭐', name: 'ポイント2ばいけん' },
-      { id: 'gift', emoji: '🎁', name: 'おまけプレゼントけん' },
-      { id: 'vip', emoji: '💳', name: 'VIPかいいんけん' },
-      { id: 'birthday', emoji: '🎂', name: 'たんじょうびわりびきけん' },
-      { id: 'golden', emoji: '🌟', name: 'ゴールドとくべつけん' }
-    ];
+    // クーポン定義は ../../data/coupons.json に一本化(ショップでの割引消費と共有するため)
+    const couponsRes = await fetch('../../data/coupons.json');
+    const COUPONS = (await couponsRes.json()).coupons;
 
     const startScreen = document.getElementById('start-screen');
     const playScreen = document.getElementById('play-screen');

@@ -48,6 +48,14 @@
     #nickname-input:focus { outline: none; border-color: #7c5cff; }
 
     .review-banner { display: none; background: linear-gradient(#fff0f8, #ffe6f4); border: 2px solid #ffc2e0; border-radius: 20px; padding: 14px; margin-bottom: 16px; text-decoration: none; color: #ff2f92; font-weight: 900; }
+
+    .daily-panel { background: rgba(255,255,255,.85); border-radius: 20px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(124,92,255,.1); }
+    .daily-title { font-weight: 900; color: #5b4b8a; margin: 0 0 8px; font-size: .95rem; }
+    .daily-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: .85rem; color: #4a3f6b; }
+    .daily-item.done { color: #4fd6bd; }
+    .daily-item .d-check { width: 20px; text-align: center; }
+    .daily-item .d-desc { flex: 1; }
+    .daily-item .d-reward { font-weight: 900; color: #ff9ec7; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -59,6 +67,10 @@
   <a href="games/quiz/index.html?mode=fb-review" id="review-banner" class="review-banner">
     🔥 リベンジクエスト：おしかったもんだいが <span id="review-count">0</span>問！2ばいごほうびで ちょうせんしよう
   </a>
+  <div class="daily-panel">
+    <p class="daily-title">📋 きょうのおしごと</p>
+    <div id="daily-list"></div>
+  </div>
   <main id="cards"></main>
 </div>
 
@@ -77,6 +89,8 @@
 <script type="module">
   import * as Store from './core/store.js';
   import * as FireLog from './core/firelog.js';
+  import { getAllMissionDefs, evaluateMissions } from './core/dailyMissions.js';
+  import { showBadgeToast } from './core/badges.js';
 
   // マイルームで選んだかべがみを、ハブの背景にも反映する(「模様替えがハブに反映される」の軽量版)
   const WALLPAPER_BG = {
@@ -111,6 +125,22 @@
       cardsEl.appendChild(a);
     });
   }
+
+  async function renderDaily() {
+    const defs = await getAllMissionDefs();
+    const list = document.getElementById('daily-list');
+    list.innerHTML = defs.map((m) => {
+      const done = Store.hasCompletedDailyMission(m.id);
+      return `<div class="daily-item ${done ? 'done' : ''}">
+        <span class="d-check">${done ? '✅' : '⬜'}</span>
+        <span class="d-desc">${m.emoji} ${m.desc}</span>
+        <span class="d-reward">+${m.reward}🌟</span>
+      </div>`;
+    }).join('');
+  }
+  const newlyCompleted = await evaluateMissions();
+  await renderDaily();
+  newlyCompleted.forEach((m, i) => setTimeout(() => showBadgeToast(m, `「${m.name}」クリア！ +${m.reward}🌟`), i * 600));
 
   function checkReviewDue() {
     FireLog.getReviewDue((items) => {

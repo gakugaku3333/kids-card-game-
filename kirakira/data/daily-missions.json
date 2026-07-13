@@ -1,0 +1,7 @@
+{
+  "missions": [
+    { "id": "play_1", "name": "きょう1かい あそぼう", "emoji": "🎮", "desc": "どれかのクエストで 1かい あそぶ", "metric": "plays", "threshold": 1, "reward": 5 },
+    { "id": "play_3", "name": "たっぷりあそぼう", "emoji": "🎯", "desc": "どれかのクエストで 3かい あそぶ", "metric": "plays", "threshold": 3, "reward": 8 },
+    { "id": "correct_10", "name": "せいかいめいじん", "emoji": "✨", "desc": "あわせて10もん せいかいする", "metric": "correctSum", "threshold": 10, "reward": 10 }
+  ]
+}

@@ -41,6 +41,13 @@
   }
   .buy-btn:disabled { background: #d9c8ff; box-shadow: none; cursor: default; }
   .owned-label { font-size: .78rem; font-weight: 900; color: #4fd6bd; margin-top: 6px; }
+  .item-card .discounted-price { font-size: .68rem; color: #ff8fbf; text-decoration: line-through; }
+
+  .coupon-panel { background: #fff0f8; border: 2px solid #ffc2e0; border-radius: 18px; padding: 12px 14px; margin-bottom: 18px; }
+  .coupon-title { font-weight: 900; color: #ff2f92; font-size: .92rem; margin: 0 0 8px; }
+  .coupon-select-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .coupon-select-row select { font-family: inherit; font-size: .85rem; border: 2px solid #ffc2e0; border-radius: 12px; padding: 6px 10px; flex: 1; min-width: 160px; }
+  .coupon-clear-btn { font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 12px; padding: 6px 12px; font-size: .8rem; color: #ff2f92; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.08); }
 
   .gacha-box { background: #fff; border-radius: 26px; padding: 30px 20px; text-align: center; box-shadow: 0 8px 18px rgba(91,75,138,.18); }
   .gacha-machine { font-size: 4rem; margin-bottom: 10px; transition: transform .1s; }
@@ -66,7 +73,16 @@
     <button class="tab-btn" data-tab="gacha">🎰 ガチャ</button>
   </div>
 
-  <section id="panel-shop" class="panel active"></section>
+  <section id="panel-shop" class="panel active">
+    <div class="coupon-panel" id="coupon-panel" style="display:none;">
+      <p class="coupon-title">🎟️ クーポンをつかう（つぎの1かいのおかいものが おとくに）</p>
+      <div class="coupon-select-row">
+        <select id="coupon-select"><option value="">クーポンを えらぶ</option></select>
+        <button class="coupon-clear-btn" id="coupon-clear">つかわない</button>
+      </div>
+    </div>
+    <div id="shop-items"></div>
+  </section>
 
   <section id="panel-gacha" class="panel">
     <div class="gacha-box">
@@ -96,9 +112,36 @@
     hair: '💇 かみがた', top: '👕 トップス', bottom: '👖 ボトムス', accessory: '💍 アクセサリー',
     wallpaper: '🖼️ かべがみ', floor: '🟫 ゆか', furniture: '🛋️ かぐ',
   };
+  const SHOPPING_MALL_ID = 'kirakira-shopping-mall';
+  const couponsRes = await fetch('data/coupons.json');
+  const ALL_COUPONS = (await couponsRes.json()).coupons;
+
+  let selectedCouponId = '';
+
+  function availableCoupons() {
+    return ALL_COUPONS.filter((c) => Store.hasUnusedCoupon(SHOPPING_MALL_ID, c.id));
+  }
+
+  function renderCouponPanel() {
+    const coupons = availableCoupons();
+    const panel = document.getElementById('coupon-panel');
+    panel.style.display = coupons.length ? 'block' : 'none';
+    const select = document.getElementById('coupon-select');
+    const cur = selectedCouponId;
+    select.innerHTML = `<option value="">クーポンを えらぶ</option>` +
+      coupons.map((c) => `<option value="${c.id}">${c.emoji} ${c.name}（${c.discountPercent}%オフ）</option>`).join('');
+    select.value = coupons.some((c) => c.id === cur) ? cur : '';
+    selectedCouponId = select.value;
+  }
+
+  function priceWithDiscount(price) {
+    const coupon = ALL_COUPONS.find((c) => c.id === selectedCouponId);
+    if (!coupon) return price;
+    return Math.max(1, Math.round(price * (1 - coupon.discountPercent / 100)));
+  }
 
   function renderShop() {
-    const panel = document.getElementById('panel-shop');
+    const panel = document.getElementById('shop-items');
     const byCategory = {};
     ALL_ITEMS.forEach((it) => { (byCategory[it.category] = byCategory[it.category] || []).push(it); });
     panel.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
@@ -107,6 +150,10 @@
         <div class="item-grid">
           ${items.map((it) => {
             const owned = Store.owns(it.id);
+            const discounted = priceWithDiscount(it.price);
+            const priceHtml = discounted < it.price
+              ? `<span class="discounted-price">${it.price}🌟</span> ${discounted}🌟`
+              : `${it.price}🌟`;
             return `
             <div class="item-card ${owned ? 'owned' : ''}" data-id="${it.id}">
               <div class="emoji">${it.emoji}</div>
@@ -114,7 +161,7 @@
               <div class="rarity rarity-${it.rarity}">${RARITY_LABEL[it.rarity]}</div>
               ${owned
                 ? `<div class="owned-label">✓ もってる</div>`
-                : `<button class="buy-btn" data-buy="${it.id}" data-price="${it.price}">${it.price}🌟 かう</button>`}
+                : `<button class="buy-btn" data-buy="${it.id}" data-price="${it.price}">${priceHtml} かう</button>`}
             </div>`;
           }).join('')}
         </div>
@@ -124,15 +171,30 @@
     panel.querySelectorAll('[data-buy]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.buy;
-        const price = Number(btn.dataset.price);
+        const price = priceWithDiscount(Number(btn.dataset.price));
         if (Store.buy(id, price)) {
+          if (selectedCouponId) {
+            Store.useCoupon(selectedCouponId);
+            selectedCouponId = '';
+          }
           shell.sound.play('coin');
+          renderCouponPanel();
           renderShop();
           await evaluateAndToast();
         }
       });
     });
   }
+
+  document.getElementById('coupon-select').addEventListener('change', (ev) => {
+    selectedCouponId = ev.target.value;
+    renderShop();
+  });
+  document.getElementById('coupon-clear').addEventListener('click', () => {
+    selectedCouponId = '';
+    renderCouponPanel();
+    renderShop();
+  });
 
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -189,6 +251,7 @@
     await evaluateAndToast();
   });
 
+  renderCouponPanel();
   renderShop();
 </script>
 </body>

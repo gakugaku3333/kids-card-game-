@@ -181,6 +181,7 @@ export class KiraShell {
   showResult({ correct = 0, total = 0, tokens = 0, time, moves, movesLabel = 'てすう' } = {}) {
     this._cleanup();
     if (tokens > 0) Store.addTokens(tokens);
+    Store.trackDailyPlay({ correct });
     const field = typeof time === 'number' ? 'time' : (typeof moves === 'number' ? 'moves' : null);
     const { isNewBest, best } = Store.recordScore(this.gameId, { correct, total, tokens, time, moves }, { compareField: field });
     const correctLabelEl = document.querySelector(`#${RESULT_MODAL_ID} .kira-result-item:first-child .r-label`);

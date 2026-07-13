@@ -27,6 +27,9 @@ function load() {
     dotArtGallery: Array.isArray(raw.dotArtGallery) ? raw.dotArtGallery : [],
     songs: Array.isArray(raw.songs) ? raw.songs : [],
     gachaPulls: typeof raw.gachaPulls === 'number' ? raw.gachaPulls : 0,
+    // Phase 5: 経済の完結(クーポン消費・デイリーおしごと)
+    usedCoupons: Array.isArray(raw.usedCoupons) ? raw.usedCoupons : [],
+    daily: (raw.daily && typeof raw.daily === 'object') ? raw.daily : { date: '', plays: 0, correctSum: 0, completedMissionIds: [] },
   };
 }
 
@@ -145,6 +148,49 @@ export function unlockQuestItem(gameId, itemId) {
     save();
   }
   return isNew;
+}
+
+// ショッピングモールで集めたクーポン(questProgressの図鑑登録=永続記録)を1回だけ購入時に消費できるようにする。
+// 図鑑表示は消費してもそのまま残す(記録と在庫を分離)。
+export function getUsedCoupons() { return data.usedCoupons.slice(); }
+export function hasUnusedCoupon(gameId, couponId) {
+  const owned = getQuestProgress(gameId).unlockedItems.indexOf(couponId) !== -1;
+  return owned && data.usedCoupons.indexOf(couponId) === -1;
+}
+export function useCoupon(couponId) {
+  if (data.usedCoupons.indexOf(couponId) !== -1) return false;
+  data.usedCoupons.push(couponId);
+  save();
+  return true;
+}
+
+// デイリーおしごと: 日付が変わったら自動リセットする軽量カウンタ
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function ensureDaily() {
+  const key = todayKey();
+  if (data.daily.date !== key) {
+    data.daily = { date: key, plays: 0, correctSum: 0, completedMissionIds: [] };
+    save();
+  }
+}
+export function getDaily() { ensureDaily(); return { ...data.daily }; }
+// ゲーム1回の完了ごとにshowResult()から呼ばれ、プレイ回数と正解数累計を積み上げる
+export function trackDailyPlay({ correct = 0 } = {}) {
+  ensureDaily();
+  data.daily.plays++;
+  data.daily.correctSum += correct;
+  save();
+}
+export function hasCompletedDailyMission(id) { ensureDaily(); return data.daily.completedMissionIds.indexOf(id) !== -1; }
+export function completeDailyMission(id) {
+  ensureDaily();
+  if (data.daily.completedMissionIds.indexOf(id) !== -1) return false;
+  data.daily.completedMissionIds.push(id);
+  save();
+  return true;
 }
 
 export function reload() { data = load(); return data; }

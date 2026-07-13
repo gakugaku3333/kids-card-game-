@@ -1,0 +1,12 @@
+{
+  "coupons": [
+    { "id": "coupon10", "emoji": "🎟️", "name": "10%オフけん", "discountPercent": 10 },
+    { "id": "coupon20", "emoji": "🏷️", "name": "20%オフけん", "discountPercent": 20 },
+    { "id": "freeship", "emoji": "📦", "name": "そうりょう無料けん", "discountPercent": 10 },
+    { "id": "point2x", "emoji": "⭐", "name": "ポイント2ばいけん", "discountPercent": 15 },
+    { "id": "gift", "emoji": "🎁", "name": "おまけプレゼントけん", "discountPercent": 15 },
+    { "id": "vip", "emoji": "💳", "name": "VIPかいいんけん", "discountPercent": 25 },
+    { "id": "birthday", "emoji": "🎂", "name": "たんじょうびわりびきけん", "discountPercent": 20 },
+    { "id": "golden", "emoji": "🌟", "name": "ゴールドとくべつけん", "discountPercent": 30 }
+  ]
+}

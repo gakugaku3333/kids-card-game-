@@ -45,8 +45,9 @@ export async function getAllBadgeDefs() {
   return loadDefs();
 }
 
-// 新規解除バッジをトースト表示する(全ページ共通の軽量演出。モーダルほど重くしない)
-export function showBadgeToast(badge) {
+// 新規解除バッジ・デイリーおしごと達成などをトースト表示する共通部品(全ページ共通の軽量演出。モーダルほど重くしない)。
+// messageは呼び出し側の文脈に合わせる(既定はバッジ獲得文言。デイリーおしごとからは「クリア」系の文言を渡す)。
+export function showBadgeToast(item, message = `バッジ「${item.name}」ゲット！`) {
   const toast = document.createElement('div');
   toast.style.cssText = `
     position: fixed; left: 50%; top: 14px; transform: translateX(-50%) translateY(-20px);
@@ -55,7 +56,7 @@ export function showBadgeToast(badge) {
     font-family: 'Zen Maru Gothic', sans-serif; opacity: 0; transition: all .35s ease;
     max-width: 90vw;
   `;
-  toast.innerHTML = `<div style="font-size:1.6rem;">${badge.emoji}</div><div style="font-weight:900;color:#7c5cff;font-size:.95rem;">バッジ「${badge.name}」ゲット！</div>`;
+  toast.innerHTML = `<div style="font-size:1.6rem;">${item.emoji}</div><div style="font-weight:900;color:#7c5cff;font-size:.95rem;">${message}</div>`;
   document.body.appendChild(toast);
   requestAnimationFrame(() => {
     toast.style.opacity = '1';
