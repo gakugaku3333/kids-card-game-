@@ -21,8 +21,7 @@
       "name": "レベル1: 1けた+1けた (こたえ10いか)",
       "desc": "3+7=10",
       "preset": "sumLe10",
-      "choiceRange": 10,
-      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル2: 1けた+1けた (こたえ2けた)",
@@ -30,8 +29,7 @@
       "kind": "sum",
       "num1Range": [5, 9],
       "num2Range": [5, 9],
-      "choiceRange": 10,
-      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル3: 2けた+1けた",
@@ -39,8 +37,7 @@
       "kind": "sum",
       "num1Range": [10, 99],
       "num2Range": [1, 9],
-      "choiceRange": 20,
-      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
+      "choiceRange": 20
     },
     {
       "name": "レベル4: 2けた+2けた",
@@ -48,8 +45,7 @@
       "kind": "sum",
       "num1Range": [10, 99],
       "num2Range": [10, 99],
-      "choiceRange": 20,
-      "template": "おかしこうじょう: {num1}こ できた！あと {num2}こ つくると ぜんぶで なんこ？"
+      "choiceRange": 20
     }
   ]
 }

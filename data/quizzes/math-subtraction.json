@@ -23,8 +23,7 @@
       "kind": "diff",
       "num1Range": [5, 9],
       "num2LtNum1": true,
-      "choiceRange": 10,
-      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル2: 2けた-1けた",
@@ -32,8 +31,7 @@
       "kind": "diff",
       "num1Range": [10, 99],
       "num2Range": [1, 9],
-      "choiceRange": 10,
-      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル3: 2けた-2けた",
@@ -41,8 +39,7 @@
       "kind": "diff",
       "num1Range": [10, 99],
       "num2LtNum1": true,
-      "choiceRange": 10,
-      "template": "おべんとうが {num1}こ あったよ。{num2}こ とどけたら のこりは なんこ？"
+      "choiceRange": 10
     }
   ]
 }

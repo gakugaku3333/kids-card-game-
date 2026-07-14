@@ -23,8 +23,7 @@
       "kind": "quotientExact",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10,
-      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル2: 2けた÷1けた (わりきれる)",
@@ -32,8 +31,7 @@
       "kind": "quotientExact",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10,
-      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこ？"
+      "choiceRange": 10
     },
     {
       "name": "レベル3: 2けた÷1けた (あまりあり)",
@@ -41,8 +39,7 @@
       "kind": "quotientRemainder",
       "divisorRange": [2, 9],
       "quotientRange": [1, 9],
-      "choiceRange": 10,
-      "template": "たからじま: おたからが {num1}こ あるよ。{num2}にんで わけると ひとり なんこで、あまりは なんこ？"
+      "choiceRange": 10
     }
   ]
 }
