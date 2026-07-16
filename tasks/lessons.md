@@ -211,3 +211,9 @@
 - **診断方法**: `fetch(url,{cache:'no-store'}).then(t=>new Blob([t],{type:'text/javascript'})).then(...)` で取得したソースをBlob URL経由で `import()` すると、キャッシュを完全にバイパスして実際のファイル内容を検証できる（この結果が正で、通常のimportが古ければキャッシュが原因と確定できる）。
 - **解決策**: [[project-lessons]] 12番と同じ「`.claude/launch.json` のポートを変える」で解決。新しいoriginは必ず初回取得になるため、モジュールも含めて全て最新化される。確認後はポートを元に戻す。
 - **教訓**: 「既存ファイルを編集したのにpreviewに反映されない」現象は、画像やCSSだけでなく **ESモジュール（`<script type="module">`のimport）でも起こる**。しかも新規タブを開いても直らないことがある（プロファイル単位のキャッシュのため）。原因切り分けにはBlob URL経由の`import()`が有効、直し方はポート変更が確実。
+
+## 36. `level.template`は「あれば強制上書き」なので、シンプル数式に戻すときはJSON側だけ直せばよい
+- **状況**: 6歳向け本家の計算クイズ（たし・ひき・かけ・わりざん）で「3+7=10」のようなシンプルな数式出題に戻したいという依頼が来た。実際に表示されていたのは「おかしこうじょう: 3こ できた！あと7こ つくると ぜんぶで なんこ？」のような文章題だった。
+- **原因**: `games/quiz/engine.js`の`_formatText()`は、`GENERATORS[kind]`が返す素の`{text: "3 + 7"}`を使う前に、JSON側の`level.template`が存在すればそれを`{num1}`/`{num2}`で置換した文章に**無条件で差し替える**設計になっている（`if (!level || !level.template || !problem.vars) return problem.text;`）。過去のセッションで「学びをクエスト風に変装させる」哲学（[[project-lessons]]冒頭のCLAUDE.md方針）に沿って各`data/quizzes/math-*.json`に`template`を追加していたため、エンジンの出力が覆い隠されていた。
+- **解決策**: エンジン本体・生成関数（GENERATORS）は変更せず、4つのJSON（`math-addition.json`等）から`"template"`キーの行だけを削除した。`questItems`（正解ごとの収集アイテム解放）は`template`と無関係な別機構なのでそのまま残した。
+- **教訓**: データ駆動クイズエンジンで「出題文の見た目」を変えたい依頼が来たら、まずエンジンのGENERATORSではなくJSON側の`template`フィールドの有無を疑う。`template`はoptionalな上書きレイヤーとして設計されているため、削除するだけでエンジン本来のフォールバック表示（数式そのまま）に戻せる。逆に文章題化したいときも同様に、エンジンを触らずJSONに`template`を足すだけでよい。
