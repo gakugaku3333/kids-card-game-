@@ -6,15 +6,49 @@
 /* --- 合成アバターのステージ --- */
 .avatar-display {
   position: relative;
-  display: inline-flex;
+  display: inline-block;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  flex: 0 0 auto;
 }
 
 .avatar-base {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
+  display: grid;
+  place-items: center;
+}
+
+.avatar-base img,
+.avatar-outfit img,
+.avatar-accessory-image img,
+.avatar-effect-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.avatar-outfit,
+.avatar-accessory-image {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.avatar-outfit.layer-avatar_princess,
+.avatar-outfit.layer-avatar_angel_girl {
+  transform: translateY(6%) scale(.55, .72);
+}
+.avatar-outfit.layer-avatar_magic_girl {
+  transform: translateY(8%) scale(.55, .85);
+}
+.avatar-outfit.layer-avatar_rabbit_fairy,
+.avatar-outfit.layer-avatar_kitty_girl {
+  transform: translateY(8%) scale(.55, .85);
 }
 
 /* かざりは右上に重ねる */
@@ -22,9 +56,13 @@
   position: absolute;
   top: -0.15em;
   right: -0.25em;
-  z-index: 3;
+  z-index: 4;
   font-size: 0.6em;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.avatar-accessory-image {
+  z-index: 4;
 }
 
 /* エフェクトのオーラ層（背面） */
@@ -40,13 +78,18 @@
   pointer-events: none;
 }
 
+.avatar-effect-image {
+  display: block;
+  font-size: inherit;
+}
+
 /* サイズ: チップ（小）／プロフィール（特大） */
-.avatar-chip { font-size: 20px; }
-.avatar-profile { font-size: 92px; }
+.avatar-chip { width: 34px; height: 34px; font-size: 25px; }
+.avatar-profile { width: 280px; height: 280px; font-size: 150px; }
 
 /* エフェクト別アニメーション */
 .avatar-aura.effect-rainbow {
-  animation: avatar-spin 6s linear infinite;
+  animation: avatar-rainbow-glow 3.6s ease-in-out infinite;
 }
 .avatar-aura.effect-sparkle {
   animation: avatar-sparkle 1.6s ease-in-out infinite;
@@ -55,8 +98,9 @@
   animation: avatar-float 2.4s ease-in-out infinite;
 }
 
-@keyframes avatar-spin {
-  to { transform: rotate(360deg); }
+@keyframes avatar-rainbow-glow {
+  0%, 100% { transform: scale(0.96); opacity: 0.72; }
+  50% { transform: scale(1.04); opacity: 1; }
 }
 @keyframes avatar-sparkle {
   0%, 100% { transform: scale(0.85); opacity: 0.5; }
@@ -117,11 +161,13 @@
 }
 
 .dressup-preview .avatar-display {
-  width: 140px;
-  height: 140px;
-  background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%);
+  width: min(300px, 72vw);
+  height: min(300px, 72vw);
+  background:
+    radial-gradient(circle at 25% 22%, #fff 0 2%, transparent 2.5%),
+    linear-gradient(180deg, #fff7cf 0 68%, #d8f2dd 68%);
   border: 3px solid #ffe0ef;
-  border-radius: 50%;
+  border-radius: 28px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
@@ -185,8 +231,15 @@
 }
 
 .dressup-option-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
   font-size: 34px;
   line-height: 1;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fff9e8, #f3efff);
+  overflow: hidden;
 }
 
 .dressup-option-name {
@@ -196,18 +249,16 @@
 }
 
 @media (max-width: 480px) {
-  .avatar-profile { font-size: 76px; }
-  .dressup-preview .avatar-display { width: 120px; height: 120px; }
+  .avatar-profile { width: 240px; height: 240px; font-size: 130px; }
   .dressup-option { width: 72px; }
-  .dressup-option-icon { font-size: 30px; }
+  .dressup-option-icon { width: 54px; height: 54px; font-size: 30px; }
 }
 
 /* 画像アバター用の共通スタイル */
 .avatar-icon-img {
   width: 1em;
   height: 1em;
-  object-fit: cover;
-  border-radius: 50%;
+  object-fit: contain;
   display: inline-block;
   vertical-align: middle;
 }
@@ -215,11 +266,16 @@
 /* アバターベース画像調整 */
 .avatar-base img.avatar-icon-img {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* 着せ替えオプション内の画像調整 */
 .dressup-option-icon img.avatar-icon-img {
-  width: 1em;
-  height: 1em;
+  width: 100%;
+  height: 100%;
 }
 
+/* 本体に重ねるため余白を持つアクセサリーは、選択カード内では大きく見せる */
+.dressup-option-icon img[src*="accessory-badge"] { transform: scale(6); transform-origin: 50% 57%; }
+.dressup-option-icon img[src*="accessory-trophy"] { transform: scale(2.4); transform-origin: 64% 63%; }

@@ -44,6 +44,21 @@ function injectStyles() {
       box-shadow: 0 3px 8px rgba(0,0,0,.18); flex-shrink: 0; overflow: hidden;
     }
     #${HEADER_ID} .shell-avatar img { width: 100%; height: 100%; object-fit: contain; }
+    #${HEADER_ID} .shell-avatar-dressed { position: relative; }
+    #${HEADER_ID} .shell-avatar-dressed img { position: absolute; inset: 0; }
+    #${HEADER_ID} .shell-avatar-dressed .avatar-icon-img { z-index: 2; }
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit { z-index: 3; }
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-accessory { z-index: 4; }
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-effect { z-index: 1; }
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit.layer-avatar_princess,
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit.layer-avatar_angel_girl {
+      transform: translateY(6%) scale(.55, .72);
+    }
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit.layer-avatar_magic_girl,
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit.layer-avatar_rabbit_fairy,
+    #${HEADER_ID} .shell-avatar-dressed .shell-avatar-outfit.layer-avatar_kitty_girl {
+      transform: translateY(8%) scale(.55, .85);
+    }
     @media (max-height: 700px) {
       #${HEADER_ID} { padding: 6px 10px; font-size: .9rem; }
     }
@@ -110,11 +125,29 @@ export class GameShell {
     // 買ったアバターを一緒に連れて遊べるようにする（ショップ経済を「貯める→買う→終わり」で終わらせない）。
     // SHOP_ITEMSのicon画像パスはサイトルート基準なので、ネストしたゲームページ用にhomePathから逆算して補正する。
     const avatarItem = avatar.base && Store.SHOP_ITEMS.find((i) => i.id === avatar.base);
+    const outfitItem = avatar.outfit && Store.SHOP_ITEMS.find((i) => i.id === avatar.outfit);
+    const accessoryItem = avatar.accessory && Store.SHOP_ITEMS.find((i) => i.id === avatar.accessory);
+    const effectItem = avatar.effect && Store.SHOP_ITEMS.find((i) => i.id === avatar.effect);
     const rootPrefix = this.homePath.replace(/index\.html$/, '');
-    const resolvedIcon = avatarItem && avatarItem.icon.indexOf('/') !== -1 && !/^https?:/.test(avatarItem.icon)
-      ? rootPrefix + avatarItem.icon
-      : (avatarItem ? avatarItem.icon : null);
-    const avatarHtml = avatarItem ? `<span class="shell-avatar">${Store.getIconHtml(resolvedIcon, avatarItem.name)}</span>` : '';
+    const resolveIcon = (item) => item && item.icon.indexOf('/') !== -1 && !/^https?:/.test(item.icon)
+      ? rootPrefix + item.icon
+      : (item ? item.icon : null);
+    const resolvedIcon = resolveIcon(avatarItem);
+    const resolvedOutfit = resolveIcon(outfitItem);
+    const resolvedAccessory = resolveIcon(accessoryItem);
+    const resolvedEffect = resolveIcon(effectItem);
+    const outfitHtml = outfitItem && resolvedOutfit
+      ? `<img class="shell-avatar-outfit layer-${outfitItem.id}" src="${resolvedOutfit}" alt="">`
+      : '';
+    const accessoryHtml = accessoryItem && resolvedAccessory && resolvedAccessory.indexOf('/') !== -1
+      ? `<img class="shell-avatar-accessory layer-${accessoryItem.id}" src="${resolvedAccessory}" alt="">`
+      : '';
+    const effectHtml = effectItem && resolvedEffect && resolvedEffect.indexOf('/') !== -1
+      ? `<img class="shell-avatar-effect effect-${effectItem.id.replace('effect_', '')}" src="${resolvedEffect}" alt="">`
+      : '';
+    const avatarHtml = avatarItem
+      ? `<span class="shell-avatar shell-avatar-dressed">${effectHtml}${Store.getIconHtml(resolvedIcon, avatarItem.name)}${outfitHtml}${accessoryHtml}</span>`
+      : '';
     // クイズで正解を重ねるほど育つお供キャラ（トークンを貯める以外の「成長の見える化」）
     const buddy = Store.getBuddyStage();
     const buddyHtml = `<span id="shell-buddy-value" class="shell-avatar" title="${buddy.name}">${buddy.emoji}</span>`;

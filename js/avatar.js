@@ -1,7 +1,7 @@
 /*
  * avatar.js — アバター合成描画 ＋ 着せ替えUI
  *
- * 買ったアイテム（ownedItems）を 3 スロット（ベース／かざり／エフェクト）に重ねて
+ * 買ったアイテム（ownedItems）を 4 スロット（どうぶつ／ふく／かざり／エフェクト）に重ねて
  * 自分のアバターを着せ替えできる。状態は共通 Store（store.js）が保持する。
  * store.js の後・gallery.js の前に素の <script> で読み込む想定。file:// でも動作する。
  */
@@ -10,7 +10,8 @@
 
     // スロット定義（表示順・ラベル・対象 type）
     var SLOTS = [
-        { slot: 'base', label: 'ベース', types: ['avatar'], hint: 'どうぶつアバターを ショップでゲットしてね！' },
+        { slot: 'base', label: 'どうぶつ', types: ['avatar'], hint: 'どうぶつアバターを ショップでゲットしてね！' },
+        { slot: 'outfit', label: 'ふく', types: ['outfit'], hint: 'かわいい ふくを ショップでゲットしてね！' },
         { slot: 'accessory', label: 'かざり', types: ['badge', 'special'], hint: 'バッジや おうかんを ショップでゲットしてね！' },
         { slot: 'effect', label: 'エフェクト', types: ['effect'], hint: 'キラキラエフェクトを ショップでゲットしてね！' }
     ];
@@ -36,6 +37,14 @@
         return item ? item.icon : '';
     }
 
+    function isImage(icon) {
+        return !!icon && (icon.indexOf('/') !== -1 || /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(icon));
+    }
+
+    function imageLayer(icon, className, alt) {
+        return '<span class="' + className + '"><img src="' + icon + '" alt="' + alt + '"></span>';
+    }
+
     /* ---- 合成アバターの描画（純粋な描画関数） ---- */
     // el に現在の装備からアバターを描く。opts.size = 'chip' | 'profile'
     window.renderAvatar = function (el, opts) {
@@ -44,22 +53,30 @@
         var size = opts.size === 'profile' ? 'profile' : 'chip';
         var av = Store.getAvatar();
 
-        var baseIcon = iconOf(av.base) || '👤';
+        var baseIcon = iconOf(av.base) || 'assets/images/avatar-dressup/base/base-rabbit.png';
+        var outfitIcon = iconOf(av.outfit);
         var accIcon = iconOf(av.accessory);
         var effItem = itemById(av.effect);
         var effClass = effItem ? ' effect-' + effItem.id.replace('effect_', '') : '';
 
-        var baseIconHtml = Store.getIconHtml(baseIcon, 'ベースアバター');
-        var accIconHtml = accIcon ? Store.getIconHtml(accIcon, 'かざり') : '';
-        var effIconHtml = effItem ? Store.getIconHtml(effItem.icon, 'エフェクト') : '';
+        var baseIconHtml = Store.getIconHtml(baseIcon, 'どうぶつアバター');
+        var outfitItem = itemById(av.outfit);
+        var accItem = itemById(av.accessory);
 
         var html = '<div class="avatar-display avatar-' + size + '">';
         if (effItem) {
-            html += '<span class="avatar-aura' + effClass + '" aria-hidden="true">' + effIconHtml + '</span>';
+            html += isImage(effItem.icon)
+                ? imageLayer(effItem.icon, 'avatar-aura avatar-effect-image' + effClass, '')
+                : '<span class="avatar-aura' + effClass + '" aria-hidden="true">' + Store.getIconHtml(effItem.icon, 'エフェクト') + '</span>';
         }
         html += '<span class="avatar-base">' + baseIconHtml + '</span>';
+        if (outfitIcon) {
+            html += imageLayer(outfitIcon, 'avatar-outfit layer-' + outfitItem.id, outfitItem.name);
+        }
         if (accIcon) {
-            html += '<span class="avatar-accessory">' + accIconHtml + '</span>';
+            html += isImage(accIcon)
+                ? imageLayer(accIcon, 'avatar-accessory avatar-accessory-image layer-' + accItem.id, accItem.name)
+                : '<span class="avatar-accessory">' + Store.getIconHtml(accIcon, 'かざり') + '</span>';
         }
         html += '</div>';
         el.innerHTML = html;

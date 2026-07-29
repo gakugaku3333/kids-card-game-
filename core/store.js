@@ -7,26 +7,28 @@
  */
 export const STORAGE_KEY = 'katakana_game_data';
 
-const SLOT_OF = { avatar: 'base', badge: 'accessory', special: 'accessory', effect: 'effect' };
+const SLOT_OF = { avatar: 'base', outfit: 'outfit', badge: 'accessory', special: 'accessory', effect: 'effect' };
+const STARTER_ITEMS = ['avatar_rabbit', 'avatar_princess'];
+const LEGACY_OUTFIT_IDS = ['avatar_magic_girl', 'avatar_princess', 'avatar_rabbit_fairy', 'avatar_kitty_girl', 'avatar_angel_girl'];
 
 export const SHOP_ITEMS = [
-  { id: 'badge_gold', name: 'きんのバッジ', icon: '🥇', price: 30, type: 'badge' },
-  { id: 'badge_silver', name: 'ぎんのバッジ', icon: '🥈', price: 20, type: 'badge' },
-  { id: 'badge_bronze', name: 'どうのバッジ', icon: '🥉', price: 10, type: 'badge' },
-  { id: 'avatar_cat', name: 'ねこアバター', icon: '🐱', price: 15, type: 'avatar' },
-  { id: 'avatar_rabbit', name: 'うさぎアバター', icon: '🐰', price: 15, type: 'avatar' },
-  { id: 'avatar_bear', name: 'くまアバター', icon: '🐻', price: 15, type: 'avatar' },
-  { id: 'avatar_unicorn', name: 'ゆにこーん', icon: '🦄', price: 25, type: 'avatar' },
-  { id: 'avatar_magic_girl', name: 'まほうしょうじょ', icon: 'assets/images/avatars/avatar_magic_girl.png', price: 30, type: 'avatar' },
-  { id: 'avatar_princess', name: 'プリンセス', icon: 'assets/images/avatars/avatar_princess.png', price: 30, type: 'avatar' },
-  { id: 'avatar_rabbit_fairy', name: 'うさぎのようせい', icon: 'assets/images/avatars/avatar_rabbit_fairy.png', price: 30, type: 'avatar' },
-  { id: 'avatar_kitty_girl', name: 'ねこみみガール', icon: 'assets/images/avatars/avatar_kitty_girl.png', price: 30, type: 'avatar' },
-  { id: 'avatar_angel_girl', name: 'てんしちゃん', icon: 'assets/images/avatars/avatar_angel_girl.png', price: 30, type: 'avatar' },
-  { id: 'effect_rainbow', name: 'にじエフェクト', icon: '🌈', price: 20, type: 'effect' },
-  { id: 'effect_sparkle', name: 'きらきら', icon: '✨', price: 20, type: 'effect' },
-  { id: 'effect_heart', name: 'はーと', icon: '💕', price: 15, type: 'effect' },
-  { id: 'crown', name: 'おうかん', icon: '👑', price: 50, type: 'special' },
-  { id: 'trophy', name: 'トロフィー', icon: '🏆', price: 40, type: 'special' },
+  { id: 'badge_gold', name: 'きんのバッジ', icon: 'assets/images/avatar-dressup/accessories/accessory-badge-gold.png', price: 30, type: 'badge' },
+  { id: 'badge_silver', name: 'ぎんのバッジ', icon: 'assets/images/avatar-dressup/accessories/accessory-badge-silver.png', price: 20, type: 'badge' },
+  { id: 'badge_bronze', name: 'どうのバッジ', icon: 'assets/images/avatar-dressup/accessories/accessory-badge-bronze.png', price: 10, type: 'badge' },
+  { id: 'avatar_cat', name: 'しまねこ', icon: 'assets/images/avatar-dressup/base/base-cat.png', price: 15, type: 'avatar' },
+  { id: 'avatar_rabbit', name: 'ココア', icon: 'assets/images/avatar-dressup/base/base-rabbit.png', price: 15, type: 'avatar' },
+  { id: 'avatar_bear', name: 'はちみつぐま', icon: 'assets/images/avatar-dressup/base/base-bear.png', price: 15, type: 'avatar' },
+  { id: 'avatar_unicorn', name: 'ゆにこーん', icon: 'assets/images/avatar-dressup/base/base-unicorn.png', price: 25, type: 'avatar' },
+  { id: 'avatar_magic_girl', name: 'まほうマント', icon: 'assets/images/avatar-dressup/outfits/outfit-magic.png', price: 30, type: 'outfit' },
+  { id: 'avatar_princess', name: 'ほしパーカー', icon: 'assets/images/avatar-dressup/outfits/outfit-star-hoodie.png', price: 30, type: 'outfit' },
+  { id: 'avatar_rabbit_fairy', name: 'あめふりセット', icon: 'assets/images/avatar-dressup/outfits/outfit-rain.png', price: 30, type: 'outfit' },
+  { id: 'avatar_kitty_girl', name: 'たんけんセット', icon: 'assets/images/avatar-dressup/outfits/outfit-explorer.png', price: 30, type: 'outfit' },
+  { id: 'avatar_angel_girl', name: 'そらいろパーカー', icon: 'assets/images/avatar-dressup/outfits/outfit-star-hoodie.png', price: 30, type: 'outfit' },
+  { id: 'effect_rainbow', name: 'にじエフェクト', icon: 'assets/images/avatar-dressup/effects/effect-rainbow.png', price: 20, type: 'effect' },
+  { id: 'effect_sparkle', name: 'きらきら', icon: 'assets/images/avatar-dressup/effects/effect-sparkle.png', price: 20, type: 'effect' },
+  { id: 'effect_heart', name: 'はーと', icon: 'assets/images/avatar-dressup/effects/effect-heart.png', price: 15, type: 'effect' },
+  { id: 'crown', name: 'ほしのおうかん', icon: 'assets/images/avatar-dressup/accessories/accessory-crown.png', price: 50, type: 'special' },
+  { id: 'trophy', name: 'トロフィー', icon: 'assets/images/avatar-dressup/accessories/accessory-trophy.png', price: 40, type: 'special' },
   { id: 'game_mole', name: 'もぐらたたき', icon: '🔨', price: 10, type: 'game' },
   { id: 'game_jump', name: 'うさぎジャンプ', icon: '🐰', price: 20, type: 'game' },
   { id: 'game_simon', name: 'ひかるボタン', icon: '🎹', price: 25, type: 'game' },
@@ -54,16 +56,22 @@ function load() {
   if (!raw || typeof raw !== 'object') raw = {};
   const av = (raw.avatar && typeof raw.avatar === 'object') ? raw.avatar : {};
   const bs = (raw.bestScores && typeof raw.bestScores === 'object') ? raw.bestScores : {};
+  const owned = Array.isArray(raw.ownedItems) ? raw.ownedItems.slice() : [];
+  STARTER_ITEMS.forEach((id) => {
+    if (owned.indexOf(id) === -1) owned.push(id);
+  });
   return {
     tokens: typeof raw.tokens === 'number' ? raw.tokens : 0,
     totalCorrect: typeof raw.totalCorrect === 'number' ? raw.totalCorrect : 0,
     totalAnswered: typeof raw.totalAnswered === 'number' ? raw.totalAnswered : 0,
-    ownedItems: Array.isArray(raw.ownedItems) ? raw.ownedItems : [],
+    ownedItems: owned,
     bestScores: bs,
     kanaCards: Array.isArray(raw.kanaCards) ? raw.kanaCards : [],
     questProgress: (raw.questProgress && typeof raw.questProgress === 'object') ? raw.questProgress : {},
     avatar: {
-      base: typeof av.base === 'string' ? av.base : null,
+      base: typeof av.base === 'string' && !LEGACY_OUTFIT_IDS.includes(av.base) ? av.base : 'avatar_rabbit',
+      outfit: typeof av.outfit === 'string' ? av.outfit
+        : (LEGACY_OUTFIT_IDS.includes(av.base) ? av.base : 'avatar_princess'),
       accessory: typeof av.accessory === 'string' ? av.accessory : null,
       effect: typeof av.effect === 'string' ? av.effect : null
     }
@@ -180,7 +188,7 @@ export function slotOf(id) {
 }
 
 export function equip(slot, id) {
-  if (slot !== 'base' && slot !== 'accessory' && slot !== 'effect') return false;
+  if (slot !== 'base' && slot !== 'outfit' && slot !== 'accessory' && slot !== 'effect') return false;
   if (id === null) { data.avatar[slot] = null; save(); return true; }
   if (owns(id) && slotOf(id) === slot) { data.avatar[slot] = id; save(); return true; }
   return false;

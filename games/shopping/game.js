@@ -83,6 +83,7 @@ function startErrand() {
 
   el('cart-list').textContent = '';
   el('add-expr').textContent = '';
+  el('add-keypad').style.display = 'none';
   el('add-input').value = '';
   el('add-feedback').textContent = '';
   showScreen('screen-stage-a');
@@ -105,7 +106,7 @@ function onShelfTap(item, btn) {
   if (session.cart.length === session.picked.length) {
     const expr = session.cart.map((i) => i.price).join(' + ');
     el('add-expr').textContent = `${expr} = ？`;
-    el('add-keypad').style.display = '';
+    el('add-keypad').style.display = 'inline-flex';
     el('add-input').focus();
   }
 }

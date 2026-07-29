@@ -219,7 +219,7 @@ body {
 }
 
 .game-card::before {
-  content: '★ ろっぴーの ぼうけん';
+  content: '★ ココアの ぼうけん';
   display: block;
   padding: 7px 14px;
   color: #8a67a7;
