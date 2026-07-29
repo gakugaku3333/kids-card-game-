@@ -29,6 +29,10 @@
   }
   .item-card.owned { border-color: #4fd6bd; }
   .item-card .emoji { font-size: 1.9rem; }
+  .item-card .item-art {
+    width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 13px;
+    background: linear-gradient(145deg, #fff8fb, #f3efff);
+  }
   .item-card .name { font-size: .78rem; font-weight: 700; color: #4a3f6b; margin: 4px 0; min-height: 2.1em; }
   .item-card .rarity { font-size: .68rem; font-weight: 900; }
   .rarity-common { color: #8aa0b8; }
@@ -156,7 +160,9 @@
               : `${it.price}🌟`;
             return `
             <div class="item-card ${owned ? 'owned' : ''}" data-id="${it.id}">
-              <div class="emoji">${it.emoji}</div>
+              ${it.asset
+                ? `<img class="item-art" src="${it.asset}" alt="${it.name}">`
+                : `<div class="emoji">${it.emoji}</div>`}
               <div class="name">${it.name}</div>
               <div class="rarity rarity-${it.rarity}">${RARITY_LABEL[it.rarity]}</div>
               ${owned

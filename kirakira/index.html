@@ -25,6 +25,26 @@
       border-radius: 50px; padding: 8px 16px; box-shadow: 0 3px 8px rgba(124,92,255,.18);
       white-space: nowrap;
     }
+    .loppi-hero {
+      position: relative; min-height: 300px; margin-bottom: 18px; overflow: hidden;
+      border-radius: 28px; border: 3px solid rgba(255,255,255,.9);
+      background: url('../assets/mascot/loppi-kirakira-hero.webp') center / cover no-repeat;
+      box-shadow: 0 12px 28px rgba(91,75,138,.23);
+    }
+    .loppi-hero::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(82,55,130,.08), transparent 62%);
+      pointer-events: none;
+    }
+    .loppi-copy {
+      position: absolute; z-index: 1; left: 24px; top: 50%; transform: translateY(-50%);
+      max-width: 245px; padding: 18px; border-radius: 22px;
+      background: rgba(255,255,255,.85); border: 2px solid rgba(255,255,255,.95);
+      box-shadow: 0 8px 20px rgba(75,51,122,.16); backdrop-filter: blur(7px);
+    }
+    .loppi-copy .eyebrow { margin: 0 0 4px; color: #ff70ad; font-weight: 900; font-size: .78rem; }
+    .loppi-copy h2 { margin: 0; color: #5b4b8a; font-size: 1.45rem; line-height: 1.35; }
+    .loppi-copy p:last-child { margin: 8px 0 0; color: #806fa4; font-size: .82rem; line-height: 1.55; font-weight: 700; }
     #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
     .game-card {
       background: rgba(255,255,255,.92); border-radius: 24px; padding: 16px; text-align: center;
@@ -32,8 +52,14 @@
       border: 2px solid #ecdcff;
     }
     .game-card:active { transform: scale(.97); }
-    .game-card .thumb { font-size: 2.4rem; }
+    .game-card .thumb {
+      width: 66px; height: 66px; margin: 0 auto; display: grid; place-items: center;
+      border-radius: 22px; font-size: 2.25rem;
+      background: linear-gradient(145deg, #fff, #efe8ff);
+      border: 2px solid #e0d2ff; box-shadow: inset 0 0 0 4px rgba(255,255,255,.65);
+    }
     .game-card .name { font-weight: 900; margin-top: 6px; display: block; }
+    .game-card .quest-mark { display: block; margin-top: 8px; color: #ff9ec7; font-size: .68rem; font-weight: 900; letter-spacing: .06em; }
     .empty-state {
       text-align: center; color: #9a8ac2; padding: 60px 20px; font-size: 1.05rem;
       grid-column: 1 / -1;
@@ -56,6 +82,12 @@
     .daily-item .d-check { width: 20px; text-align: center; }
     .daily-item .d-desc { flex: 1; }
     .daily-item .d-reward { font-weight: 900; color: #ff9ec7; white-space: nowrap; }
+    @media (max-width: 540px) {
+      .loppi-hero { min-height: 270px; background-position: 58% center; }
+      .loppi-copy { left: 12px; right: 12px; top: auto; bottom: 12px; transform: none; max-width: none; padding: 12px 15px; }
+      .loppi-copy h2 { font-size: 1.15rem; }
+      .loppi-copy p:last-child { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -64,6 +96,13 @@
     <h1><span class="star">🌟</span> キラキラひろば</h1>
     <span class="token-badge">🌟 <span id="kiraTokens">0</span></span>
   </header>
+  <section class="loppi-hero" aria-label="ろっぴーのキラキラクエストルーム">
+    <div class="loppi-copy">
+      <p class="eyebrow">LOPPI'S QUEST ROOM</p>
+      <h2>ろっぴーと、<br>今日の好きを育てよう。</h2>
+      <p>クエスト、コーデ、作品づくり。集めたものが、この部屋をもっと自分らしくするよ。</p>
+    </div>
+  </section>
   <a href="games/quiz/index.html?mode=fb-review" id="review-banner" class="review-banner">
     🔥 リベンジクエスト：おしかったもんだいが <span id="review-count">0</span>問！2ばいごほうびで ちょうせんしよう
   </a>
@@ -121,7 +160,7 @@
       const a = document.createElement('a');
       a.className = 'game-card';
       a.href = g.path;
-      a.innerHTML = `<div class="thumb">${g.emoji || '🎮'}</div><span class="name">${g.title}</span>`;
+      a.innerHTML = `<div class="thumb">${g.emoji || '🎮'}</div><span class="name">${g.title}</span><span class="quest-mark">LOPPI QUEST ✦</span>`;
       cardsEl.appendChild(a);
     });
   }

@@ -6,178 +6,262 @@
 <title>コーデスタジオ（キラキラひろば）</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-  body { background: linear-gradient(160deg, #efe6ff 0%, #e2fbf3 100%); min-height: 100vh; margin: 0; }
-  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 18px 40px; box-sizing: border-box; }
-
+  :root { --ink:#51476d; --pink:#ff68a8; --purple:#8066e8; }
+  * { box-sizing: border-box; }
+  body {
+    min-height:100vh; margin:0; color:var(--ink);
+    background:
+      radial-gradient(circle at 12% 8%, #fff9ca 0 4%, transparent 13%),
+      radial-gradient(circle at 90% 18%, #ffdff0 0 6%, transparent 16%),
+      linear-gradient(155deg,#eee7ff,#ddf9f2);
+  }
+  button { font-family:inherit; }
+  .wrap { max-width:720px; margin:0 auto; padding:12px 16px 44px; }
   .theme-banner {
-    background: linear-gradient(#fff0f8, #ffe6f4); border: 2px solid #ffc2e0; border-radius: 20px;
-    padding: 12px 16px; text-align: center; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;
+    padding:11px 15px; border:2px solid #ffc4df; border-radius:20px;
+    background:rgba(255,255,255,.88); box-shadow:0 6px 18px rgba(91,75,138,.1);
   }
-  .theme-banner .t-label { font-size: .78rem; color: #ff2f92; font-weight: 900; }
-  .theme-banner .t-text { font-weight: 900; color: #4a3f6b; font-size: 1rem; }
-  .theme-reroll { font-family: inherit; border: none; background: #fff; border-radius: 50%; width: 34px; height: 34px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,.1); }
+  .t-label { font-size:.72rem; color:#f14f91; font-weight:900; letter-spacing:.08em; }
+  .t-text { font-size:1rem; font-weight:900; }
+  .theme-reroll { width:38px; height:38px; border:0; border-radius:50%; background:#fff0f7; color:#de3c82; font-size:1.15rem; cursor:pointer; }
 
-  .preview-card {
-    background: #fff; border-radius: 24px; padding: 20px; text-align: center;
-    box-shadow: 0 8px 18px rgba(91,75,138,.18); margin-bottom: 18px;
+  .studio-card {
+    position:relative; overflow:hidden; border:3px solid rgba(255,255,255,.85); border-radius:30px;
+    background:linear-gradient(#fae8f4 0 70%,#e8d3c7 70%); box-shadow:0 14px 30px rgba(83,64,125,.2);
   }
-  .preview-stack { display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
-  .p-hair { font-size: 2.2rem; }
-  .p-face { font-size: 4rem; }
-  .p-top { font-size: 2.2rem; margin-top: -12px; }
-  .p-bottom { font-size: 2.2rem; margin-top: -8px; }
-  .p-acc { position: absolute; top: 4px; right: 30%; font-size: 1.6rem; }
+  .studio-card::before {
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.55;
+    background:
+      linear-gradient(90deg,transparent 49.5%,rgba(255,255,255,.72) 50%,transparent 50.5%),
+      radial-gradient(circle at 18% 22%,#fff 0 1.5%,transparent 1.7%),
+      radial-gradient(circle at 84% 30%,#fff 0 1%,transparent 1.2%);
+  }
+  .room-label {
+    position:absolute; z-index:20; top:12px; left:12px; padding:6px 10px; border-radius:14px;
+    background:rgba(255,255,255,.85); color:#d23f82; font-size:.75rem; font-weight:900;
+  }
+  .doll-stage { position:relative; width:min(100%,490px); aspect-ratio:1/1; margin:auto; }
+  .doll-layer {
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none;
+    transform-origin:50% 50%; opacity:0; transition:opacity .18s,transform .2s;
+  }
+  .doll-layer.visible { opacity:1; }
+  #layer-wings { z-index:1; }
+  #layer-base { z-index:2; opacity:1; }
+  #layer-bottom { z-index:3; }
+  #layer-top { z-index:4; }
+  #layer-hair { z-index:5; }
+  #layer-accessory { z-index:6; }
+  .sparkle { position:absolute; z-index:10; color:white; filter:drop-shadow(0 1px 2px #f28eb9); animation:twinkle 1.8s ease-in-out infinite; pointer-events:none; }
+  .s1 { top:18%; left:15%; } .s2 { top:30%; right:13%; animation-delay:.7s; } .s3 { bottom:15%; left:22%; animation-delay:1.1s; }
+  @keyframes twinkle { 50% { transform:scale(1.5) rotate(20deg); opacity:.45; } }
+  .studio-actions { position:relative; z-index:15; display:flex; align-items:center; justify-content:center; gap:9px; padding:0 12px 15px; }
   .save-btn {
-    font-family: inherit; font-weight: 900; border: none; cursor: pointer;
-    border-radius: 22px; padding: 12px 26px; font-size: 1.05rem; color: #fff; margin-top: 12px;
-    background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886;
+    border:0; border-radius:22px; padding:12px 22px; color:#fff; font-size:1rem; font-weight:900; cursor:pointer;
+    background:linear-gradient(#ff95c1,#f2559b); box-shadow:0 5px 0 #c63878;
   }
+  .clear-btn { border:2px solid #e6d9f8; border-radius:18px; padding:9px 13px; background:#fff; color:#74628f; font-weight:900; cursor:pointer; }
+  .save-btn:active,.clear-btn:active,.cat-tab:active,.item-chip:active { transform:translateY(2px); }
 
-  .cat-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
+  .closet { margin-top:16px; padding:13px; border-radius:25px; background:rgba(255,255,255,.7); box-shadow:0 8px 20px rgba(83,64,125,.1); }
+  .closet-heading { display:flex; align-items:center; justify-content:space-between; margin:0 2px 10px; }
+  .closet-heading strong { font-size:1rem; }
+  .closet-heading span { font-size:.72rem; color:#9486ae; font-weight:700; }
+  .cat-tabs { display:flex; gap:6px; overflow-x:auto; padding:1px 1px 7px; scrollbar-width:none; }
   .cat-tab {
-    font-family: inherit; font-weight: 900; border: none; cursor: pointer; white-space: nowrap;
-    border-radius: 14px; padding: 8px 14px; font-size: .88rem; color: #7c5cff; background: #fff;
-    box-shadow: 0 3px 0 rgba(0,0,0,.08);
+    flex:1; min-width:82px; border:0; border-radius:15px; padding:9px 8px; color:#7159cf; background:#fff;
+    font-size:.8rem; font-weight:900; cursor:pointer; box-shadow:0 3px 0 rgba(94,75,151,.11);
   }
-  .cat-tab.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
-  .item-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin-bottom: 20px; }
+  .cat-tab.active { color:#fff; background:linear-gradient(#a890fa,#7962df); box-shadow:0 3px 0 #5840ba; }
+  .item-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
   .item-chip {
-    background: #fff; border-radius: 14px; padding: 8px 4px; text-align: center; cursor: pointer;
-    border: 2px solid transparent; box-shadow: 0 3px 6px rgba(91,75,138,.1);
+    position:relative; min-width:0; padding:5px 4px 7px; border:2px solid transparent; border-radius:16px;
+    background:#fff; text-align:center; cursor:pointer; box-shadow:0 3px 8px rgba(91,75,138,.1); transition:.16s;
   }
-  .item-chip.selected { border-color: #ff6bb0; }
-  .item-chip.locked { opacity: .4; cursor: default; }
-  .item-chip .emoji { font-size: 1.5rem; }
-  .item-chip .name { font-size: .66rem; font-weight: 700; color: #4a3f6b; margin-top: 2px; }
-  .shop-hint { text-align: center; font-size: .82rem; color: #9a8ac2; margin: -8px 0 20px; }
-  .shop-hint a { color: #7c5cff; font-weight: 900; }
+  .item-chip.selected { border-color:var(--pink); background:#fff5fa; transform:translateY(-2px); }
+  .item-chip.locked { cursor:default; filter:grayscale(.25); }
+  .item-art { width:100%; aspect-ratio:1; object-fit:contain; border-radius:12px; background:linear-gradient(145deg,#fff8fb,#f3efff); }
+  .item-chip.locked .item-art { opacity:.46; }
+  .item-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px; color:#554970; font-size:.64rem; font-weight:900; }
+  .lock-badge { position:absolute; top:7px; right:6px; padding:2px 5px; border-radius:9px; background:rgba(74,62,94,.82); color:white; font-size:.57rem; font-weight:900; }
+  .none-chip { display:grid; place-items:center; min-height:105px; color:#8b7ba5; }
+  .none-chip .none-mark { font-size:1.8rem; }
+  .shop-hint { margin:10px 0 3px; text-align:center; color:#8f81a7; font-size:.76rem; }
+  .shop-hint a { color:#7159cf; font-weight:900; }
 
-  .gallery-title { font-weight: 900; color: #5b4b8a; margin: 4px 0 10px; }
-  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-  .gallery-item { background: #fff; border-radius: 14px; padding: 8px 2px; text-align: center; font-size: 1.5rem; box-shadow: 0 3px 6px rgba(91,75,138,.1); }
+  .gallery-title { margin:19px 3px 9px; color:#5b4b8a; font-size:.95rem; font-weight:900; }
+  .gallery-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .gallery-item { overflow:hidden; border:2px solid #fff; border-radius:16px; background:linear-gradient(#fae8f4 0 70%,#e8d3c7 70%); box-shadow:0 4px 10px rgba(91,75,138,.12); }
+  .mini-stage { position:relative; aspect-ratio:1; }
+  .mini-stage img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+  .gallery-empty { grid-column:1/-1; padding:20px; border-radius:15px; background:rgba(255,255,255,.55); text-align:center; color:#a398b4; font-size:.82rem; }
+  .toast { position:fixed; z-index:100; left:50%; bottom:24px; transform:translate(-50%,20px); padding:10px 16px; border-radius:18px; background:#4f4269; color:#fff; font-weight:900; opacity:0; transition:.2s; pointer-events:none; }
+  .toast.show { opacity:1; transform:translate(-50%,0); }
+  @media (max-width:450px) {
+    .wrap { padding-inline:10px; }
+    .studio-card { border-radius:24px; }
+    .item-row { grid-template-columns:repeat(3,1fr); }
+    .gallery-grid { grid-template-columns:repeat(3,1fr); }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="theme-banner">
-    <div>
-      <div class="t-label">きょうのおだい</div>
-      <div class="t-text" id="theme-text">-</div>
-    </div>
-    <button class="theme-reroll" id="theme-reroll">🔄</button>
+    <div><div class="t-label">COCOA'S STYLE MISSION</div><div class="t-text" id="theme-text">-</div></div>
+    <button class="theme-reroll" id="theme-reroll" aria-label="お題を変える">↻</button>
   </div>
 
-  <div class="preview-card">
-    <div class="preview-stack">
-      <span class="p-acc" id="p-acc"></span>
-      <span class="p-hair" id="p-hair"></span>
-      <span class="p-face">😊</span>
-      <span class="p-top" id="p-top"></span>
-      <span class="p-bottom" id="p-bottom"></span>
+  <section class="studio-card" aria-label="コーデのプレビュー">
+    <div class="room-label">ココアのおすすめコーデ ♡</div>
+    <div class="doll-stage" id="doll-stage">
+      <img class="doll-layer" id="layer-wings" alt="">
+      <img class="doll-layer" id="layer-base" src="../../assets/coord/base/girl-base.png" alt="10歳くらいの女の子のモデル">
+      <img class="doll-layer" id="layer-bottom" alt="">
+      <img class="doll-layer" id="layer-top" alt="">
+      <img class="doll-layer" id="layer-hair" alt="">
+      <img class="doll-layer" id="layer-accessory" alt="">
+      <span class="sparkle s1">✦</span><span class="sparkle s2">✦</span><span class="sparkle s3">✦</span>
     </div>
-    <button class="save-btn" id="save-btn">📸 しゃしんを ほぞんする</button>
-  </div>
+    <div class="studio-actions">
+      <button class="clear-btn" id="clear-btn">ぜんぶ はずす</button>
+      <button class="save-btn" id="save-btn">♡ コーデを ほぞん</button>
+    </div>
+  </section>
 
-  <div class="cat-tabs" id="cat-tabs"></div>
-  <div class="item-row" id="item-row"></div>
-  <p class="shop-hint">もっていない アイテムは <a href="../../shop.html">🛍️ ショップ</a> で てにいれよう</p>
+  <section class="closet">
+    <div class="closet-heading"><strong>マイクローゼット</strong><span>タップして着せ替え</span></div>
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div class="item-row" id="item-row"></div>
+    <p class="shop-hint">鍵つきアイテムは <a href="../../shop.html">ショップ</a> でゲットできるよ</p>
+  </section>
 
-  <p class="gallery-title">📸 コーデギャラリー</p>
+  <p class="gallery-title">♡ マイコーデアルバム</p>
   <div class="gallery-grid" id="gallery-grid"></div>
 </div>
+<div class="toast" id="toast">コーデを保存したよ！</div>
 
 <script type="module">
   import { KiraShell } from '../../core/shell.js';
   import * as Store from '../../core/store.js';
   import { evaluateAndToast } from '../../core/badges.js';
 
-  const shell = new KiraShell({ gameId: 'coord-studio', title: 'コーデスタジオ' });
-
-  const THEMES = ['あまい系でコーデして', 'ゆきの女王ふうに', 'ようせいっぽく', 'がっこうスタイルで', 'パーティドレスアップ', 'アイドルステージふう', 'おさんぽスタイル'];
-
-  const shopRes = await fetch('../../data/shop-items.json');
-  const shopData = await shopRes.json();
-  const OUTFIT_ITEMS = shopData.outfit;
+  const shell = new KiraShell({ gameId:'coord-studio', title:'コーデスタジオ' });
+  const THEMES = ['放課後カフェコーデ','ふわふわフェアリー','友だちとショッピング','キラキラ発表会スタイル','パステルアイドル','ちょっぴりお姉さんコーデ','週末のおでかけ'];
   const CATEGORIES = [
-    { key: 'hair', label: '💇 かみがた' },
-    { key: 'top', label: '👕 トップス' },
-    { key: 'bottom', label: '👖 ボトムス' },
-    { key: 'accessory', label: '💍 アクセサリー' },
+    { key:'hair', label:'ヘア' }, { key:'top', label:'トップス' },
+    { key:'bottom', label:'ボトムス' }, { key:'accessory', label:'こもの' }
   ];
-
-  const selected = { hair: null, top: null, bottom: null, accessory: null };
+  const STARTERS = { hair:'hair_twin', top:'top_tshirt', bottom:'bottom_skirt', accessory:null };
+  const shopData = await (await fetch('../../data/shop-items.json')).json();
+  const OUTFIT_ITEMS = shopData.outfit;
+  const selected = { ...STARTERS };
   let activeCat = 'hair';
 
-  function itemsOf(cat) { return OUTFIT_ITEMS.filter((it) => it.category === cat); }
-  function findItem(id) { return OUTFIT_ITEMS.find((it) => it.id === id); }
+  Object.values(STARTERS).filter(Boolean).forEach((id) => Store.grantItem(id));
+  const itemById = (id) => OUTFIT_ITEMS.find((item) => item.id === id);
+  const itemsOf = (cat) => OUTFIT_ITEMS.filter((item) => item.category === cat);
+  const assetUrl = (item) => item?.asset ? `../../${item.asset}` : '';
+
+  // Each illustration stays on one shared square canvas. Small offsets align it to the model.
+  const FIT = {
+    hair_twin:'translate(0,-21%) scale(.46)', hair_wave:'translate(0,-27%) scale(.47)',
+    hair_ribbon:'translate(0,-25%) scale(.47)', hair_starclip:'translate(0,-22%) scale(.47)',
+    top_tshirt:'translate(0,-15%) scale(.41)', top_hoodie:'translate(0,-13%) scale(.47)',
+    top_sailor:'translate(0,-15%) scale(.39)', top_princess:'translate(0,-15%) scale(.35)',
+    bottom_skirt:'translate(0,4%) scale(.528)', bottom_jeans:'translate(0,8%) scale(.456,.90)',
+    bottom_tutu:'translate(0,5%) scale(.48)', bottom_gown:'translate(0,16%) scale(.408,.936)',
+    acc_ribbon:'translate(10%,5%) scale(.35)', acc_glasses:'translate(0,-19%) scale(.50)',
+    acc_crown:'translate(0,-24%) scale(.56)', acc_wings:'translate(0,-7%) scale(.70)'
+  };
+
+  function setLayer(el, id) {
+    const item = itemById(id);
+    if (!item) { el.removeAttribute('src'); el.classList.remove('visible'); return; }
+    el.src = assetUrl(item);
+    el.style.transform = FIT[id] || 'none';
+    el.classList.add('visible');
+  }
 
   function renderPreview() {
-    document.getElementById('p-hair').textContent = selected.hair ? findItem(selected.hair).emoji : '';
-    document.getElementById('p-top').textContent = selected.top ? findItem(selected.top).emoji : '👚';
-    document.getElementById('p-bottom').textContent = selected.bottom ? findItem(selected.bottom).emoji : '👖';
-    document.getElementById('p-acc').textContent = selected.accessory ? findItem(selected.accessory).emoji : '';
+    setLayer(document.getElementById('layer-hair'), selected.hair);
+    setLayer(document.getElementById('layer-top'), selected.top);
+    setLayer(document.getElementById('layer-bottom'), selected.bottom);
+    const accessory = itemById(selected.accessory);
+    setLayer(document.getElementById('layer-wings'), accessory?.layer === 'back' ? accessory.id : null);
+    setLayer(document.getElementById('layer-accessory'), accessory?.layer !== 'back' ? accessory?.id : null);
   }
 
   function renderTabs() {
-    document.getElementById('cat-tabs').innerHTML = CATEGORIES.map((c) =>
-      `<button class="cat-tab ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
+    const tabs = document.getElementById('cat-tabs');
+    tabs.innerHTML = CATEGORIES.map((cat) =>
+      `<button class="cat-tab ${cat.key === activeCat ? 'active' : ''}" data-cat="${cat.key}">${cat.label}</button>`
     ).join('');
-    document.querySelectorAll('.cat-tab').forEach((btn) => {
-      btn.addEventListener('click', () => { activeCat = btn.dataset.cat; renderTabs(); renderItems(); });
-    });
+    tabs.querySelectorAll('[data-cat]').forEach((button) => button.addEventListener('click', () => {
+      activeCat = button.dataset.cat; renderTabs(); renderItems();
+    }));
   }
 
   function renderItems() {
     const row = document.getElementById('item-row');
-    row.innerHTML = itemsOf(activeCat).map((it) => {
-      const owned = Store.owns(it.id);
-      const isSel = selected[activeCat] === it.id;
-      return `
-      <div class="item-chip ${isSel ? 'selected' : ''} ${owned ? '' : 'locked'}" data-id="${it.id}" data-owned="${owned}">
-        <div class="emoji">${it.emoji}</div>
-        <div class="name">${owned ? it.name : '🔒 ' + it.price + '🌟'}</div>
-      </div>`;
-    }).join('');
-    row.querySelectorAll('.item-chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        if (chip.dataset.owned !== 'true') return;
-        selected[activeCat] = selected[activeCat] === chip.dataset.id ? null : chip.dataset.id;
-        renderItems();
-        renderPreview();
-      });
+    row.innerHTML = `
+      <button class="item-chip none-chip ${selected[activeCat] === null ? 'selected' : ''}" data-clear>
+        <span><span class="none-mark">∅</span><span class="item-name" style="display:block">はずす</span></span>
+      </button>` +
+      itemsOf(activeCat).map((item) => {
+        const owned = Store.owns(item.id);
+        return `<button class="item-chip ${selected[activeCat] === item.id ? 'selected' : ''} ${owned ? '' : 'locked'}"
+          data-id="${item.id}" data-owned="${owned}">
+          <img class="item-art" src="${assetUrl(item)}" alt="${item.name}">
+          ${owned ? '' : `<span class="lock-badge">🔒 ${item.price}★</span>`}
+          <div class="item-name">${item.name}</div>
+        </button>`;
+      }).join('');
+    row.querySelector('[data-clear]').addEventListener('click', () => {
+      selected[activeCat] = null; renderItems(); renderPreview();
     });
+    row.querySelectorAll('[data-id]').forEach((button) => button.addEventListener('click', () => {
+      if (button.dataset.owned !== 'true') return;
+      selected[activeCat] = button.dataset.id; renderItems(); renderPreview();
+    }));
+  }
+
+  function miniStage(outfit) {
+    const ids = [outfit.accessory, outfit.bottom, outfit.top, outfit.hair].filter(Boolean);
+    const wings = ids.filter((id) => itemById(id)?.layer === 'back');
+    const front = ids.filter((id) => itemById(id)?.layer !== 'back');
+    const image = (id) => `<img src="${assetUrl(itemById(id))}" alt="" style="transform:${FIT[id] || 'none'}">`;
+    return `<div class="mini-stage">${wings.map(image).join('')}
+      <img src="../../assets/coord/base/girl-base.png" alt="保存したコーデ">
+      ${front.map(image).join('')}</div>`;
   }
 
   function renderGallery() {
-    const grid = document.getElementById('gallery-grid');
     const outfits = Store.getOutfits().slice().reverse();
-    grid.innerHTML = outfits.length
-      ? outfits.map((o) => `<div class="gallery-item">${o.hairEmoji || ''}${o.topEmoji || '👚'}</div>`).join('')
-      : `<div style="grid-column:1/-1;text-align:center;color:#bbb;">まだ ないよ</div>`;
+    document.getElementById('gallery-grid').innerHTML = outfits.length
+      ? outfits.map((outfit) => `<div class="gallery-item">${miniStage(outfit)}</div>`).join('')
+      : '<div class="gallery-empty">お気に入りのコーデを保存してみよう</div>';
   }
 
   function setTheme() {
     document.getElementById('theme-text').textContent = THEMES[Math.floor(Math.random() * THEMES.length)];
   }
+  function showToast() {
+    const toast = document.getElementById('toast'); toast.classList.add('show');
+    window.setTimeout(() => toast.classList.remove('show'), 1800);
+  }
   document.getElementById('theme-reroll').addEventListener('click', setTheme);
-
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    Object.keys(selected).forEach((key) => { selected[key] = null; });
+    renderItems(); renderPreview();
+  });
   document.getElementById('save-btn').addEventListener('click', async () => {
-    Store.saveOutfit({
-      hair: selected.hair, top: selected.top, bottom: selected.bottom, accessory: selected.accessory,
-      hairEmoji: selected.hair ? findItem(selected.hair).emoji : '',
-      topEmoji: selected.top ? findItem(selected.top).emoji : '👚',
-      theme: document.getElementById('theme-text').textContent,
-    });
-    shell.sound.play('coin');
-    renderGallery();
-    await evaluateAndToast();
+    Store.saveOutfit({ ...selected, theme:document.getElementById('theme-text').textContent });
+    shell.sound.play('coin'); showToast(); renderGallery(); await evaluateAndToast();
   });
 
-  setTheme();
-  renderTabs();
-  renderItems();
-  renderPreview();
-  renderGallery();
+  setTheme(); renderTabs(); renderItems(); renderPreview(); renderGallery();
 </script>
 </body>
 </html>

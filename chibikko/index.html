@@ -15,7 +15,25 @@
     background-size: cover; background-position: center; background-color: #fff2df;
     min-height: 100vh; box-sizing: border-box;
   }
-  #hub-wrap { max-width: 640px; margin: 0 auto; padding: 28px 18px 40px; }
+  #hub-wrap { max-width: 640px; margin: 0 auto; padding: 20px 18px 40px; }
+  .loppi-hero {
+    position: relative; min-height: 230px; overflow: hidden; border-radius: 32px;
+    background: url('../assets/mascot/loppi-chibikko-hero.webp') center / cover no-repeat;
+    box-shadow: 0 10px 24px rgba(62,145,184,.22);
+    border: 5px solid rgba(255,255,255,.9);
+  }
+  .loppi-hero::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,.22), transparent 52%);
+    pointer-events: none;
+  }
+  .loppi-name {
+    position: absolute; left: 18px; top: 18px; z-index: 1;
+    margin: 0; padding: 9px 17px; border-radius: 999px;
+    background: rgba(255,255,255,.9); color: #e47835; font-size: 1.15rem;
+    box-shadow: 0 4px 10px rgba(58,109,128,.15);
+  }
+  .loppi-name span { color: #4d98ba; }
   #sticker-fab {
     position: fixed; top: 10px; right: 10px; z-index: 50;
     width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
@@ -31,7 +49,11 @@
   .game-card:active { transform: scale(.95); }
   .game-card.teaser { font-size: 2.6rem; background: linear-gradient(#fff6ec, #ffe6c4); }
   .game-card.emoji-card { font-size: 3.2rem; }
-  @media (max-width: 380px) { #cards { gap: 14px; } }
+  @media (max-width: 380px) {
+    #cards { gap: 14px; }
+    .loppi-hero { min-height: 190px; }
+    .loppi-name { font-size: .95rem; left: 12px; top: 12px; }
+  }
   #unlock-overlay {
     position: fixed; inset: 0; z-index: 2000; display: none;
     align-items: center; justify-content: center; background: rgba(92,76,81,.5); padding: 20px;
@@ -53,6 +75,9 @@
 <body>
 <button id="sticker-fab" aria-label="シールちょう">📒</button>
 <div id="hub-wrap">
+  <section class="loppi-hero" aria-label="ロップイヤーのろっぴーが遊びに誘っています">
+    <h1 class="loppi-name">ろっぴー<span>と あそぼ！</span></h1>
+  </section>
   <div id="cards"></div>
 </div>
 <div id="unlock-overlay">
