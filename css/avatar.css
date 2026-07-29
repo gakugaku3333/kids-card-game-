@@ -41,14 +41,14 @@
 
 .avatar-outfit.layer-avatar_princess,
 .avatar-outfit.layer-avatar_angel_girl {
-  transform: translateY(6%) scale(.55, .72);
+  transform: translateY(6%) scale(.66, .864);
 }
 .avatar-outfit.layer-avatar_magic_girl {
-  transform: translateY(8%) scale(.55, .85);
+  transform: translateY(8%) scale(.66, 1.02);
 }
 .avatar-outfit.layer-avatar_rabbit_fairy,
 .avatar-outfit.layer-avatar_kitty_girl {
-  transform: translateY(8%) scale(.55, .85);
+  transform: translateY(8%) scale(.66, 1.02);
 }
 
 /* かざりは右上に重ねる */
