@@ -56,9 +56,40 @@
   const stage = document.getElementById('stage');
   const tabsEl = document.getElementById('tabs');
   const choicesEl = document.getElementById('choices');
+  // These assets were repaired from flattened JPEGs. Versioning makes every
+  // browser fetch the repaired RGBA files instead of a previously cached one.
+  const dressupAsset = (path) => `${asset(path)}?v=20260730`;
+  const LAYER_LAYOUTS = {
+    dress: {
+      pink: { left: '21%', top: '42%', width: '58%' },
+      mizutama: { left: '27.5%', top: '42%', width: '45%' },
+      yukihime: { left: '21%', top: '42%', width: '58%' },
+      morihime: { left: '22.5%', top: '42%', width: '55%' },
+      hanahime: { left: '23.5%', top: '42%', width: '53%' },
+      awahime: { left: '22%', top: '42%', width: '56%' },
+      honhime: { left: '22%', top: '42%', width: '56%' }
+    },
+    shoes: {
+      glass: { left: '32%', top: '70%', width: '36%' },
+      red: { left: '32%', top: '70%', width: '36%' },
+      sneaker: { left: '42%', top: '72%', width: '16%' },
+      boots: { left: '32%', top: '70%', width: '36%' }
+    },
+    hat: {
+      tiara: { left: '27%', top: '14%', width: '46%' },
+      usamimi: { left: '29%', top: '2%', width: '42%' },
+      mugiwara: { left: '24%', top: '10%', width: '52%' }
+    },
+    hair: {
+      'mitsuami-gin': { left: '31%', top: '14%', width: '38%' },
+      'kinpatsu-hana': { left: '32%', top: '13%', width: '36%' },
+      'akage-maki': { left: '24%', top: '10%', width: '52%' },
+      'chairo-updo': { left: '26%', top: '0%', width: '48%' }
+    }
+  };
 
   const CATEGORIES = [
-    { id: 'dress', label: '👗', zIndex: 2, items: [
+    { id: 'dress', label: '👗', zIndex: 20, items: [
       { id: 'pink', file: 'assets/dressup/dress-pink.png' },
       { id: 'mizutama', file: 'assets/dressup/dress-mizutama.png' },
       { id: 'yukihime', file: 'assets/dressup/dress-yukihime.png' },
@@ -67,18 +98,18 @@
       { id: 'awahime', file: 'assets/dressup/dress-awahime.png' },
       { id: 'honhime', file: 'assets/dressup/dress-honhime.png' }
     ] },
-    { id: 'hair', label: '💇', zIndex: 3, items: [
+    { id: 'hair', label: '💇', zIndex: 40, items: [
       { id: 'mitsuami-gin', file: 'assets/dressup/hair-mitsuami-gin.png' },
       { id: 'kinpatsu-hana', file: 'assets/dressup/hair-kinpatsu-hana.png' },
       { id: 'akage-maki', file: 'assets/dressup/hair-akage-maki.png' },
       { id: 'chairo-updo', file: 'assets/dressup/hair-chairo-updo.png' }
     ] },
-    { id: 'hat', label: '👑', zIndex: 4, items: [
+    { id: 'hat', label: '👑', zIndex: 50, items: [
       { id: 'tiara', file: 'assets/dressup/hat-tiara.png' },
       { id: 'usamimi', file: 'assets/dressup/hat-usamimi.png' },
       { id: 'mugiwara', file: 'assets/dressup/hat-mugiwara.png' }
     ] },
-    { id: 'shoes', label: '👠', zIndex: 2, items: [
+    { id: 'shoes', label: '👠', zIndex: 30, items: [
       { id: 'glass', file: 'assets/dressup/shoes-glass.png' },
       { id: 'red', file: 'assets/dressup/shoes-red.png' },
       { id: 'sneaker', file: 'assets/dressup/shoes-sneaker.png' },
@@ -87,11 +118,21 @@
   ];
 
   const base = document.createElement('img');
-  base.src = asset('assets/dressup/base-girl.png');
-  base.style.zIndex = 1;
+  base.src = dressupAsset('assets/dressup/base-girl.png');
+  base.style.zIndex = 10;
+  base.alt = '';
   stage.appendChild(base);
 
-  const layers = {};
+  // Keep category elements in this fixed order. Selection order must never
+  // affect whether shoes, dresses, hair or hats appear in front.
+  const layers = Object.fromEntries(CATEGORIES.map((cat) => {
+    const img = document.createElement('img');
+    img.style.zIndex = cat.zIndex;
+    img.alt = '';
+    img.hidden = true;
+    stage.appendChild(img);
+    return [cat.id, img];
+  }));
   const equipped = {};
 
   function renderTabs() {
@@ -113,7 +154,7 @@
     cat.items.forEach((item) => {
       const btn = document.createElement('button');
       btn.className = `kise-choice${equipped[catId] === item.id ? ' on' : ''}`;
-      btn.innerHTML = `<img src="${asset(item.file)}" alt="${item.id}" />`;
+      btn.innerHTML = `<img src="${dressupAsset(item.file)}" alt="${item.id}" />`;
       btn.addEventListener('click', () => toggleItem(cat, item, btn));
       choicesEl.appendChild(btn);
     });
@@ -124,16 +165,21 @@
     shell.sound.play('coin');
     if (already) {
       equipped[cat.id] = null;
-      if (layers[cat.id]) { layers[cat.id].remove(); layers[cat.id] = null; }
+      layers[cat.id].hidden = true;
+      layers[cat.id].removeAttribute('src');
     } else {
       equipped[cat.id] = item.id;
-      if (!layers[cat.id]) {
-        const img = document.createElement('img');
-        img.style.zIndex = cat.zIndex;
-        stage.appendChild(img);
-        layers[cat.id] = img;
-      }
-      layers[cat.id].src = asset(item.file);
+      const layout = LAYER_LAYOUTS[cat.id][item.id];
+      Object.assign(layers[cat.id].style, {
+        inset: 'auto',
+        left: layout.left,
+        top: layout.top,
+        width: layout.width,
+        height: 'auto',
+        objectFit: 'contain'
+      });
+      layers[cat.id].src = dressupAsset(item.file);
+      layers[cat.id].hidden = false;
     }
     document.querySelectorAll('.kise-choice').forEach((b) => b.classList.remove('on'));
     if (equipped[cat.id]) btn.classList.add('on');
@@ -144,8 +190,10 @@
   });
 
   function startGame() {
-    Object.values(layers).forEach((img) => img && img.remove());
-    Object.keys(layers).forEach((k) => (layers[k] = null));
+    Object.values(layers).forEach((img) => {
+      img.hidden = true;
+      img.removeAttribute('src');
+    });
     Object.keys(equipped).forEach((k) => (equipped[k] = null));
     renderTabs();
     selectTab('dress');

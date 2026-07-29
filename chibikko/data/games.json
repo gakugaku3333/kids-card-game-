@@ -96,19 +96,19 @@
       "id": "hiragana-search",
       "title": "ひらがなさがし",
       "path": "games/hiragana-search/index.html",
-      "emoji": "🔤"
+      "icon": "assets/icons/growth/hiragana-search.png"
     },
     {
       "id": "otsukai",
       "title": "おつかいごっこ",
       "path": "games/otsukai/index.html",
-      "emoji": "🛍️"
+      "icon": "assets/icons/growth/otsukai.png"
     },
     {
       "id": "nazorigaki",
       "title": "なぞりがき",
       "path": "games/nazorigaki/index.html",
-      "emoji": "✏️"
+      "icon": "assets/icons/growth/nazorigaki.png"
     }
   ]
 }
