@@ -27,6 +27,37 @@
   }
   .slot img { width: 100%; height: 100%; object-fit: contain; }
   .slot.locked { font-size: 1.6rem; color: #ccc; }
+  /* 貼れているシールはタップすると名前を読み上げる＝「言える名前が増えていく図鑑」 */
+  .slot.owned { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .slot.owned:active { transform: scale(.92); }
+  .slot.pop { animation: slot-pop .45s ease; }
+  @keyframes slot-pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  /* きろくシールは金縁の別枠。できるようになった節目だけが貼られる。 */
+  #record-sheet {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 22px;
+    background: rgba(255,255,255,.7); border-radius: 24px; padding: 16px;
+  }
+  .record-slot {
+    aspect-ratio: 1; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; background: #fffaf0; border: 4px solid #ffce3d;
+    box-shadow: 0 0 0 3px #fff3c4; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  .record-slot:active { transform: scale(.92); }
+  .record-slot.locked { border-color: #e6e0d4; box-shadow: none; background: rgba(255,255,255,.6); color: #ccc; cursor: default; }
+  #story-btn {
+    display: block; margin: 22px auto 0; border: none; cursor: pointer;
+    font-family: inherit; font-weight: 900; font-size: 1.3rem; color: #fff;
+    padding: 18px 34px; border-radius: 26px;
+    background: linear-gradient(#ffa5d2, #ff79b8); box-shadow: 0 6px 0 #e05797;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  #story-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #e05797; }
+  #story-btn[hidden] { display: none; }
   #themes { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
   .theme-btn {
     width: 70px; height: 70px; border-radius: 16px; border: 4px solid #fff; cursor: pointer;
@@ -41,6 +72,8 @@
 <button id="home-fab" aria-label="ホーム">🏠</button>
 <div id="wrap">
   <div id="sheet"></div>
+  <div id="record-sheet"></div>
+  <button id="story-btn" hidden>📖 おはなし</button>
   <div id="themes"></div>
 </div>
 <script type="module">
@@ -58,14 +91,44 @@
   Store.STICKERS.forEach((s) => {
     const slot = document.createElement('div');
     if (owned.has(s.id)) {
-      slot.className = 'slot';
+      slot.className = 'slot owned';
       slot.innerHTML = `<img src="${asset(s.file)}" alt="${s.id}" />`;
+      // 眺めるだけの台紙ではなく「名前が言えるようになる図鑑」にする
+      slot.addEventListener('click', () => {
+        Voice.speak(`sticker-${s.id}`);
+        slot.classList.remove('pop');
+        void slot.offsetWidth;
+        slot.classList.add('pop');
+      });
     } else {
       slot.className = 'slot locked';
       slot.textContent = '❔';
     }
     sheet.appendChild(slot);
   });
+
+  // きろくシール（金縁）: できるようになった節目だけが貼られる別枠の台紙
+  const recordSheet = document.getElementById('record-sheet');
+  const ownedRecords = new Set(Store.getRecordStickers());
+  Store.RECORD_STICKERS.forEach((r) => {
+    const slot = document.createElement('div');
+    if (ownedRecords.has(r.id)) {
+      slot.className = 'record-slot';
+      slot.textContent = r.emoji;
+      slot.addEventListener('click', () => Voice.speak(`record-${r.id}`));
+    } else {
+      slot.className = 'record-slot locked';
+      slot.textContent = '❔';
+    }
+    recordSheet.appendChild(slot);
+  });
+
+  // おはなしはきろくシールが1枚でも貯まってから現れる（何もない画面へ行かせない）
+  const storyBtn = document.getElementById('story-btn');
+  if (Store.unlockedStories().length > 0) {
+    storyBtn.hidden = false;
+    storyBtn.addEventListener('click', () => { window.location.href = 'story.html'; });
+  }
 
   const themesEl = document.getElementById('themes');
   const unlocked = new Set(Store.unlockedThemes().map((t) => t.id));

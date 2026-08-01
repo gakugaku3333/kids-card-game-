@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>おはなし</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: linear-gradient(#ffeef7, #ffe0ef);
+    min-height: 100vh; box-sizing: border-box; overflow-y: auto;
+  }
+  #back-fab {
+    position: fixed; top: 10px; left: 10px; z-index: 50;
+    width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255,255,255,.9); font-size: 1.8rem; box-shadow: 0 4px 10px rgba(0,0,0,.2);
+  }
+  #wrap { max-width: 640px; margin: 0 auto; padding: 90px 18px 40px; }
+  #list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .story-card {
+    background: rgba(255,255,255,.94); border: 5px solid #ffce3d; border-radius: 28px;
+    padding: 12px; aspect-ratio: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,.13);
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  .story-card:active { transform: scale(.95); }
+  .story-card img { width: 100%; height: 100%; object-fit: contain; }
+  .story-card.locked { border-color: #eadfe4; background: rgba(255,255,255,.55); cursor: default; }
+  .story-card.locked span { font-size: 2.4rem; color: #ddd; }
+  /* 紙芝居1画面: 絵とココアの声だけ。文字は読ませず、おうちのひと用に小さく添える。 */
+  #scene {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+    background: rgba(92,76,81,.55);
+  }
+  #scene.show { display: flex; }
+  .scene-card {
+    background: #fff; border-radius: 32px; padding: 24px 20px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: 0 14px 34px rgba(0,0,0,.3);
+  }
+  .scene-card img {
+    width: min(60vw, 220px); max-height: 220px; object-fit: contain; display: block; margin: 0 auto;
+    animation: scene-pop .5s ease;
+  }
+  @keyframes scene-pop {
+    0% { transform: scale(.5); opacity: 0; }
+    60% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .scene-card p { font-weight: 900; color: #7b5260; font-size: .95rem; line-height: 1.6; margin: 14px 4px 6px; }
+  .scene-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer; color: #fff;
+    border-radius: 26px; padding: 18px 22px; font-size: 1.8rem; min-width: 110px;
+    background: linear-gradient(#ffb347, #ff9a3d); box-shadow: 0 6px 0 #e07e22; margin: 6px;
+  }
+  @media (max-height: 700px) {
+    #wrap { padding-top: 74px; }
+    .scene-card img { width: min(38vw, 150px); max-height: 150px; }
+    .scene-btn { padding: 12px 18px; font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<button id="back-fab" aria-label="もどる">🏠</button>
+<div id="wrap">
+  <div id="list"></div>
+</div>
+<div id="scene">
+  <div class="scene-card">
+    <img id="scene-img" src="" alt="">
+    <p id="scene-text"></p>
+    <button class="scene-btn" id="scene-close">⭕️</button>
+  </div>
+</div>
+<script type="module">
+  import * as Store from './core/store.js';
+  import * as Voice from './core/voice.js';
+  import { asset } from './core/paths.js';
+
+  window.CHIBIKKO_ROOT = '../';
+
+  document.body.addEventListener('pointerdown', () => Voice.unlock(), { once: true });
+  document.getElementById('back-fab').addEventListener('click', () => {
+    window.location.href = 'sticker-book.html';
+  });
+
+  // おはなしの絵は専用イラストが届くまでプリンセスのレアシールで代用する
+  // （tasks/イラスト生成指示書.md に story-*.png の章を追加済み）。
+  const artOf = (id) => `assets/stickers/${id}.png`;
+
+  const listEl = document.getElementById('list');
+  const sceneEl = document.getElementById('scene');
+  const sceneImg = document.getElementById('scene-img');
+  const sceneText = document.getElementById('scene-text');
+  let lines = {};
+
+  fetch(asset('chibikko/data/voice-lines.json'))
+    .then((r) => r.json())
+    .then((json) => { lines = json; });
+
+  function openScene(story) {
+    sceneImg.src = asset(artOf(story.id));
+    sceneImg.alt = story.id;
+    const line = lines[`story-${story.id}`];
+    sceneText.textContent = line ? line.text : '';
+    sceneEl.classList.add('show');
+    Voice.speak(`story-${story.id}`);
+    Store.markStorySeen(story.id);
+  }
+
+  document.getElementById('scene-close').addEventListener('click', () => {
+    sceneEl.classList.remove('show');
+  });
+
+  const unlocked = new Set(Store.unlockedStories().map((s) => s.id));
+  Store.STORIES.forEach((story) => {
+    const card = document.createElement('div');
+    if (unlocked.has(story.id)) {
+      card.className = 'story-card';
+      card.innerHTML = `<img src="${asset(artOf(story.id))}" alt="${story.id}">`;
+      card.addEventListener('click', () => openScene(story));
+    } else {
+      card.className = 'story-card locked';
+      card.innerHTML = '<span>❔</span>';
+    }
+    listEl.appendChild(card);
+  });
+</script>
+</body>
+</html>

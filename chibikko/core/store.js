@@ -63,6 +63,37 @@ export const THEMES = [
   { id: 'koori', file: 'assets/bg/theme-koori.png', unlockAt: 40 }
 ];
 
+/*
+ * Phase C2: きろくシール（金縁）。
+ * 「はじめてできた」の1回1回ではなく、できるようになった節目だけを貼る。
+ * 毎問ごとに貼ると特別さが消えるため、しきい値式にしている。
+ * 条件は既存データ（pickProgress / gamePlayCounts / playCount）だけを読み、
+ * 新しい計測は増やさない。emoji は専用イラストが届くまでのプレースホルダ。
+ */
+export const RECORD_STICKERS = [
+  { id: 'iro-3', emoji: '🎨', cond: { type: 'seenCount', setId: 'color-touch', threshold: 3 } },
+  { id: 'iro-all', emoji: '🌈', cond: { type: 'seenCount', setId: 'color-touch', threshold: 7 } },
+  { id: 'kazu-5', emoji: '✋', cond: { type: 'seenCount', setId: 'number-touch', threshold: 5 } },
+  { id: 'kazu-10', emoji: '🔟', cond: { type: 'pickLevel', setId: 'number-touch', threshold: 3 } },
+  { id: 'nakama', emoji: '🧺', cond: { type: 'seenCount', setId: 'nakama', threshold: 10 } },
+  { id: 'kimochi', emoji: '💗', cond: { type: 'seenCount', setId: 'feelings', threshold: 4 } },
+  { id: 'kurabekko', emoji: '⚖️', cond: { type: 'seenCount', setId: 'compare', threshold: 4 } },
+  { id: 'hiragana-5', emoji: '📖', cond: { type: 'seenCount', setId: 'hiragana-search', threshold: 5 } },
+  { id: 'hiragana-all', emoji: '🏆', cond: { type: 'seenCount', setId: 'hiragana-search', threshold: 15 } },
+  { id: 'meiro', emoji: '🗺️', cond: { type: 'gamePlays', gameId: 'maze', threshold: 10 } },
+  { id: 'takusan', emoji: '🎊', cond: { type: 'playCount', threshold: 30 } }
+];
+
+// きろくシールが貯まるごとに、プリンセスのおはなしが1話ずつ増える。
+// 一番好きなものを一番のごほうびに置く原則（3歳向け計画書）の続き。
+export const STORIES = [
+  { id: 'yukihime', unlockAt: 1 },
+  { id: 'morihime', unlockAt: 3 },
+  { id: 'hanahime', unlockAt: 5 },
+  { id: 'awahime', unlockAt: 7 },
+  { id: 'honhime', unlockAt: 9 }
+];
+
 function load() {
   let raw = null;
   try {
@@ -77,7 +108,9 @@ function load() {
     gamePlayCounts: (raw.gamePlayCounts && typeof raw.gamePlayCounts === 'object') ? raw.gamePlayCounts : {},
     selectedTheme: typeof raw.selectedTheme === 'string' ? raw.selectedTheme : 'sora',
     pickProgress: (raw.pickProgress && typeof raw.pickProgress === 'object') ? raw.pickProgress : {},
-    revealedGrowthGames: Array.isArray(raw.revealedGrowthGames) ? raw.revealedGrowthGames : []
+    revealedGrowthGames: Array.isArray(raw.revealedGrowthGames) ? raw.revealedGrowthGames : [],
+    recordStickers: Array.isArray(raw.recordStickers) ? raw.recordStickers : [],
+    seenStories: Array.isArray(raw.seenStories) ? raw.seenStories : []
   };
 }
 
@@ -186,6 +219,8 @@ export function getGrowthSummary() {
     playCount: data.playCount,
     stickerCount: getUniqueCount(),
     stickerTotal: STICKERS.length,
+    recordCount: data.recordStickers.length,
+    recordTotal: RECORD_STICKERS.length,
     sets
   };
 }
@@ -236,6 +271,55 @@ export function hasSeenUnlockCelebration(gameId) {
 export function markUnlockCelebrationSeen(gameId) {
   if (data.revealedGrowthGames.indexOf(gameId) === -1) {
     data.revealedGrowthGames.push(gameId);
+    save();
+  }
+}
+
+// ===== Phase C2: きろくシールとおはなし =====
+
+// 条件判定。まだ遊んでいないゲームは pickProgress に項目が無いので、
+// どの分岐も「無ければ0」として扱う。
+function meetsCondition(cond) {
+  if (!cond) return false;
+  if (cond.type === 'playCount') return data.playCount >= cond.threshold;
+  if (cond.type === 'gamePlays') return (data.gamePlayCounts[cond.gameId] || 0) >= cond.threshold;
+  const p = data.pickProgress[cond.setId];
+  if (!p) return false;
+  if (cond.type === 'pickLevel') return (p.level || 0) >= cond.threshold;
+  if (cond.type === 'seenCount') return (p.seenIds || []).length >= cond.threshold;
+  return false;
+}
+
+export function getRecordStickers() { return data.recordStickers.slice(); }
+export function ownsRecordSticker(id) { return data.recordStickers.indexOf(id) !== -1; }
+export function getRecordCount() { return data.recordStickers.length; }
+
+/**
+ * 条件を満たしたきろくシールを貼る。すでに持っているものは対象外。
+ * @returns {Array<object>} 今回あたらしく貼られたきろくシール（無ければ空配列）
+ */
+export function checkRecordStickers() {
+  const earned = RECORD_STICKERS.filter((r) => !ownsRecordSticker(r.id) && meetsCondition(r.cond));
+  if (earned.length === 0) return [];
+  earned.forEach((r) => data.recordStickers.push(r.id));
+  save();
+  return earned;
+}
+
+export function unlockedStories() {
+  const n = getRecordCount();
+  return STORIES.filter((s) => n >= s.unlockAt);
+}
+
+export function isStoryUnlocked(id) {
+  return unlockedStories().some((s) => s.id === id);
+}
+
+export function hasSeenStory(id) { return data.seenStories.indexOf(id) !== -1; }
+
+export function markStorySeen(id) {
+  if (data.seenStories.indexOf(id) === -1) {
+    data.seenStories.push(id);
     save();
   }
 }

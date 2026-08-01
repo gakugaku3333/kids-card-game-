@@ -17,6 +17,7 @@ const HEADER_ID = 'toddler-header';
 const RESULT_MODAL_ID = 'toddler-result-modal';
 const GATE_MODAL_ID = 'toddler-gate-modal';
 const HOME_CONFIRM_ID = 'toddler-home-confirm';
+const RECORD_MODAL_ID = 'toddler-record-modal';
 
 function injectStyles() {
   if (document.getElementById('toddler-shell-style')) return;
@@ -66,6 +67,21 @@ function injectStyles() {
     }
     .toddler-growth-row:last-child { border-bottom: none; }
     .toddler-growth-empty { font-size: .9rem; color: #a98; margin: 6px 0; }
+    /* きろくシールは通常シールと別枠の「金縁」。特別さが伝わるよう枠と光で差をつける。 */
+    .toddler-record-card { border: 6px solid #ffce3d; box-shadow: 0 0 0 6px #fff3c4, 0 14px 34px rgba(0,0,0,.25); }
+    .toddler-record-emoji {
+      font-size: 5rem; line-height: 1; margin: 6px 0 2px;
+      filter: drop-shadow(0 4px 10px rgba(255,190,60,.7));
+      animation: toddler-record-pop .6s ease;
+    }
+    @keyframes toddler-record-pop {
+      0% { transform: scale(.4); opacity: 0; }
+      60% { transform: scale(1.18); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    @media (max-height: 700px) {
+      .toddler-record-emoji { font-size: 3.2rem; }
+    }
     @media (max-height: 700px) {
       .toddler-card { padding: 20px 16px; }
       .toddler-emoji { font-size: 2.6rem; }
@@ -86,6 +102,7 @@ export class ToddlerShell {
     injectStyles();
     this._injectHeader();
     this._ensureResultModal();
+    this._ensureRecordModal();
     this._ensureHomeConfirm();
     this._ensureGateModal();
   }
@@ -183,6 +200,7 @@ export class ToddlerShell {
     el.innerHTML =
       `<div class="toddler-growth-row"><span>あそんだかいすう</span><span>${summary.playCount}かい</span></div>` +
       `<div class="toddler-growth-row"><span>あつめたシール</span><span>${summary.stickerCount}/${summary.stickerTotal}</span></div>` +
+      `<div class="toddler-growth-row"><span>きろくシール</span><span>${summary.recordCount}/${summary.recordTotal}</span></div>` +
       rows;
   }
 
@@ -224,6 +242,42 @@ export class ToddlerShell {
       window.location.href = this.homePath;
     });
     this.resultModal = modal;
+  }
+
+  // きろくシールは通常シールと同じ枠に出すと重なるため、専用の金縁カードを上に重ねる。
+  _ensureRecordModal() {
+    this._recordQueue = [];
+    const existing = document.getElementById(RECORD_MODAL_ID);
+    if (existing) { this._recordModal = existing; return; }
+    const modal = document.createElement('div');
+    modal.id = RECORD_MODAL_ID;
+    modal.className = 'toddler-overlay hidden';
+    modal.style.zIndex = '1100';
+    modal.innerHTML = `
+      <div class="toddler-card toddler-record-card">
+        <div class="toddler-emoji">✨</div>
+        <div id="toddler-record-emoji" class="toddler-record-emoji">🎊</div>
+        <div class="toddler-btn-row">
+          <button class="toddler-btn" id="toddler-record-ok">⭕️</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#toddler-record-ok').addEventListener('click', () => this._showNextRecord());
+    this._recordModal = modal;
+  }
+
+  // 複数まとめて達成した場合は1枚ずつ順番に見せる（まとめて出すと何ができたのか伝わらない）。
+  _showNextRecord() {
+    const next = this._recordQueue.shift();
+    if (!next) {
+      this._recordModal.classList.add('hidden');
+      return;
+    }
+    this._recordModal.querySelector('#toddler-record-emoji').textContent = next.emoji;
+    this._recordModal.classList.remove('hidden');
+    sound.play('clear');
+    Confetti.burst();
+    Voice.speak(`record-${next.id}`);
   }
 
   onRetry(fn) {
@@ -275,6 +329,13 @@ export class ToddlerShell {
     Voice.speak(isNew ? 'result-new' : 'result-again');
     if (newTheme) {
       setTimeout(() => Voice.speak('new-theme'), 1800);
+    }
+
+    // きろくシールは通常シールを見せたあとに重ねる。声が重ならないよう順番をずらす。
+    const earned = Store.checkRecordStickers();
+    if (earned.length > 0) {
+      this._recordQueue = earned.slice();
+      setTimeout(() => this._showNextRecord(), newTheme ? 3200 : 2000);
     }
   }
 
