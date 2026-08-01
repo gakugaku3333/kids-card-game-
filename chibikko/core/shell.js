@@ -87,6 +87,30 @@ function injectStyles() {
       .toddler-emoji { font-size: 2.6rem; }
       .toddler-btn { padding: 16px 14px; font-size: 1.6rem; min-height: 76px; }
     }
+    /* あいさつ音声専用のタップ誘導画面（selectedオプションX-b）。
+       ゲーム本編の一手とタップを兼用させると、あいさつが遅れてゲームに割り込むため分離する。 */
+    .toddler-start-screen { background: rgba(255,246,230,.99); z-index: 1200; cursor: pointer; flex-direction: column; }
+    .toddler-start-img {
+      width: min(70vw, 320px); display: block; margin: 0 auto;
+      border-radius: 28px; box-shadow: 0 14px 34px rgba(0,0,0,.22);
+      animation: toddler-breathe 1.6s ease-in-out infinite;
+    }
+    @keyframes toddler-breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.035); }
+    }
+    .toddler-start-hint {
+      font-size: 2.6rem; text-align: center; margin-top: 14px;
+      animation: toddler-hint-bounce 1.1s ease-in-out infinite;
+    }
+    @keyframes toddler-hint-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+    }
+    @media (max-height: 700px) {
+      .toddler-start-img { width: min(48vw, 220px); }
+      .toddler-start-hint { font-size: 2rem; margin-top: 8px; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -210,17 +234,36 @@ export class ToddlerShell {
   }
 
   /**
-   * 確認画面なしでゲームを即開始する。音声unlockは最初のタップに便乗させる
-   * （二度タップの手間をなくすため、専用のスタート画面は挟まない）。
+   * ココアが手を振るタップ誘導画面を挟んでからゲームを開始する。
+   * iOS Safariは音声再生にそのページ内でのタップが必須でコードでは省略できない
+   * （docs/ai/plans/2026-08-01-chibikko-voice-latency.md 原因1）。最初のタップを
+   * ゲーム本編の一手と兼用させると、あいさつ音声がゲーム進行に割り込んで遅れて
+   * 聞こえてしまうため、あいさつ専用の意図的なタップに分離する（選択肢X-b）。
    * @param {object} opts - { greeting, onStart }
    */
   autoStart({ greeting, onStart }) {
-    document.body.addEventListener('pointerdown', () => {
+    if (greeting) Voice.preload(greeting);
+    this._ensureStartScreen();
+    const screen = this._startScreen;
+    screen.classList.remove('hidden');
+    screen.addEventListener('pointerdown', () => {
       Voice.unlock();
       sound.resume();
       if (greeting) Voice.speak(greeting);
+      screen.classList.add('hidden');
+      this.startGame(onStart);
     }, { once: true });
-    this.startGame(onStart);
+  }
+
+  _ensureStartScreen() {
+    if (this._startScreen) return;
+    const el = document.createElement('div');
+    el.className = 'toddler-overlay toddler-start-screen hidden';
+    el.innerHTML = `
+      <img class="toddler-start-img" src="${asset('assets/mascot/loppi-chibikko-hero.webp')}" alt="ココア">
+      <div class="toddler-start-hint">👆</div>`;
+    document.body.appendChild(el);
+    this._startScreen = el;
   }
 
   _ensureResultModal() {

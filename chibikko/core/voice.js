@@ -13,6 +13,7 @@ import { muted } from './sound.js';
 let unlocked = false;
 let jaVoice = null;
 let linesPromise = null;
+let linesCache = null;
 const audioCache = new Map();
 
 function pickJaVoice() {
@@ -23,23 +24,33 @@ function pickJaVoice() {
 
 function loadLines() {
   if (!linesPromise) {
-    linesPromise = fetch(asset('chibikko/data/voice-lines.json')).then((r) => r.json());
+    linesPromise = fetch(asset('chibikko/data/voice-lines.json'))
+      .then((r) => r.json())
+      .then((json) => { linesCache = json; return json; });
   }
   return linesPromise;
 }
+// タップ待ちにせず、モジュール読み込み時点で取得を始める（初回タップ時の直列fetchをなくす）。
+loadLines();
 
 export function unlock() {
   if (unlocked) return;
   unlocked = true;
-  loadLines();
-  if (typeof speechSynthesis === 'undefined') return;
-  const warmup = new SpeechSynthesisUtterance('');
-  warmup.volume = 0;
-  speechSynthesis.speak(warmup);
-  jaVoice = pickJaVoice();
-  if (!jaVoice && typeof speechSynthesis.addEventListener === 'function') {
-    speechSynthesis.addEventListener('voiceschanged', () => { jaVoice = pickJaVoice(); }, { once: true });
+  if (typeof speechSynthesis !== 'undefined') {
+    const warmup = new SpeechSynthesisUtterance('');
+    warmup.volume = 0;
+    speechSynthesis.speak(warmup);
+    jaVoice = pickJaVoice();
+    if (!jaVoice && typeof speechSynthesis.addEventListener === 'function') {
+      speechSynthesis.addEventListener('voiceschanged', () => { jaVoice = pickJaVoice(); }, { once: true });
+    }
   }
+  // <audio> 経路は speechSynthesis と別枠でアンロックが要る（iOS Safari）。
+  // 無音のHTMLAudioElementを同期的にplay()しておかないと、後続のspeak()がplay()を拒否されうる。
+  const unlockAudio = new Audio();
+  unlockAudio.muted = true;
+  const p = unlockAudio.play();
+  if (p && typeof p.catch === 'function') p.catch(() => {});
 }
 
 function fallbackSpeak(text) {
@@ -58,28 +69,61 @@ function getAudio(id) {
   let audio = audioCache.get(id);
   if (!audio) {
     audio = new Audio(asset(`chibikko/assets/voice/${id}.wav`));
+    audio.preload = 'auto';
     audioCache.set(id, audio);
   }
   return audio;
 }
 
 /**
+ * 再生要求より前にWAV取得を始めておく。あいさつ音声などIDが事前に分かっている
+ * 場面で呼ぶと、実際のspeak()時点では取得済みになっている。
+ * @param {string} id
+ */
+export function preload(id) {
+  getAudio(id).load();
+}
+
+/**
  * data/voice-lines.json のIDで音声を即時再生する。
  * 3歳向けはタップへの反応速度が最優先のため、キューに積まず重なりを許容する。
  * 同じIDの連打は頭出しリスタート、別IDは並行再生になる。
+ *
+ * voice-lines.jsonが読み込み済みならawaitを一切挟まず同期的にaudio.play()を呼ぶ。
+ * iOS Safariはユーザージェスチャのコールスタックが切れると再生を拒否するため、
+ * ここでawaitを挟むとホームタップ由来のジェスチャが失効し無音になる（未読込時のみ許容）。
  * @param {string} id
  */
 export function speak(id) {
   if (muted()) return;
-  _play(id);
+  if (linesCache) {
+    _playSync(id);
+  } else {
+    _playAsync(id);
+  }
 }
 
-async function _play(id) {
+function _playSync(id) {
+  const line = linesCache[id];
+  if (!line) return;
+  const audio = getAudio(id);
+  try {
+    audio.currentTime = 0;
+  } catch (e) { /* readyState 0 でのInvalidStateErrorは無視してよい（古いWebKit対策） */ }
+  const p = audio.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(() => fallbackSpeak(line.text));
+  }
+}
+
+async function _playAsync(id) {
   const lines = await loadLines();
   const line = lines[id];
   if (!line) return;
   const audio = getAudio(id);
-  audio.currentTime = 0;
+  try {
+    audio.currentTime = 0;
+  } catch (e) { /* readyState 0 でのInvalidStateErrorは無視してよい */ }
   try {
     await audio.play();
   } catch (e) {
@@ -95,4 +139,10 @@ export function praise() {
 const ENCOURAGE_IDS = ['encourage1', 'encourage2', 'encourage3'];
 export function encourage() {
   speak(ENCOURAGE_IDS[Math.floor(Math.random() * ENCOURAGE_IDS.length)]);
+}
+
+// DevToolsから先読み状況を確認するためのデバッグ用エクスポート（AC3）。
+export function _debugReadyState(id) {
+  const audio = audioCache.get(id);
+  return audio ? audio.readyState : -1;
 }
