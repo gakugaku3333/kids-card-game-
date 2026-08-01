@@ -81,7 +81,7 @@
     <header class="gallery-header">
       <div class="gallery-world-hero">
         <div class="gallery-hero-copy">
-          <p class="gallery-mascot-name">ロップイヤーの ココアが あんないするよ！</p>
+          <p class="gallery-mascot-name">ロップイヤーの ココアから ひとこと！</p>
           <h1 class="gallery-title">
             <span class="bubble">あ</span>
             <span class="bubble">そ</span>
@@ -91,11 +91,11 @@
             <br class="mobile-break">
             <span class="title-main">ゲームひろば</span>
           </h1>
-          <p class="gallery-subtitle">きょうは どの ぼうけんに する？</p>
+          <p id="cocoa-message" class="gallery-subtitle cocoa-message" aria-live="polite">きょうは どの ぼうけんに する？</p>
         </div>
       </div>
 
-      <!-- トークン残高 ＆ ショップ入口 -->
+      <!-- トークン残高 ＆ もちもの入口 -->
       <div class="header-actions">
         <span id="user-chip" class="user-chip" style="display:none;" onclick="window._showLoginModal()">
           <span id="user-chip-avatar">👤</span> <span id="user-chip-name"></span>
@@ -103,10 +103,17 @@
         <span class="token-badge">
           <span class="token-star">⭐</span><span id="siteTokens">0</span> トークン
         </span>
-        <button id="btn-shop" class="shop-open-btn">🛍️ ショップ</button>
-        <button id="btn-dressup" class="dressup-open-btn">👗 きせかえ</button>
-        <button id="btn-history" class="dressup-open-btn">📖 きろく</button>
-        <button id="btn-zukan" class="dressup-open-btn">🎴 ずかん</button>
+        <div class="possessions-menu">
+          <button id="btn-possessions" class="possessions-trigger" type="button" aria-expanded="false" aria-controls="possessions-panel">
+            🎒 もちもの <span class="possessions-arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div id="possessions-panel" class="possessions-panel" hidden>
+            <button id="btn-shop" class="possession-item possession-item-shop" type="button">🛍️ ショップ</button>
+            <button id="btn-dressup" class="possession-item possession-item-dressup" type="button">👗 きせかえ</button>
+            <button id="btn-history" class="possession-item" type="button">📖 きろく</button>
+            <button id="btn-zukan" class="possession-item" type="button">🎴 ずかん</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -282,6 +289,63 @@
   (function () {
     'use strict';
 
+    // ===== ココアのひとこと =====
+    // 進み具合に合わせて、ココアが次の遊びをやさしく案内する。
+    // 新しい保存フィールドは作らず、既存の成績・図鑑・トークンだけを読む。
+    var activeUserName = '';
+    var reviewDueCount = 0;
+    var cocoaMessageEl = document.getElementById('cocoa-message');
+
+    function renderCocoaMessage() {
+      if (!cocoaMessageEl) return;
+      Store.reload();
+      var data = Store.getData();
+      var name = activeUserName ? activeUserName + '、' : '';
+      var kanaCount = Store.getKanaCards().length;
+      var bestCount = Object.keys(data.bestScores || {}).length;
+      var message;
+
+      if (reviewDueCount > 0) {
+        message = name + 'おしかった もんだいが ' + reviewDueCount + 'もん！ ごほうび2ばいで もういちど いこう！';
+      } else if (kanaCount > 0 && kanaCount < 46) {
+        message = name + 'カタカナカードが あと ' + (46 - kanaCount) + 'まいだよ。いっしょに さがそう！';
+      } else if (bestCount > 0) {
+        message = name + 'じこベスト、きょうも ぬりかえちゃおう！';
+      } else if (data.totalCorrect > 0) {
+        message = name + 'せいかいを ' + data.totalCorrect + 'こ みつけたね！ つぎは なにを する？';
+      } else {
+        message = name + 'はじめての ぼうけん、いっしょに さがしに いこう！';
+      }
+      cocoaMessageEl.textContent = message;
+    }
+
+    document.addEventListener('tokens-changed', renderCocoaMessage);
+
+    // ===== もちものメニュー =====
+    var possessionsTrigger = document.getElementById('btn-possessions');
+    var possessionsPanel = document.getElementById('possessions-panel');
+
+    function closePossessions() {
+      if (!possessionsPanel || !possessionsTrigger) return;
+      possessionsPanel.hidden = true;
+      possessionsTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    if (possessionsTrigger && possessionsPanel) {
+      possessionsTrigger.addEventListener('click', function () {
+        var willOpen = possessionsPanel.hidden;
+        possessionsPanel.hidden = !willOpen;
+        possessionsTrigger.setAttribute('aria-expanded', String(willOpen));
+      });
+      possessionsPanel.addEventListener('click', closePossessions);
+      document.addEventListener('click', function (event) {
+        if (!event.target.closest('.possessions-menu')) closePossessions();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closePossessions();
+      });
+    }
+
     // ===== かたかなカードずかん =====
     var KANA_LIST = ['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ',
       'タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ',
@@ -317,18 +381,22 @@
     }
 
     function applyUser(name) {
+      activeUserName = name;
       document.getElementById('user-chip-name').textContent = name;
       document.getElementById('user-chip').style.display = '';
       if (typeof window.renderAvatar === 'function') {
         window.renderAvatar(document.getElementById('user-chip-avatar'), { size: 'chip' });
       }
       hideLoginModal();
+      renderCocoaMessage();
       // 復習バナーを確認
       if (window.FireLog) {
         FireLog.getReviewDue(function (items) {
           if (items.length > 0) {
+            reviewDueCount = items.length;
             document.getElementById('review-count').textContent = items.length;
             document.getElementById('review-banner').style.display = '';
+            renderCocoaMessage();
           }
         });
       }
@@ -447,6 +515,8 @@
     closeOnOverlayClick(document.getElementById('history-modal'));
 
     // 起動時：保存済みニックネームがあればそのまま復元、なければログイン画面
+    // ココアのひとことは名前が無くても進み具合を語るので、ログイン前から出す。
+    renderCocoaMessage();
     var saved = window.FireLog ? FireLog.getSavedUser() : localStorage.getItem('kids_game_nickname');
     if (saved) {
       applyUser(saved);

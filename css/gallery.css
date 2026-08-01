@@ -76,6 +76,10 @@ body {
   width: 100%;
   margin-bottom: 40px;
   animation: slideDown 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  /* slideDown の transform で重ね合わせコンテキストができるため、
+     もちものパネルがゲームカードの下に潜らないようヘッダーごと前面に置く。 */
+  position: relative;
+  z-index: 30;
 }
 
 .gallery-world-hero {
@@ -187,6 +191,98 @@ body {
   font-size: 15px;
   font-weight: 700;
   color: var(--g-color-text-light);
+}
+
+/* ココアのひとこと。タイトルより控えめに、相棒からの案内として読ませる。 */
+.cocoa-message {
+  min-height: 2.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   もちものメニュー
+   ========================================================================== */
+.possessions-menu {
+  position: relative;
+}
+
+.possessions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  background: linear-gradient(135deg, #8f77eb 0%, #6f57d5 100%);
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 #5940b9, 0 8px 16px rgba(92,68,176,.25);
+  padding: 10px 18px;
+  font: 900 16px var(--g-font);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.possessions-trigger:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #5940b9;
+}
+
+.possessions-arrow {
+  display: inline-block;
+  font-size: 1.05em;
+  transition: transform .18s ease;
+}
+
+.possessions-trigger[aria-expanded="true"] .possessions-arrow {
+  transform: rotate(180deg);
+}
+
+.possessions-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(280px, calc(100vw - 40px));
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 10px;
+  border: 3px solid rgba(255,255,255,.95);
+  border-radius: 20px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 12px 26px rgba(74,82,94,.22);
+}
+
+.possessions-panel[hidden] {
+  display: none;
+}
+
+.possession-item {
+  min-height: 50px;
+  padding: 7px 8px;
+  color: var(--g-color-text);
+  background: #fff7fb;
+  border: 2px solid #ffe0ef;
+  border-radius: 14px;
+  font: 900 13px var(--g-font);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.possession-item:active {
+  transform: scale(.96);
+}
+
+.possession-item-shop { background: #fff0f7; border-color: #ffc6df; }
+.possession-item-dressup { background: #f4efff; border-color: #d8caff; }
+
+@media (max-width: 480px) {
+  .cocoa-message { min-height: 2.9em; }
+  .possessions-trigger { padding: 9px 14px; font-size: 14px; }
 }
 
 /* ==========================================================================

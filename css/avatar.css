@@ -119,32 +119,7 @@
   }
 }
 
-/* --- 着せ替えボタン（ヘッダー、ショップボタンと並ぶ） --- */
-.dressup-open-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-  color: #fff;
-  font-family: var(--g-font, sans-serif);
-  font-weight: 700;
-  font-size: 18px;
-  padding: 12px 26px;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(124, 86, 212, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.dressup-open-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(124, 86, 212, 0.5);
-}
-.dressup-open-btn:active {
-  transform: translateY(-1px);
-}
+/* 着せ替え入口ボタンは「もちもの」メニュー（gallery.css の .possession-item）へ統合済み */
 
 /* チップ内アバター（👤 の置き換え） */
 #user-chip-avatar .avatar-display {
