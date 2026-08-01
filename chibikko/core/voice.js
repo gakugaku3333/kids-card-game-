@@ -53,8 +53,11 @@ export function unlock() {
   if (p && typeof p.catch === 'function') p.catch(() => {});
 }
 
-function fallbackSpeak(text) {
-  if (typeof speechSynthesis === 'undefined' || !text) return;
+function fallbackSpeak(text, onEnd) {
+  if (typeof speechSynthesis === 'undefined' || !text) {
+    if (onEnd) onEnd();
+    return;
+  }
   // speechSynthesisは同時発話できないため直前の発話を打ち切って最新を優先する
   speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
@@ -62,6 +65,10 @@ function fallbackSpeak(text) {
   utter.rate = 0.9;
   utter.pitch = 1.1;
   if (jaVoice) utter.voice = jaVoice;
+  if (onEnd) {
+    utter.addEventListener('end', onEnd, { once: true });
+    utter.addEventListener('error', onEnd, { once: true });
+  }
   speechSynthesis.speak(utter);
 }
 
@@ -87,33 +94,41 @@ export function preload(id) {
 /**
  * data/voice-lines.json のIDで音声を即時再生する。
  * 3歳向けはタップへの反応速度が最優先のため、キューに積まず重なりを許容する。
- * 同じIDの連打は頭出しリスタート、別IDは並行再生になる。
+ * 同じIDの連打は頭出しリスタート、別IDは並行再生になる（#33）。
  *
  * voice-lines.jsonが読み込み済みならawaitを一切挟まず同期的にaudio.play()を呼ぶ。
  * iOS Safariはユーザージェスチャのコールスタックが切れると再生を拒否するため、
  * ここでawaitを挟むとホームタップ由来のジェスチャが失効し無音になる（未読込時のみ許容）。
+ *
+ * 戻り値は再生完了（またはフォールバック発話完了）で解決するPromise。
+ * 通常は誰も待たず重ねて鳴らしてよいが、あいさつ→最初の出題のように
+ * 順番に聞かせたい特定の箇所だけが利用する（呼び出し側でキュー化はしない）。
  * @param {string} id
+ * @returns {Promise<void>}
  */
 export function speak(id) {
-  if (muted()) return;
-  if (linesCache) {
-    _playSync(id);
-  } else {
-    _playAsync(id);
-  }
+  if (muted()) return Promise.resolve();
+  return linesCache ? _playSync(id) : _playAsync(id);
 }
 
 function _playSync(id) {
   const line = linesCache[id];
-  if (!line) return;
+  if (!line) return Promise.resolve();
   const audio = getAudio(id);
   try {
     audio.currentTime = 0;
   } catch (e) { /* readyState 0 でのInvalidStateErrorは無視してよい（古いWebKit対策） */ }
-  const p = audio.play();
-  if (p && typeof p.catch === 'function') {
-    p.catch(() => fallbackSpeak(line.text));
-  }
+  return new Promise((resolve) => {
+    const onEnded = () => resolve();
+    audio.addEventListener('ended', onEnded, { once: true });
+    const p = audio.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {
+        audio.removeEventListener('ended', onEnded);
+        fallbackSpeak(line.text, resolve);
+      });
+    }
+  });
 }
 
 async function _playAsync(id) {
@@ -124,11 +139,14 @@ async function _playAsync(id) {
   try {
     audio.currentTime = 0;
   } catch (e) { /* readyState 0 でのInvalidStateErrorは無視してよい */ }
-  try {
-    await audio.play();
-  } catch (e) {
-    fallbackSpeak(line.text);
-  }
+  return new Promise((resolve) => {
+    const onEnded = () => resolve();
+    audio.addEventListener('ended', onEnded, { once: true });
+    audio.play().catch(() => {
+      audio.removeEventListener('ended', onEnded);
+      fallbackSpeak(line.text, resolve);
+    });
+  });
 }
 
 const PRAISE_IDS = ['praise1', 'praise2', 'praise3', 'praise4', 'praise5'];

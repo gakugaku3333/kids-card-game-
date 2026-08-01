@@ -239,6 +239,12 @@ export class ToddlerShell {
    * （docs/ai/plans/2026-08-01-chibikko-voice-latency.md 原因1）。最初のタップを
    * ゲーム本編の一手と兼用させると、あいさつ音声がゲーム進行に割り込んで遅れて
    * 聞こえてしまうため、あいさつ専用の意図的なタップに分離する（選択肢X-b）。
+   *
+   * あいさつが終わるまではゲーム側の出題音声（例: pick/engine.jsの300ms後の
+   * askVoiceId）と重ならないよう、あいさつの再生完了を待ってからstartGame()する。
+   * 実機（iPad/iPhone Safari）で確認した際、あいさつと最初の出題がかぶって
+   * 聞き取れなくなる問題が見つかったための対応。#33の「重なりを許容する」方針を
+   * 覆すものではなく、あいさつ→最初の出題という一箇所だけの例外（キュー化はしない）。
    * @param {object} opts - { greeting, onStart }
    */
   autoStart({ greeting, onStart }) {
@@ -249,9 +255,13 @@ export class ToddlerShell {
     screen.addEventListener('pointerdown', () => {
       Voice.unlock();
       sound.resume();
-      if (greeting) Voice.speak(greeting);
-      screen.classList.add('hidden');
-      this.startGame(onStart);
+      const greetingDone = greeting ? Voice.speak(greeting) : Promise.resolve();
+      // 音声再生に失敗して'ended'が来ない場合の保険。永遠に画面が進まなくなるのを防ぐ。
+      const safety = new Promise((resolve) => setTimeout(resolve, 4000));
+      Promise.race([greetingDone, safety]).then(() => {
+        screen.classList.add('hidden');
+        this.startGame(onStart);
+      });
     }, { once: true });
   }
 
