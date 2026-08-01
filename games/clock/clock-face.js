@@ -56,5 +56,7 @@ export function renderClock(el, { hour, minute }) {
 export function formatTime(hour, minute, level) {
   if (level === 1 || minute === 0) return `${hour}じ`;
   if (level === 2) return minute === 30 ? `${hour}じはん` : `${hour}じ`;
-  return `${hour}じ${minute}ふん`;
+  // 10の位ちょうど（10,20,30,40,50）は「ぷん」、それ以外（5,15,25,35,45,55）は「ふん」
+  const suffix = minute % 10 === 0 ? 'ぷん' : 'ふん';
+  return `${hour}じ${minute}${suffix}`;
 }
