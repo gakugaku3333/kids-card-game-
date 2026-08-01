@@ -23,7 +23,8 @@
 
 - ノービルド・ESモジュール・静的サイト（GitHub Pages, main ブランチ）。公開URL: https://gakugaku3333.github.io/kids-card-game-/
 - アーキテクチャ詳細・新規ゲーム追加手順: `memory/project_architecture.md`（自動読込メモリ）
-- 実装時の技術教訓（横向き対応・二重加算防止・preview確認方法ほか）: `tasks/lessons.md` とメモリ `project_lessons.md`。**新規ページ作成・ゲーム改修の前に必ず参照する**
+- 実装時の技術教訓: `tasks/lessons.md` とメモリ `project_lessons.md`。40件超あるので通読はしない。**着手前に `tasks/lessons.md` 冒頭の「着手前に引く対応表」を見て、これから触る領域の節だけを読む**（実際に「必ず参照する」とだけ書いてあった時期は読まれず、同じ失敗を繰り返した。教訓 #41）
+- 共有シェル（`core/shell.js` / `chibikko/core/shell.js` / `kirakira/core/shell.js`）を触る変更は、そのサイトのスモークテスト章（`tasks/smoke-test.md`）を丸ごと通す。代表数本を開くだけでは足りない（教訓 #40）
 - localStorage キー: 本家 `katakana_game_data` / ちびっこ `chibikko_data` / キラキラ `kirakira_data`（サイト間で絶対に共有しない）
 - イラスト素材はCodexで生成する。画像生成スキルを使い、透過PNGとして各アセット配下へ保存する。未生成時だけ絵文字プレースホルダで進めてよいが、最終UIは固有イラストへ置き換える。
 - 3歳・6歳・10歳サイト共通の案内役は、ブロークンオレンジ色のロップイヤーうさぎ「ココア」。10歳向けコーデスタジオの着せ替えモデルは、ココアではなく10歳くらいの女の子とする。

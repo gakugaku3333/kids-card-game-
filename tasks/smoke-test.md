@@ -31,6 +31,60 @@
 - [ ] localStorage `katakana_game_data` のキー構造が変化していない（tokens/ownedItems/avatarが壊れていない）
 - [ ] 全ゲームでブラウザコンソールにエラーが出ていない
 
+## ちびっこひろば（3歳・`chibikko/`）のチェック項目
+
+`chibikko/core/shell.js`（ToddlerShell）・`chibikko/core/store.js`・
+`chibikko/games/pick/engine.js` を触る変更は**全18ゲームに波及する**ため、
+変更のたびにこの章を通す。本家の章とは対象も観点も別（年齢別設計の原則）。
+
+3歳向け固有の確認観点:
+1. ハブ（`chibikko/index.html`）のカードからゲームが開ける
+2. **最初のタップで音声が鳴る**（文字を読ませない設計のため、無音は致命的）
+3. 1プレイ完走 → 「できたね！」リザルト → シールが1枚必ず出る（失敗が存在しない）
+4. 🔁で再スタートしてもタイマーが二重に走らない・シールが二重加算されない
+5. 横向き（`max-height: 700px`）でレイアウトが崩れない
+6. コンソールエラーがない
+7. localStorage `chibikko_data` のキー構造が壊れていない（`stickers` / `playCount` /
+   `pickProgress` / `recordStickers` / `seenStories`）。**リロード後も残ること**を必ず確認する
+   （[lessons.md](lessons.md) #31: `load()` のホワイトリスト漏れは保存直後だけ正常に見える）
+
+### 通常ゲーム15本
+
+- [ ] ハブ (`chibikko/index.html`) — カード15枚表示・シールちょうFAB・カードタップで音声→遷移
+- [ ] ふうせんぽん (`games/balloon/`)
+- [ ] どうぶつのこえ (`games/animalvoice/`)
+- [ ] いろタッチ (`games/colortouch/`) — pickエンジン `swatch`
+- [ ] かずタッチ (`games/numbertouch/`) — pickエンジン `count`。**唯一 tiers を持つ**ので適応難易度の上下も見る
+- [ ] かたちはめ (`games/shapefit/`)
+- [ ] おおきいのどっち (`games/compare/`) — pickエンジン `compare`
+- [ ] なかまさがし (`games/nakama/`) — pickエンジン `category`
+- [ ] ぺあさがし (`games/pairs/`)
+- [ ] どっちのきもち (`games/feelings/`) — pickエンジン `emotion`
+- [ ] おかたづけ (`games/tidyup/`)
+- [ ] プリンセスきせかえ (`games/kisekae/`) — 創造系（正解なし・リザルトの出方が異なる）
+- [ ] ぬりえ (`games/coloring/`) — 創造系
+- [ ] シールぺったん (`games/stickerplay/`) — 創造系
+- [ ] おとあそび (`games/music/`) — 独自AudioContext。ミュート中に鳴らないことも見る
+- [ ] めいろ (`games/maze/`)
+
+### 解放ゲーム3本（`growthGames`）
+
+解放条件を満たさないと**ハブに出ない**ため、テスト時は `chibikko_data` の
+`pickProgress` / `gamePlayCounts` を直接埋めて解放させる。
+
+- [ ] ひらがなさがし (`games/hiragana-search/`) — pickエンジン `letter`
+- [ ] おつかいごっこ (`games/otsukai/`)
+- [ ] なぞりがき (`games/nazorigaki/`)
+- [ ] 解放お祝い演出が**初回だけ**出る（2回目以降は通常表示）
+
+### シールちょう・きろく・おはなし
+
+- [ ] シールちょう (`chibikko/sticker-book.html`) — 台紙表示・**シールタップで名前読み上げ**・テーマ切替
+- [ ] きろくシール（金縁）— 条件達成でリザルト後に金縁カードが出る。複数同時達成は1枚ずつ順番
+- [ ] 見せきれずに🔁した場合、次のリザルトで残りが出る（消えない）
+- [ ] おはなし (`chibikko/story.html`) — きろくシール1枚以上でボタンが出る。解放数が 1/3/5/7/9 枚と対応
+- [ ] おうちのひとメニュー（🏠長押し2秒）— せいちょうレポートに「きろくシール n/11」が出る
+
 ## 実施ログ
 
 | 日付 | フェーズ | 結果 | 備考 |
@@ -42,3 +96,4 @@
 | 2026-07-04 | Phase 1（残り: memory/catch/drawをcore/へ移行）＋Phase 2（memory/catch/drawのシェル対応） | ✅（catchのみ一部preview不可） | memory: `core/shell.js`導入、ヘッダーをシェル製に統一（レベル選択に戻るボタンは独自に維持）、`shell.store.addTokens`+`shell.fireLog.logSession`に置換。previewで6枚(かんたん)を実際にマッチさせ⭐5加算・ヘッダー即時反映・カスタム結果モーダル(タイム/ミス数)表示を確認。catch: 全面シェル化（独自ヘッダー/結果モーダルを撤去しshell.showResultに統一）。start画面・ヘッダー・シェル製結果モーダルの表示は確認したが、**rAFループの実プレイ確認はpreviewのタブ非表示(document.hidden)でrequestAnimationFrameが発火せず不可。iPad実機で要確認**。draw: ヘッダーのみシェル化、`shell.store.addTokens`に置換。実際に描画→「できた！」→⭐3加算→ヘッダー反映→ハブに戻って同じ⭐21が共有されていることを確認。3ゲームともコンソールエラーなし |
 | 2026-07-04 | Phase 2（クイズエンジンのデータ駆動化） | ✅ | `games/rakugaku/index.html`(3570行)のうち実際にハブから到達可能な範囲（かたかな・算数4種・ふくしゅう導線。内包されていた15個のミニゲーム＋独自ショップ/とうけい画面はハブから到達不能な死んだコードと判明、削除）を`games/quiz/engine.js`(汎用エンジン211行)＋`games/quiz/index.html`(182行)＋`data/quizzes/*.json`(5ファイル)に置換。旧`games/rakugaku/index.html`は26行のリダイレクトシムに縮小し旧URL(`?mode=katakana`/`?math=xxx`/`?mode=fb-review`)を新URLへ`location.replace`。previewで確認: かたかなクイズ(3択・正解/不正解の両分岐・トークン蓄積)、たしざんレベル1(45組み合わせプリセットの総数確認)、わりざんレベル3(あまり生成の数値検証: 38÷5→あまり3)、旧URLからのリダイレクト、ふくしゅう導線(該当なし時のメッセージ表示)、ハブのカード一覧・トークン共有、全画面でコンソール/ネットワークエラーなしを確認 |
 | 2026-07-29 | 6歳向け画像レイヤー着せ替え＋購入E2E | ✅ | 動物素体・服・アクセサリー・エフェクトを透過PNGレイヤーへ移行。実ブラウザでおかいものレベル1を3回完走して⭐10獲得→銅バッジ購入→着せ替えで装備→ページリロード後もヘッダーと着せ替えプレビューで装備維持を確認。途中で判明した合計入力欄の非表示不具合を修正し、2・3回目の開始時に入力欄が再び隠れることも確認。ブラウザーエラー0件。 |
+| 2026-08-01 | ちびっこ Phase C2（きろくシール・おはなし。`chibikko/core/shell.js`/`store.js` 変更） | ✅ | ちびっこ章を新設し初実施。18ゲーム全部（通常15＋解放3）をブラウザで開き、ToddlerShell のヘッダー・きろくシールモーダルが注入され、コンソールエラー0件であることを確認。いろタッチで**実クリックで5問完走**→シール1枚排出→2秒後に金縁「🎨 いろが3つ わかったね！」表示→localStorage が `playCount 3→4` / `stickers 1→2` / `recordStickers ['iro-3']` に更新されることを確認。🔁での再スタートでは playCount・シールとも二重加算されないことも確認。シールちょうのタップ読み上げは speechSynthesis へのフォールバック到達を差し替え計測で確認。おはなしは 375×812 で中央・667×320 でもスクロールなしで⭕️に到達することを確認 |
