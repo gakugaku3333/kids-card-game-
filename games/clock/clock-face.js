@@ -53,15 +53,8 @@ export function renderClock(el, { hour, minute }) {
   `;
 }
 
-// 5分刻みの分の読み方（ふん/ぷんの使い分け表）
-export const MINUTE_LABEL = {
-  5: 'ごふん', 10: 'じゅっぷん', 15: 'じゅうごふん', 20: 'にじゅっぷん',
-  25: 'にじゅうごふん', 30: 'さんじゅっぷん', 35: 'さんじゅうごふん',
-  40: 'よんじゅっぷん', 45: 'よんじゅうごふん', 50: 'ごじゅっぷん', 55: 'ごじゅうごふん'
-};
-
 export function formatTime(hour, minute, level) {
   if (level === 1 || minute === 0) return `${hour}じ`;
   if (level === 2) return minute === 30 ? `${hour}じはん` : `${hour}じ`;
-  return `${hour}じ${MINUTE_LABEL[minute]}`;
+  return `${hour}じ${minute}ふん`;
 }
