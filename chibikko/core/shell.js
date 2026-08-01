@@ -246,7 +246,7 @@ export class ToddlerShell {
 
   // きろくシールは通常シールと同じ枠に出すと重なるため、専用の金縁カードを上に重ねる。
   _ensureRecordModal() {
-    this._recordQueue = [];
+    if (!this._recordQueue) this._recordQueue = [];
     const existing = document.getElementById(RECORD_MODAL_ID);
     if (existing) { this._recordModal = existing; return; }
     const modal = document.createElement('div');
@@ -332,9 +332,10 @@ export class ToddlerShell {
     }
 
     // きろくシールは通常シールを見せたあとに重ねる。声が重ならないよう順番をずらす。
-    const earned = Store.checkRecordStickers();
-    if (earned.length > 0) {
-      this._recordQueue = earned.slice();
+    // 前回の🔁で見せきれずに残った分があれば、今回まとめて続きから見せる
+    // （上書きすると、まだ見ていない金縁シールが誰にも見られないまま消えてしまう）。
+    this._recordQueue = this._recordQueue.concat(Store.checkRecordStickers());
+    if (this._recordQueue.length > 0) {
       setTimeout(() => this._showNextRecord(), newTheme ? 3200 : 2000);
     }
   }
