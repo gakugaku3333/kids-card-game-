@@ -39,14 +39,14 @@
   .rt-song-btn.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
   .rt-song-btn:disabled { opacity: .5; cursor: default; }
   #rt-start { display: block; margin: 0 auto 14px; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 14px 32px; font-size: 1.15rem; color: #fff; background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
-  .rt-lane-btn-row { display: flex; gap: 6px; }
+  .rt-lane-btn-row { display: flex; gap: 4px; }
   .rt-lane-btn {
     flex: 1; font-family: inherit; font-weight: 900; border: none; cursor: pointer; height: 56px;
-    border-radius: 14px; font-size: 1.3rem; color: #fff; background: linear-gradient(#ffb3d9, #ff8fbf); box-shadow: 0 4px 0 #d9548f;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1;
+    border-radius: 12px; font-size: 1.05rem; color: #fff; background: linear-gradient(#ffb3d9, #ff8fbf); box-shadow: 0 4px 0 #d9548f;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1; padding: 0 2px;
   }
   .rt-lane-btn:active { transform: translateY(3px); box-shadow: none; }
-  .rt-lane-hint { font-size: .62rem; font-weight: 700; opacity: .85; }
+  .rt-lane-hint { font-size: .58rem; font-weight: 700; opacity: .85; }
   .rt-judge-toast { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); font-weight: 900; font-size: 1.3rem; pointer-events: none; opacity: 0; transition: all .25s; }
   .rt-judge-toast.show { opacity: 1; transform: translateX(-50%) translateY(-14px); }
 
@@ -88,14 +88,22 @@
       <div class="rt-lane" data-lane="1"></div>
       <div class="rt-lane" data-lane="2"></div>
       <div class="rt-lane" data-lane="3"></div>
+      <div class="rt-lane" data-lane="4"></div>
+      <div class="rt-lane" data-lane="5"></div>
+      <div class="rt-lane" data-lane="6"></div>
+      <div class="rt-lane" data-lane="7"></div>
       <div class="rt-judge-line"></div>
       <div class="rt-judge-toast" id="rt-toast"></div>
     </div>
     <div class="rt-lane-btn-row">
-      <button class="rt-lane-btn" data-lane="0">D<span class="rt-lane-hint">ド・レ</span></button>
-      <button class="rt-lane-btn" data-lane="1">F<span class="rt-lane-hint">ミ</span></button>
-      <button class="rt-lane-btn" data-lane="2">J<span class="rt-lane-hint">ファ・ソ</span></button>
-      <button class="rt-lane-btn" data-lane="3">K<span class="rt-lane-hint">ラ</span></button>
+      <button class="rt-lane-btn" data-lane="0">S<span class="rt-lane-hint">ド</span></button>
+      <button class="rt-lane-btn" data-lane="1">D<span class="rt-lane-hint">レ</span></button>
+      <button class="rt-lane-btn" data-lane="2">F<span class="rt-lane-hint">ミ</span></button>
+      <button class="rt-lane-btn" data-lane="3">G<span class="rt-lane-hint">ファ</span></button>
+      <button class="rt-lane-btn" data-lane="4">H<span class="rt-lane-hint">ソ</span></button>
+      <button class="rt-lane-btn" data-lane="5">J<span class="rt-lane-hint">ラ</span></button>
+      <button class="rt-lane-btn" data-lane="6">K<span class="rt-lane-hint">シ</span></button>
+      <button class="rt-lane-btn" data-lane="7">L<span class="rt-lane-hint">ド</span></button>
     </div>
   </section>
 
@@ -156,15 +164,15 @@
   function drumHit() { tone(110, 0.12, 'triangle', 0.25); }
 
   /* ==================== リズムタップ ==================== */
-  const LANE_COUNT = 4;
+  const LANE_COUNT = 8;
   const ARRIVE_MS = 1500;
   const JUDGE_WINDOW_MS = 320;
   const TRACK_H = 340, JUDGE_Y = TRACK_H - 56;
   const BEAT_MS = 480;
 
-  // 童謡の音階（ドレミファソラ、レーンは音の高さの順に4本へ割り当て）
-  const NOTE_FREQ = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.00, A: 440.00 };
-  const NOTE_LANE = { C: 0, D: 0, E: 1, F: 2, G: 2, A: 3 };
+  // 童謡の音階（ドレミファソラシド、1オクターブぶん8つのレーンへ音の高さ順に割り当て）
+  const NOTE_FREQ = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.00, A: 440.00, B: 493.88, C2: 523.25 };
+  const NOTE_LANE = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6, C2: 7 };
 
   const SONGS = {
     twinkle: {
@@ -190,14 +198,14 @@
     kaeru: {
       name: 'かえるのうた',
       notes: [
-        ['C', 1], ['D', 1], ['E', 1], ['C', 1],
-        ['C', 1], ['D', 1], ['E', 1], ['C', 1],
-        ['E', 1], ['F', 1], ['G', 2],
-        ['E', 1], ['F', 1], ['G', 2],
-        ['G', 0.5], ['A', 0.5], ['G', 0.5], ['F', 0.5], ['E', 1], ['C', 1],
-        ['G', 0.5], ['A', 0.5], ['G', 0.5], ['F', 0.5], ['E', 1], ['C', 1],
-        ['C', 1], ['G', 1], ['C', 2],
-        ['C', 1], ['G', 1], ['C', 2],
+        // 「かえるの うたが」
+        ['C', 0.5], ['D', 0.5], ['E', 0.5], ['F', 0.5], ['E', 0.5], ['D', 0.5], ['C', 1],
+        // 「きこえて くるよ」
+        ['E', 0.5], ['F', 0.5], ['G', 0.5], ['A', 0.5], ['G', 0.5], ['F', 0.5], ['E', 1],
+        // 「クヮクヮクヮクヮ ケケケケ」
+        ['C', 0.5], ['C', 0.5], ['C', 0.5], ['C', 0.5], ['D', 0.5], ['D', 0.5], ['D', 0.5], ['D', 0.5],
+        // 「クヮクヮクヮ」
+        ['E', 1], ['D', 1], ['C', 2],
       ],
     },
     tulip: {
@@ -344,7 +352,7 @@
   document.querySelectorAll('.rt-lane-btn').forEach((btn) => {
     btn.addEventListener('click', () => tapLane(Number(btn.dataset.lane)));
   });
-  const KEY_LANE = { d: 0, f: 1, j: 2, k: 3 };
+  const KEY_LANE = { s: 0, d: 1, f: 2, g: 3, h: 4, j: 5, k: 6, l: 7 };
   document.addEventListener('keydown', (ev) => {
     const lane = KEY_LANE[ev.key.toLowerCase()];
     if (lane !== undefined) tapLane(lane);
