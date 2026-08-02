@@ -36,8 +36,10 @@
   .rt-lane-btn {
     flex: 1; font-family: inherit; font-weight: 900; border: none; cursor: pointer; height: 56px;
     border-radius: 14px; font-size: 1.3rem; color: #fff; background: linear-gradient(#ffb3d9, #ff8fbf); box-shadow: 0 4px 0 #d9548f;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1;
   }
   .rt-lane-btn:active { transform: translateY(3px); box-shadow: none; }
+  .rt-lane-hint { font-size: .62rem; font-weight: 700; opacity: .85; }
   .rt-judge-toast { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); font-weight: 900; font-size: 1.3rem; pointer-events: none; opacity: 0; transition: all .25s; }
   .rt-judge-toast.show { opacity: 1; transform: translateX(-50%) translateY(-14px); }
 
@@ -82,10 +84,10 @@
       <div class="rt-judge-toast" id="rt-toast"></div>
     </div>
     <div class="rt-lane-btn-row">
-      <button class="rt-lane-btn" data-lane="0">D</button>
-      <button class="rt-lane-btn" data-lane="1">F</button>
-      <button class="rt-lane-btn" data-lane="2">J</button>
-      <button class="rt-lane-btn" data-lane="3">K</button>
+      <button class="rt-lane-btn" data-lane="0">D<span class="rt-lane-hint">ド・レ</span></button>
+      <button class="rt-lane-btn" data-lane="1">F<span class="rt-lane-hint">ミ</span></button>
+      <button class="rt-lane-btn" data-lane="2">J<span class="rt-lane-hint">ファ・ソ</span></button>
+      <button class="rt-lane-btn" data-lane="3">K<span class="rt-lane-hint">ラ</span></button>
     </div>
   </section>
 
@@ -150,6 +152,19 @@
   const ARRIVE_MS = 1500;
   const JUDGE_WINDOW_MS = 320;
   const TRACK_H = 340, JUDGE_Y = TRACK_H - 56;
+  const BEAT_MS = 480;
+
+  // 「きらきら星」の音階（ドレミファソラ、レーンは音の高さの順に4本へ割り当て）
+  const NOTE_FREQ = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.00, A: 440.00 };
+  const NOTE_LANE = { C: 0, D: 0, E: 1, F: 2, G: 2, A: 3 };
+  const MELODY = [
+    ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
+    ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
+    ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
+    ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
+    ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
+    ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
+  ];
 
   let rtSchedule = [];
   let rtSpawned = [];
@@ -161,12 +176,11 @@
 
   function buildSchedule() {
     const sched = [];
-    const count = 24;
     let t = 1500;
-    for (let i = 0; i < count; i++) {
-      sched.push({ t, lane: Math.floor(Math.random() * LANE_COUNT), judged: false, el: null });
-      t += 550 + Math.floor(Math.random() * 200);
-    }
+    MELODY.forEach(([note, beats]) => {
+      sched.push({ t, lane: NOTE_LANE[note], freq: NOTE_FREQ[note], judged: false, el: null });
+      t += beats * BEAT_MS;
+    });
     return sched;
   }
 
@@ -188,8 +202,8 @@
     note.judged = true;
     rtJudgedCount++;
     const abs = Math.abs(diffMs);
-    if (abs < 130) { rtScore += 100; rtCombo++; rtHitCount++; rtToast('Perfect!', 'perfect'); shell.sound.play('correct'); }
-    else if (abs < JUDGE_WINDOW_MS) { rtScore += 50; rtCombo++; rtHitCount++; rtToast('Good', 'good'); shell.sound.play('correct'); }
+    if (abs < 130) { rtScore += 100; rtCombo++; rtHitCount++; rtToast('Perfect!', 'perfect'); tone(note.freq, 0.32, 'triangle', 0.22); }
+    else if (abs < JUDGE_WINDOW_MS) { rtScore += 50; rtCombo++; rtHitCount++; rtToast('Good', 'good'); tone(note.freq, 0.28, 'triangle', 0.18); }
     else { rtCombo = 0; rtToast('Miss', 'miss'); shell.sound.play('wrong'); }
     if (note.el) note.el.remove();
     rtUpdateHud();
