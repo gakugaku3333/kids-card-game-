@@ -41,11 +41,21 @@
   }
   .px-cell {
     border: 1px solid #e0d4ff; box-sizing: border-box; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; line-height: 1; user-select: none;
   }
   .px-cell.filled { background: #7c5cff; }
+  .px-cell.marked-x { background: #fff; color: #d4463c; font-size: 1.1em; }
+  .px-cell.marked-hold { background: #fff4d6; color: #d99a1f; font-size: .95em; }
   .px-cell.solved { border-color: transparent; background: #ff8fbf; }
   #board-wrap.solved .clue-col, #board-wrap.solved .clue-row { opacity: 0; }
   #board-wrap.solved .px-cell { border-color: transparent; }
+
+  .px-legend { font-size: .8rem; font-weight: 700; color: #7c5cff; margin: 12px 0 0; }
+  .px-legend span { display: inline-block; font-weight: 900; }
+  .px-legend .lg-fill { color: #7c5cff; }
+  .px-legend .lg-x { color: #d4463c; }
+  .px-legend .lg-hold { color: #d99a1f; }
 
   #reveal-label {
     position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
@@ -73,6 +83,7 @@
       <div class="hud-box"><span class="hud-label">タイム</span><span class="hud-value" id="hud-time">0:00</span></div>
     </div>
     <div id="board-wrap"></div>
+    <p class="px-legend">タップで <span class="lg-blank">□</span> → <span class="lg-fill">■</span> → <span class="lg-x">×</span> → <span class="lg-hold">？</span> と かわるよ</p>
   </section>
 </div>
 
@@ -129,7 +140,7 @@
   function checkSolved() {
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        if (!!filled[r][c] !== !!solution[r][c]) return false;
+        if ((filled[r][c] === 1) !== !!solution[r][c]) return false;
       }
     }
     return true;
@@ -178,10 +189,20 @@
     }
   }
 
+  const CELL_STATES = [
+    { cls: '', text: '' },
+    { cls: 'filled', text: '' },
+    { cls: 'marked-x', text: '×' },
+    { cls: 'marked-hold', text: '?' },
+  ];
+
   function onCellClick(r, c, el) {
     if (solved) return;
-    filled[r][c] = filled[r][c] ? 0 : 1;
-    el.classList.toggle('filled', !!filled[r][c]);
+    filled[r][c] = (filled[r][c] + 1) % CELL_STATES.length;
+    const state = CELL_STATES[filled[r][c]];
+    el.classList.remove('filled', 'marked-x', 'marked-hold');
+    if (state.cls) el.classList.add(state.cls);
+    el.textContent = state.text;
     if (checkSolved()) onSolved();
   }
 
@@ -189,7 +210,14 @@
     solved = true;
     shell.sound.play('correct');
     boardWrap.classList.add('solved');
-    document.querySelectorAll('.px-cell.filled').forEach((el) => el.classList.add('solved'));
+    document.querySelectorAll('.px-cell').forEach((el) => {
+      if (el.classList.contains('filled')) {
+        el.classList.add('solved');
+      } else {
+        el.classList.remove('marked-x', 'marked-hold');
+        el.textContent = '';
+      }
+    });
     const puzzle = order[round];
     setTimeout(() => {
       rlEmoji.textContent = puzzle.emoji;
