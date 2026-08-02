@@ -234,7 +234,7 @@
     const sched = [];
     let t = 1500;
     SONGS[currentSong].notes.forEach(([note, beats]) => {
-      sched.push({ t, lane: NOTE_LANE[note], freq: NOTE_FREQ[note], judged: false, el: null });
+      sched.push({ t, lane: NOTE_LANE[note], freq: NOTE_FREQ[note], beats, judged: false, el: null });
       t += beats * BEAT_MS;
     });
     return sched;
@@ -273,8 +273,10 @@
     note.judged = true;
     rtJudgedCount++;
     const abs = Math.abs(diffMs);
-    if (abs < 130) { rtScore += 100; rtCombo++; rtHitCount++; rtToast('Perfect!', 'perfect'); tone(note.freq, 0.32, 'triangle', 0.22); }
-    else if (abs < JUDGE_WINDOW_MS) { rtScore += 50; rtCombo++; rtHitCount++; rtToast('Good', 'good'); tone(note.freq, 0.28, 'triangle', 0.18); }
+    // 音の長さは譜面の拍数(beats)にあわせる。ロングノートほど長く伸ばして鳴らし、曲らしい強弱を出す
+    const noteDur = Math.max(0.18, Math.min(0.9, (note.beats || 1) * (BEAT_MS / 1000) * 0.85));
+    if (abs < 130) { rtScore += 100; rtCombo++; rtHitCount++; rtToast('Perfect!', 'perfect'); tone(note.freq, noteDur, 'triangle', 0.22); }
+    else if (abs < JUDGE_WINDOW_MS) { rtScore += 50; rtCombo++; rtHitCount++; rtToast('Good', 'good'); tone(note.freq, noteDur, 'triangle', 0.18); }
     else { rtCombo = 0; rtToast('Miss', 'miss'); shell.sound.play('wrong'); }
     if (note.el) note.el.remove();
     rtUpdateHud();
@@ -299,12 +301,16 @@
     rtSchedule.forEach((note) => {
       if (!note.spawned && now >= note.t - ARRIVE_MS) {
         note.spawned = true;
+        // 音符の長さ(beats)をバーの長さに反映し、ロングノートは見た目でも分かるようにする
+        const height = Math.max(16, Math.min(70, Math.round(26 * (note.beats || 1))));
+        const targetBottom = JUDGE_Y - 3 + 26;
         const el = document.createElement('div');
         el.className = 'rt-note';
-        el.style.top = '-30px';
+        el.style.height = `${height}px`;
+        el.style.top = `${-(height + 4)}px`;
         el.style.transition = `top ${ARRIVE_MS}ms linear`;
         document.querySelectorAll('.rt-lane')[note.lane].appendChild(el);
-        requestAnimationFrame(() => { el.style.top = `${JUDGE_Y - 3}px`; });
+        requestAnimationFrame(() => { el.style.top = `${targetBottom - height}px`; });
         note.el = el;
       }
       if (!note.judged && note.spawned && now > note.t + JUDGE_WINDOW_MS) {
