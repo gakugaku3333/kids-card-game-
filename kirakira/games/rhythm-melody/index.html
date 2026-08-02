@@ -31,6 +31,13 @@
   .rt-lane:first-child { border-left: none; }
   .rt-judge-line { position: absolute; left: 0; right: 0; bottom: 56px; height: 4px; background: #ffc2e0; }
   .rt-note { position: absolute; left: 8%; width: 84%; height: 26px; border-radius: 8px; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 6px rgba(0,0,0,.15); }
+  .rt-song-picker { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 12px; }
+  .rt-song-btn {
+    font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 16px;
+    padding: 8px 14px; font-size: .85rem; color: #7c5cff; background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.08);
+  }
+  .rt-song-btn.active { color: #fff; background: linear-gradient(#a78bfa, #7c5cff); box-shadow: 0 3px 0 #5b3fd6; }
+  .rt-song-btn:disabled { opacity: .5; cursor: default; }
   #rt-start { display: block; margin: 0 auto 14px; font-family: inherit; font-weight: 900; border: none; cursor: pointer; border-radius: 22px; padding: 14px 32px; font-size: 1.15rem; color: #fff; background: linear-gradient(#ff9fc9, #ff6bb0); box-shadow: 0 5px 0 #d94886; }
   .rt-lane-btn-row { display: flex; gap: 6px; }
   .rt-lane-btn {
@@ -74,6 +81,7 @@
       <div class="rt-hud-box"><span class="rt-hud-label">スコア</span><span class="rt-hud-value" id="rt-score">0</span></div>
       <div class="rt-hud-box"><span class="rt-hud-label">コンボ</span><span class="rt-hud-value" id="rt-combo">0</span></div>
     </div>
+    <div class="rt-song-picker" id="rt-song-picker"></div>
     <button id="rt-start">▶️ スタート</button>
     <div id="rt-track">
       <div class="rt-lane" data-lane="0"></div>
@@ -154,17 +162,57 @@
   const TRACK_H = 340, JUDGE_Y = TRACK_H - 56;
   const BEAT_MS = 480;
 
-  // 「きらきら星」の音階（ドレミファソラ、レーンは音の高さの順に4本へ割り当て）
+  // 童謡の音階（ドレミファソラ、レーンは音の高さの順に4本へ割り当て）
   const NOTE_FREQ = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.00, A: 440.00 };
   const NOTE_LANE = { C: 0, D: 0, E: 1, F: 2, G: 2, A: 3 };
-  const MELODY = [
-    ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
-    ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
-    ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
-    ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
-    ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
-    ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
-  ];
+
+  const SONGS = {
+    twinkle: {
+      name: 'きらきら星',
+      notes: [
+        ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
+        ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
+        ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
+        ['G', 1], ['G', 1], ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 2],
+        ['C', 1], ['C', 1], ['G', 1], ['G', 1], ['A', 1], ['A', 1], ['G', 2],
+        ['F', 1], ['F', 1], ['E', 1], ['E', 1], ['D', 1], ['D', 1], ['C', 2],
+      ],
+    },
+    chouchou: {
+      name: 'ちょうちょう',
+      notes: [
+        ['G', 1], ['E', 1], ['E', 1], ['F', 1], ['D', 1], ['D', 2],
+        ['C', 1], ['D', 1], ['E', 1], ['F', 1], ['G', 1], ['G', 1], ['G', 2],
+        ['G', 1], ['E', 1], ['E', 1], ['F', 1], ['D', 1], ['D', 2],
+        ['C', 1], ['E', 1], ['G', 1], ['G', 1], ['E', 1], ['C', 2],
+      ],
+    },
+    kaeru: {
+      name: 'かえるのうた',
+      notes: [
+        ['C', 1], ['D', 1], ['E', 1], ['C', 1],
+        ['C', 1], ['D', 1], ['E', 1], ['C', 1],
+        ['E', 1], ['F', 1], ['G', 2],
+        ['E', 1], ['F', 1], ['G', 2],
+        ['G', 0.5], ['A', 0.5], ['G', 0.5], ['F', 0.5], ['E', 1], ['C', 1],
+        ['G', 0.5], ['A', 0.5], ['G', 0.5], ['F', 0.5], ['E', 1], ['C', 1],
+        ['C', 1], ['G', 1], ['C', 2],
+        ['C', 1], ['G', 1], ['C', 2],
+      ],
+    },
+    tulip: {
+      name: 'チューリップ',
+      notes: [
+        ['C', 1], ['C', 1], ['D', 1], ['E', 1],
+        ['C', 1], ['E', 1], ['D', 2],
+        ['C', 1], ['C', 1], ['D', 1], ['E', 1],
+        ['C', 1], ['E', 1], ['D', 2],
+        ['G', 1], ['E', 1], ['D', 1], ['C', 1],
+        ['D', 1], ['E', 1], ['D', 1], ['C', 1],
+      ],
+    },
+  };
+  let currentSong = 'twinkle';
 
   let rtSchedule = [];
   let rtSpawned = [];
@@ -177,12 +225,27 @@
   function buildSchedule() {
     const sched = [];
     let t = 1500;
-    MELODY.forEach(([note, beats]) => {
+    SONGS[currentSong].notes.forEach(([note, beats]) => {
       sched.push({ t, lane: NOTE_LANE[note], freq: NOTE_FREQ[note], judged: false, el: null });
       t += beats * BEAT_MS;
     });
     return sched;
   }
+
+  function renderSongPicker() {
+    const wrap = document.getElementById('rt-song-picker');
+    wrap.innerHTML = Object.entries(SONGS).map(([key, s]) =>
+      `<button class="rt-song-btn ${key === currentSong ? 'active' : ''}" data-song="${key}">${s.name}</button>`
+    ).join('');
+    wrap.querySelectorAll('.rt-song-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (rtRunning) return;
+        currentSong = btn.dataset.song;
+        renderSongPicker();
+      });
+    });
+  }
+  renderSongPicker();
 
   function rtUpdateHud() {
     document.getElementById('rt-score').textContent = String(rtScore);
@@ -215,6 +278,7 @@
       rtRunning = false;
       cancelAnimationFrame(rtRafId);
       document.getElementById('rt-start').disabled = false;
+      document.querySelectorAll('.rt-song-btn').forEach((b) => { b.disabled = false; });
       setTimeout(() => {
         shell.showResult({ correct: rtHitCount, total: rtSchedule.length, tokens: Math.max(1, Math.round(rtHitCount / 3)) });
       }, 400);
@@ -250,6 +314,7 @@
     rtUpdateHud();
     rtRunning = true;
     document.getElementById('rt-start').disabled = true;
+    document.querySelectorAll('.rt-song-btn').forEach((b) => { b.disabled = true; });
     rtStartTime = performance.now();
     rtRafId = requestAnimationFrame(rtLoop);
   }
@@ -261,6 +326,7 @@
     rtScore = 0; rtCombo = 0;
     rtUpdateHud();
     document.getElementById('rt-start').disabled = false;
+    document.querySelectorAll('.rt-song-btn').forEach((b) => { b.disabled = false; });
   });
 
   function tapLane(lane) {
